@@ -427,8 +427,8 @@ function parentPush(k,text){
 function courtPush(){
   prel();
   const p=clamp(.4+P.st.brave/200+(P.parentRel-50)/400,.15,.8);
-  return {kind:'major',title:'부모의 뜻 · 궁녀',text:`${P.sub==='nobi'?'주인과 부모가':'부모가'} 그대를 궁에 들여보내 생각시로 삼으려 한다. 궁에 들면 다시는 집으로 돌아올 수 없고, 혼인도 할 수 없다.`,opts:[
-    {t:'뜻을 따라 궁에 들어간다',sub:'궁녀의 길을 걷는다',p:null,tags:['궁에 매임','혼인할 수 없음','부모와 사이 ↑'],fn:()=>{P.parentRel=clamp(P.parentRel+6);changeJob('court');}},
+  return {kind:'major',title:'부모의 뜻 · 궁녀',text:`${P.sub==='nobi'?'주인과 부모가':'부모가'} 그대를 궁에 들여보내 생각시로 삼으려 한다. 궁에 들면 집으로 돌아오기 어렵고, 혼인하려면 궁을 떠나야 한다.`,opts:[
+    {t:'뜻을 따라 궁에 들어간다',sub:'궁녀의 길을 걷는다',p:null,tags:['궁에 매임','혼인이 어려움','부모와 사이 ↑'],fn:()=>{P.parentRel=clamp(P.parentRel+6);changeJob('court');}},
     {t:'울며 버틴다',sub:'궁에 들어가지 않겠다고 한다',p,tags:['부모와 사이가 멀어질 수 있음'],fn:()=>{
       if(chance(p)){P.parentRel=clamp(P.parentRel-8);say('끝내 부모가 뜻을 거두었다. 집에 남게 되었다.','big');}
       else{P.parentRel=clamp(P.parentRel-15);say('울며 버텼으나 끝내 궁으로 보내졌다.','big');changeJob('court');}}}]};
@@ -451,11 +451,11 @@ const JOB_DESC={
   gwangdae:['광대','놀이판에서 줄타기와 소리로 이름을 얻는다. 재주가 중요하다.'],
   yein:['예인의 길','사당패를 따라 소리와 춤을 익혀 명창·명무가 된다. 재주가 중요하다.'],
   gisaeng:['기방에 들어간다','기적에 이름을 올리고 가무와 시서를 익힌다. 명기가 될 수도 있다.'],
-  court:['궁녀로 들어간다','궁에 들어가 생각시가 된다. 다시는 궁을 나올 수 없다.'],
+  court:['궁녀로 들어간다','궁에 들어가 생각시가 된다. 혼인하려면 궁을 떠나야 해서 쉽지 않다.'],
   lady:['규방 살림','집안 살림을 익혀 안주인·종부가 된다. 매력이 중요하다.'],
   slave:['주인집 일','시키는 일을 하며 산다.']
 };
-const JOB_TAGS={gisaeng:['신분 변화: 천민(기적)','평판 ↓','다시 벗어나려면 속량해야 함'],court:['궁에 매임','혼인할 수 없음'],yein:['떠돌이 삶','평판 조금 ↓'],sword:[],hunjang:[]};
+const JOB_TAGS={gisaeng:['신분 변화: 천민(기적)','평판 ↓','다시 벗어나려면 속량해야 함'],court:['궁에 매임','혼인이 어려움'],yein:['떠돌이 삶','평판 조금 ↓'],sword:[],hunjang:[]};
 function jobChoices(){
   const a=P.age;
   if(a<8)return {list:[],why:'아직 생업을 정할 나이가 아니다.'};
@@ -484,7 +484,7 @@ function changeJob(k){
   if(k==='official'&&!(P.job&&P.job.k==='official'))return;
   P.lastJobChange=P.year;
   if(k==='gisaeng'){P.cls='cheonmin';P.sub='gisaeng';P.home='관아 근처 기방';setJob('gisaeng',P.age>=18?1:0);fx({fame:-8},true);say('기방에 들어가 기적에 이름을 올렸다. 이제 기생의 길을 걷게 되었다.','big');note('gisaeng');ev('job','기방에 들어갔다');return;}
-  if(k==='court'){P.court=true;P.home='궁궐 안 처소';setJob('court',P.age>=18?1:0);say('궁에 들어가 생각시가 되었다. 다시는 집으로 돌아갈 수 없었다.','big');note('gungnyeo');ev('court','궁에 들어갔다');return;}
+  if(k==='court'){P.court=true;P.home='궁궐 안 처소';setJob('court',P.age>=18?1:0);say('궁에 들어가 생각시가 되었다. 이제 궁이 그대의 집이었다.','big');note('gungnyeo');ev('court','궁에 들어갔다');return;}
   if(k==='yein')fx({fame:-3},true);
   setJob(k,0);
   say(`앞으로 ‘${JOB_DESC[k][0]}’ 길을 걷기로 하였다.`,'big');ev('job',`${JOB_DESC[k][0]}의 길을 택하였다`);
@@ -542,7 +542,8 @@ function yFocus(){
   if(!av.list.includes(P.focus)||av.forced&&P.age<12&&!P.flags.focusPicked)P.focus=av.list[0];
   const f=FOCI.find(x=>x.k===P.focus);
   const o={...f.st};
-  for(const k in o)o[k]=o[k]+ri(-1,1);
+  /* 중점으로 고른 능력치는 해마다 5~10씩 오른다 */
+  for(const k in o){const v=o[k];o[k]=Math.abs(v)>=3?Math.sign(v)*ri(5,10):v+ri(0,1);}
   if(P.age>=40)o.health=(o.health||0)-ri(0,2);
   if(P.age>=55)o.health=(o.health||0)-ri(1,3);
   if(P.age>=70)o.health=(o.health||0)-ri(1,3);
@@ -900,7 +901,8 @@ function canRemarry(){
 function marriageable(){
   if(P.married||P.age<18)return false;
   if(P.widowed)return false;
-  if(P.court||P.sub==='gisaeng'&&P.job&&P.job.k==='gisaeng')return false;
+  if(P.sub==='gisaeng'&&P.job&&P.job.k==='gisaeng')return false;
+  if(P.court&&!chance(.35))return false;
   if(P.job&&['concubine','queen'].includes(P.job.k))return false;
   const lim=P.female?30:36;if(P.age>lim)return false;
   return chance(.3+(P.age>22?.2:0)+(P.rejects?.1:0));
