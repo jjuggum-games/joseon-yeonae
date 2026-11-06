@@ -428,3 +428,47 @@ function displayName(){
   if(['yangban','jungin','royal'].includes(P.cls)&&!P.female)return P.sur+P.name;
   return P.name;
 }
+
+/* ===== 살림과 집안의 일 ===== */
+const UNIT={royal:30,yangban:4,jungin:3,sangmin:.6,cheonmin:.15};
+function homeScene(){
+  P.flags.homeY=P.year;
+  const U=UNIT[P.cls]||.5;const W=P.wealth;const amt=f=>Math.max(U*f*10,W*f);
+  const free=!(P.cls==='cheonmin'&&P.sub==='nobi');
+  const sib=(P.sibs||[]).filter(s=>s.alive);
+  const kid=P.kids.find(k=>k.alive&&!k.edu&&P.year-k.born>=7&&P.year-k.born<=13);
+  const fam=typeof FAMINES!=='undefined'&&FAMINES.includes(P.year);
+  const L=[];
+  if(free&&W>=U*15)L.push(()=>{const c=amt(.3);const p=clamp(.55+P.st.wit/400);
+    return {kind:'major',title:'살림 · 땅',text:`고을에 논밭을 내놓은 이가 있다. 값은 ${money(c)}쯤이라 한다. 땅을 사 두면 해마다 소출이 늘겠지만, 흉년이 들거나 땅에 탈이 나면 손해를 볼 수도 있다.`,opts:[
+      {t:'땅을 사들인다',sub:'재산을 불릴 기회',p,tags:['재산 ↑↓'],fn:()=>{fx({wealth:-c},true);if(chance(p)){fx({wealth:c*1.9,fame:3,worry:-3});say('사들인 땅에서 소출이 넉넉히 났다. 살림이 한결 피었다.','big');}else{fx({worry:8});say('사들인 땅이 물에 잠겨 한 해 농사를 망쳤다. 헛돈만 쓴 셈이었다.');}}},
+      {t:'욕심내지 않는다',p:null,safe:true,tags:[],fn:()=>{say('가진 것을 지키기로 하였다.');}}]};});
+  if(W>=U*5)L.push(()=>{const c=amt(.2);const who=sib.length&&chance(.6)?(sib[0].female?'누이':'형제'):R(['사촌','외삼촌','먼 친척','이웃']);const p=clamp(.45+P.st.wit/300);
+    return {kind:'major',title:'살림 · 빚',text:`${iga(who)} 찾아와 ${money(c)}만 빌려 달라며 사정하였다. 갚겠다고는 하나 형편이 넉넉해 보이지 않는다.`,opts:[
+      {t:'빌려준다',sub:'정을 지킨다',p,tags:['재산 ↓','평판 ↑'],fn:()=>{fx({wealth:-c,fame:3},true);if(chance(p)){fx({wealth:c*1.1});say(`이듬해 ${iga(who)} 빌린 돈에 고맙다는 인사까지 얹어 갚았다.`);}else say(`${who}는 끝내 돈을 갚지 못하였다. 그래도 사람을 잃지는 않았다.`);}},
+      {t:'딱 잘라 거절한다',p:null,safe:true,tags:['평판 조금 ↓'],fn:()=>{fx({fame:-3});say(`${iga(who)} 서운한 얼굴로 돌아갔다.`);}}]};});
+  if(parentAlive()&&P.age>=25)L.push(()=>{const c=amt(.12);const pw=P.parents.f.alive&&P.parents.m.alive?R(['아버지','어머니']):P.parents.f.alive?'아버지':'어머니';
+    return {kind:'major',title:'집안 · 부모',text:`${pw}가 병석에 누웠다는 기별이 왔다. 약값도 들고, 곁을 지키려면 손이 많이 간다.`,opts:[
+      {t:'곁에서 정성껏 모신다',sub:'약값과 품이 든다',p:null,tags:['재산 ↓','평판 ↑','부모와 사이 ↑'],fn:()=>{prel();P.parentRel=clamp(P.parentRel+12);fx({wealth:-c,fame:6,worry:5,health:-2});say(`${pw}의 곁을 지키며 탕약을 달였다. 효성이 지극하다는 말이 고을에 퍼졌다.`);}},
+      {t:'약값만 보낸다',p:null,tags:['재산 ↓'],fn:()=>{fx({wealth:-c*.6});say('약값을 보내고 소식만 기다렸다.');}},
+      ...(sib.length?[{t:'형제에게 맡긴다',p:null,safe:true,tags:['부모와 사이 ↓'],fn:()=>{prel();P.parentRel=clamp(P.parentRel-8);fx({worry:3});say('형제에게 병구완을 맡겼다. 마음 한쪽이 무거웠다.');}}]:[])]};});
+  if(sib.length&&free&&W>=U*8)L.push(()=>{const s=sib[0];const nm=s.name;const c=amt(.25);
+    return {kind:'major',title:'살림 · 동업',text:`${s.female?'누이':'형제'} ${iga(nm)} 함께 장사를 해 보자며 밑천을 보태 달라 한다. 잘되면 큰돈이 되지만, 망하면 형제 사이도 틀어질 수 있다.`,opts:[
+      {t:'함께 장사를 벌인다',p:.5,tags:['재산 ↑↓'],fn:()=>{fx({wealth:-c},true);if(chance(.5)){fx({wealth:c*2.2,worry:-3});say(`${gwawa(nm)} 벌인 장사가 제법 잘되었다. 형제가 함께 웃었다.`,'big');}else{fx({worry:10});say(`장사가 기울어 밑천을 다 날렸다. ${gwawa(nm)} 한동안 서먹하게 지냈다.`);}}},
+      {t:'정중히 사양한다',p:null,safe:true,tags:[],fn:()=>{say(`${nm}에게 형편이 어렵다며 사양하였다.`);}}]};});
+  if(fam||chance(.25)&&W>=U*10)L.push(()=>{const c=amt(.15);
+    return {kind:'major',title:'고을 · 흉년',text:`${fam?'흉년이 들어':'봄 보릿고개에'} 고을에 굶는 이가 늘었다. 이웃들이 그대의 집 앞을 기웃거린다.`,opts:[
+      {t:'곳간을 열어 나눈다',p:null,tags:['재산 ↓','평판 크게 ↑'],fn:()=>{fx({wealth:-c,fame:10,worry:-3});say('곳간을 열어 죽을 쑤어 나누었다. 사람들이 그대의 집을 향해 절을 하였다.','big');}},
+      {t:'조금만 나눈다',p:null,tags:['재산 조금 ↓','평판 ↑'],fn:()=>{fx({wealth:-c*.3,fame:3});say('쌀 몇 됫박을 나누어 주었다.');}},
+      {t:'문을 걸어 잠근다',p:null,safe:true,tags:['평판 ↓'],fn:()=>{fx({fame:-5});say('문을 걸어 잠갔다. 담 너머로 원망하는 소리가 들렸다.');}}]};});
+  if(free&&W>=U*25&&!P.flags.bigHome)L.push(()=>{const c=amt(.3);
+    return {kind:'major',title:'살림 · 집',text:`살림이 늘어 집이 비좁아졌다. 집을 넓혀 짓자는 말이 나왔다. 비용은 ${money(c)}쯤 든다.`,opts:[
+      {t:'집을 넓혀 짓는다',p:null,tags:['재산 ↓','평판 ↑','근심 ↓'],fn:()=>{P.flags.bigHome=1;const up={'초가삼간':'너른 초가','기와집':'큰 기와집','사랑채 딸린 기와집':'솟을대문 달린 기와집'};P.home=up[P.home]||P.home;fx({wealth:-c,fame:4,worry:-6});say(`집을 넓혀 지었다. 이제 ${P.home}에서 산다.`,'big');}},
+      {t:'아껴 둔다',p:null,safe:true,tags:[],fn:()=>{say('집은 그대로 두고 재물을 아껴 두었다.');}}]};});
+  if(kid&&W>=U*3)L.push(()=>{const c=amt(.1);const kn=kid.name;
+    return {kind:'major',title:'집안 · 자식 교육',text:`${kid.female?'딸':'아들'} ${iga(kn)} 제법 컸다. 글을 가르칠지, 집안일을 거들게 할지 정할 때가 되었다.`,opts:[
+      {t:'스승을 모셔 가르친다',p:null,tags:['재산 ↓','자식의 앞날 ↑'],fn:()=>{kid.edu=1;fx({wealth:-c,fame:2});say(`${kn}에게 스승을 붙여 글을 가르쳤다. 총기가 남다르다는 말을 들었다.`);}},
+      {t:'집안일을 거들게 한다',p:null,safe:true,tags:['재산 조금 ↑'],fn:()=>{kid.edu=-1;fx({wealth:U});say(`${iga(kn)} 집안일을 야무지게 거들었다.`);}}]};});
+  if(!L.length)return null;
+  return R(L)();
+}

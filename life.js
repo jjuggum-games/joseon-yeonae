@@ -719,12 +719,12 @@ function yLoveEvent(){
     if(!chance(G.fest?.7:.5))return;
     P.lastLove=P.year;return loveScene(tg);
   }
-  const pool=Object.values(P.people).filter(x=>(x.kind==='love'&&x.status!=='parted'||x.kind==='spouse')&&x.alive);
+  /* 배우자와의 일은 사이가 틀어졌을 때만 찾아온다 */
+  const pool=Object.values(P.people).filter(x=>(x.kind==='love'&&x.status!=='parted'||x.kind==='spouse'&&(x.t<35||x.h<30))&&x.alive);
   if(!pool.length)return;
   if(P.lastLove&&P.year-P.lastLove<2)return;
   if(!chance(.3))return;
   const x=wpick(pool.map(p=>[p,10+p.h+p.t+(G.fest?10:0)+(p.kind==='spouse'?15:0)]));
-  if(x.kind==='spouse'&&x.t>=80&&x.h>=80&&chance(.5))return;
   P.lastLove=P.year;return loveScene(x);
 }
 function actOdds(x,a){
@@ -917,6 +917,7 @@ function yMajor(){
     if(P.cls==='cheonmin'&&P.sub==='nobi'&&P.wealth>=40&&!P.flags.napsokAsked)add(40,()=>napsokScene());
     if(P.female&&['yangban','jungin','sangmin'].includes(P.cls)&&P.st.know>=70&&P.st.brave>=45&&!P.married&&P.age<=30&&!Store.codex().rare.namjang&&!P.flags.namjang&&chance(.06))add(25,()=>namjangScene());
     if(P.flags.wasGisaeng&&P.married&&!P.flags.rare3&&P.year-(P.flags.wedY||0)>=5&&chance(.04))add(22,()=>{P.flags.rare3=1;rare('gisaeng2lady','정실이 세상을 떠나 그대가 집안의 안주인 자리에 올랐다. 훗날 남편이 정1품에 올라 그대는 정경부인의 칭호를 받았다. 기녀 출신으로는 전에 없던 일이라 하였다.');fx({fame:30});return null;});
+    if(P.age>=20&&(P.married||P.age>=25)&&P.year-(P.flags.homeY||0)>=3&&chance(.4))add(26,()=>homeScene());
     if(P.widowed&&!P.married&&P.age<=45&&canRemarry())add(46,()=>{P.widowed=P.widowed;return matchScene(true);});
   }
   if(!c.length)return;
