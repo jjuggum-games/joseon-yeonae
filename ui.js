@@ -474,16 +474,16 @@ function renderSillok(h,fresh){
     ${sl.letter?`<div class="s"><h4>남은 서찰</h4><div class="lttr">${esc(sl.letter.text)}</div><div class="muted" style="font-size:.8em;text-align:right">— ${esc(sl.letter.from)}${sl.letter.from==='그대'?'가 남긴 글':'의 글'}, ${sl.letter.y}년</div></div>`:''}
     </div>${newc}
     <div class="rowbtns" style="margin-top:22px">
-      <button class="btn" data-a="saveimg">이미지로 저장·공유</button>
+      <button class="btn" data-a="saveimg">이미지로 저장</button>${!window.claude&&navigator.canShare?'<button class="btn" data-a="shareimg">이미지 공유</button>':''}
       <button class="btn" data-a="copytext">글로 복사</button>
       <button class="btn pri" data-a="new">새로운 삶</button>
       <button class="btn" data-a="title">처음으로</button>
     </div>
-    <div class="fnote" style="text-align:center;max-width:560px">휴대폰의 Claude 앱에서는 이미지로 저장할 때 공유 창이 열려 카카오톡 등으로 바로 보낼 수 있습니다.</div>
+    <div class="fnote" style="text-align:center;max-width:560px">${window.claude?'휴대폰의 Claude 앱에서는 이미지로 저장할 때 공유 창이 열려 카카오톡 등으로 바로 보낼 수 있습니다.':'휴대폰에서 저장이 잘 안 되면 ‘이미지 공유’를 눌러 사진첩에 저장하거나 카카오톡으로 보낼 수 있습니다.'}</div>
   </div>`;
   window.scrollTo(0,0);
 }
-async function saveImage(sl){
+async function saveImage(sl,mode){
   try{await document.fonts.load("100px 'Yeon Sung'",'조선연애실록'+(P&&P.name||''));await document.fonts.ready;}catch(e){}
   const W=1080,pad=96,cw=W-pad*2;
   const c=document.createElement('canvas');const x=c.getContext('2d');
@@ -511,7 +511,7 @@ async function saveImage(sl){
   if(!dl){
     if(!window.claude){
       const file=new File([blob],`${sl.title}.png`,{type:'image/png'});
-      try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:sl.title});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+      if(mode==='share'){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:sl.title});return;}}catch(e){if(e&&e.name==='AbortError')return;}}
       try{const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${sl.title}.png`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('이미지를 저장했습니다.');return;}catch(e){}
     }
     showImg();return;}
@@ -678,7 +678,8 @@ document.addEventListener('click',async e=>{
     case 'copycode':try{await navigator.clipboard.writeText($('#codeOut').value);toast('옮기기 코드를 복사했습니다.');}catch(err){$('#codeOut').select();toast('코드를 길게 눌러 직접 복사해 주십시오.');}break;
     case 'savecode':{let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(err){}if(!dl){toast('이 화면에서는 파일 저장을 쓸 수 없습니다. 코드 복사를 이용해 주십시오.');return;}try{await dl.save({filename:'조선연애실록-기록.txt',data:$('#codeOut').value});}catch(err){}break;}
     case 'loadcode':{try{const d=await readCode($('#codeIn').value);const n=mergeData(d);toast(`기록을 합쳤습니다. 새로 들어온 삶 ${n}개.`);renderTransfer();}catch(err){toast('코드를 읽지 못하였습니다. 처음부터 끝까지 빠짐없이 붙여 넣었는지 확인해 주십시오.');}break;}
-    case 'saveimg':if(V.viewing)saveImage(V.viewing.sillok);break;
+    case 'saveimg':if(V.viewing)saveImage(V.viewing.sillok,'save');break;
+    case 'shareimg':if(V.viewing)saveImage(V.viewing.sillok,'share');break;
     case 'copytext':{const h=V.viewing;if(!h)return;try{await navigator.clipboard.writeText(sillokText(h.sillok));toast('실록을 글로 복사했습니다.');}catch(err){toast('복사하지 못하였습니다.');}break;}
   }
 });
