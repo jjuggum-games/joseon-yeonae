@@ -516,7 +516,7 @@ function freeFocusScene(){
   const av=availFoci();
   const D=typeof FOCUS_DESC!=='undefined'?FOCUS_DESC:{};
   return {kind:'major',title:'올해의 중점',text:'해마다 무엇에 힘쓸지 고르면 그쪽 능력치가 오른다. 한 번 고르면 해가 바뀌어도 이어지고, 왼쪽 ‘올해의 중점’에서 언제든 세월을 멈추지 않고 바꿀 수 있다.',
-    opts:FOCI.filter(f=>av.list.includes(f.k)).map(f=>({t:f.n,sub:D[f.k]?D[f.k][0]+' · '+D[f.k][1]:'',p:null,tags:[],fn:()=>{P.focus=f.k;P.flags.focusPicked=1;say(`앞으로 ‘${f.n}’에 힘쓰기로 하였다.`);}}))};
+    opts:FOCI.filter(f=>av.list.includes(f.k)).map(f=>({t:f.n,sub:D[f.k]?D[f.k][1]:'',p:null,tags:D[f.k]?[D[f.k][0]]:[],fn:()=>{P.focus=f.k;P.flags.focusPicked=1;say(`앞으로 ‘${f.n}’에 힘쓰기로 하였다.`);}}))};
 }
 function yFirstFocus(){
   if(P.flags.focusAsked)return;
@@ -535,7 +535,7 @@ function yFirstFocus(){
   P.flags.focusAsked=1;
   const D=typeof FOCUS_DESC!=='undefined'?FOCUS_DESC:{};
   return {kind:'major',title:'올해의 중점',text:`${P.age<18?'이제 스스로 무엇에 힘쓸지 정할 나이가 되었다.':'이제 스스로 무엇에 힘쓸지 정할 수 있게 되었다.'} 해마다 무엇에 힘쓸지 고르면 그쪽 능력치가 오른다. 한 번 고르면 해가 바뀌어도 이어지고, 왼쪽 ‘올해의 중점’에서 언제든 세월을 멈추지 않고 바꿀 수 있다.`,
-    opts:FOCI.filter(f=>av.list.includes(f.k)).map(f=>({t:f.n,sub:D[f.k]?D[f.k][0]+' · '+D[f.k][1]:'',p:null,tags:[],fn:()=>{P.focus=f.k;P.flags.focusPicked=1;say(`앞으로 ‘${f.n}’에 힘쓰기로 하였다.`);}}))};
+    opts:FOCI.filter(f=>av.list.includes(f.k)).map(f=>({t:f.n,sub:D[f.k]?D[f.k][1]:'',p:null,tags:D[f.k]?[D[f.k][0]]:[],fn:()=>{P.focus=f.k;P.flags.focusPicked=1;say(`앞으로 ‘${f.n}’에 힘쓰기로 하였다.`);}}))};
 }
 function yFocus(){
   const av=availFoci();
