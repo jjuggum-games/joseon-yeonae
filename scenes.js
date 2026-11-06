@@ -587,3 +587,33 @@ function promoteCheopScene(c){
     {t:`${eulreul(nm)} 정실로 올린다`,p:null,tags:['배우자가 생김',...(yb?['평판 ↓ (법도에 어긋남)']:[])],fn:()=>{c.kind='spouse';c.status='married';c.mode='wife';P.spouse=c.id;P.married=true;P.widowed=false;P.cheopN=Math.max(0,(P.cheopN||1)-1);fx({fame:yb?-6:2});say(`첩 ${eulreul(nm)} 정실로 올렸다. ${iga(nm)} 눈물을 글썽였다.`,'big');ev('marry',c.id,{love:true,mode:'wife'});}},
     {t:'새 아내를 들이기로 한다',p:null,safe:true,tags:[],fn:()=>{say('첩은 첩의 자리에 두고, 새 혼처를 알아보기로 하였다.');}}]};
 }
+
+/* 남편을 여읜 뒤: 수절과 열녀 */
+function widowScene(){
+  P.flags.widowAsked=1;const yb=['yangban','royal'].includes(P.cls);const sp=Object.values(P.people).filter(x=>x.kind==='spouse'&&!x.alive).pop();const nm=sp?callOf(sp):'남편';
+  note('yeollyeo');
+  return {kind:'major',title:'남편을 여의고',pid:sp&&sp.id,text:`${eulreul(nm)} 떠나보낸 뒤, 소복을 입고 삼년상을 치렀다. ${yb?'양반가의 과부에게 세상은 평생 수절을 바란다. 절개를 지킨 여인은 나라에서 열녀로 기리기도 한다.':'이웃들은 아직 젊으니 새 사람을 만나라고도 하고, 절개를 지키라고도 한다.'} 앞으로 어떻게 살 것인가.`,opts:[
+    {t:'평생 수절한다',sub:'정절을 지키며 홀로 산다',p:null,tags:['평판 ↑','다시 혼인하지 않음','열녀문을 받을 수 있음'],fn:()=>{P.flags.sujeol=P.year;P.flags.noRemarry=1;fx({fame:yb?12:6,worry:5});ev('sujeol','');say('흰 소복을 벗지 않고 홀로 집안을 지키기로 하였다.','big');}},
+    {t:'자식을 키우며 살아간다',sub:'혼인은 마음 가는 대로',p:null,safe:true,tags:[],fn:()=>{fx({worry:-3});say('슬픔을 추스르고 남은 식구들을 보살피며 살아가기로 하였다.');}},
+    ...(yb&&P.year>=1485&&!P.alt?[]:[{t:'새 인연을 찾는다',sub:yb?'세상의 눈총을 받는다':'',p:null,tags:yb?['평판 ↓']:[],fn:()=>{P.flags.widowOpen=1;if(yb)fx({fame:-8});say('언젠가 다시 정을 붙일 사람을 만나리라 마음먹었다.');}}])]};
+}
+function jeongnyeoScene(){
+  P.flags.jeongnyeo=1;const y=P.year-P.flags.sujeol;
+  say(`${y}해 동안 절개를 지킨 일이 고을에 알려졌다. 나라에서 그대의 집 앞에 열녀문을 세우고 정려(旌閭)를 내렸다.`,'big');
+  fx({fame:30,worry:-10});ev('jeongnyeo','열녀문');note('yeollyeo');
+  return null;
+}
+/* 자식의 신분: 시대마다 달랐던 법 */
+function kidClass(fa,mo){
+  const fc=fa?fa.cls:'sangmin',mc=mo?mo.cls:'sangmin',y=P.year;
+  if(y>=1894)return fc==='cheonmin'?'sangmin':fc;
+  if(fc!=='cheonmin'&&mc!=='cheonmin')return fc==='royal'&&mc!=='royal'?'royal':fc;
+  if(fc==='cheonmin'&&mc==='cheonmin')return 'cheonmin';
+  let rule;
+  if(y<1414)rule='both';else if(y<1432)rule='father';else if(y>=1669&&y<1675)rule='mother';else if(y<1731)rule='both';else rule='mother';
+  P.flags.kidRule=rule;
+  if(rule==='both')return 'cheonmin';
+  if(rule==='father')return fc==='cheonmin'?'cheonmin':(fc==='royal'?'royal':fc);
+  return mc==='cheonmin'?'cheonmin':(fc==='cheonmin'?'sangmin':fc);
+}
+const KID_RULE={both:'부모 가운데 한쪽이라도 천인이면 자식도 천인이 된다는 법(일천즉천)',father:'아버지의 신분을 따른다는 법(노비종부법)',mother:'어머니의 신분을 따른다는 법(노비종모법)'};

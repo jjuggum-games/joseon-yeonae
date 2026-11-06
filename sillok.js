@@ -78,21 +78,30 @@ function buildSillok(){
 
   // 일생
   const W=[];
-  if(P.peak){const t=jobTitle(P.peak),k=P.peak.k;
-    if(k==='official')W.push(`문과에 급제하여 벼슬이 ${RANKS[P.peak.lv]}에 이르렀다.`);
-    else if(k==='military')W.push(P.peak.lv?`무과에 급제하여 무관으로서 ${t.replace(/\(.*\)/,'')}에 이르렀다.`:'무과를 준비하며 무예를 닦았다.');
-    else if(k==='gisaeng'&&P.peak.lv>=3)W.push('명기로 이름을 팔도에 떨쳤다.');
-    else if(k==='gisaeng')W.push(`${t}로 살았다.`);
-    else if(k==='concubine')W.push(`후궁으로서 ${t}의 품계에 이르렀다.`);
-    else if(k==='queen'&&P.peak.lv>=1)W.push('중전의 자리에 올랐다.');
-    else if(k==='queen')W.push('세자빈의 자리에 올랐다.');
-    else if(k==='court')W.push(`궁녀로서 ${t}에 이르렀다.`);
-    else if(k==='lady'&&P.peak.lv>=3)W.push('종가의 종부로 집안을 이끌었다.');
-    else if(k==='lady')W.push(`${euro(t)}서 집안 살림을 맡았다.`);
-    else if(k==='scholar')W.push(P.peak.lv?`소과에 붙어 ${iga(t)} 되었다.`:'글을 읽는 선비로 살았다.');
-    else W.push(`${t}${bat(t)?'으로':'로'} 살았다.`);}
+  const jobLine=(k,lv)=>{const t=jobTitle({k,lv});
+    if(k==='official')return `문과에 급제하여 벼슬이 ${RANKS[lv]}에 이르렀다.`;
+    if(k==='military')return lv?`무과에 급제하여 무관으로서 ${t.replace(/\(.*\)/,'')}에 이르렀다.`:'무과를 준비하며 무예를 닦았다.';
+    if(k==='gisaeng')return lv>=3?'명기로 이름을 팔도에 떨쳤다.':`${t}로 살았다.`;
+    if(k==='concubine')return `후궁으로서 ${t}의 품계에 이르렀다.`;
+    if(k==='queen')return lv>=1?'중전의 자리에 올라 국모가 되었다.':'세자빈의 자리에 올랐다.';
+    if(k==='king')return '보위에 올라 임금이 되었다.';
+    if(k==='royalwife')return `${P.cls==='royal'?'':'신분의 벽을 넘어 '}왕실에 시집가 ${iga(t)} 되었다.`;
+    if(k==='buma')return '공주(옹주)와 혼인하여 부마가 되었다.';
+    if(k==='court')return `궁녀로서 ${t}에 이르렀다.`;
+    if(k==='lady')return lv>=3?'종가의 종부로 집안을 이끌었다.':`${euro(t)}서 집안 살림을 맡았다.`;
+    if(k==='housewife')return lv>=2?'안주인으로 집안 살림을 도맡았다.':'혼인하여 한 집안의 살림을 꾸렸다.';
+    if(k==='scholar')return lv?`소과에 붙어 ${iga(t)} 되었다.`:'글을 읽는 선비로 살았다.';
+    if(k==='slave')return null;
+    return `${t}${bat(t)?'으로':'로'} 살았다.`;};
+  const order=P.jobOrder&&P.jobOrder.length?P.jobOrder:(P.peak?[P.peak.k]:[]);
+  /* 학생 시절이 벼슬로 이어졌으면 앞의 것은 생략 */
+  const skip=new Set();if(order.includes('official'))skip.add('scholar');if(order.includes('queen')&&P.jobBest&&P.jobBest.queen>=1)skip.add('royalwife');if(order.includes('lady')&&order.includes('housewife'))skip.add('housewife');
+  const JL=order.filter(k=>!skip.has(k)).map(k=>jobLine(k,P.jobBest&&P.jobBest[k]!=null?P.jobBest[k]:(P.peak&&P.peak.k===k?P.peak.lv:0))).filter(Boolean);
+  JL.slice(0,5).forEach(t=>W.push(t));
   if(P.titles.includes('임금의 어머니'))W.push('훗날 아들이 보위에 올라 임금의 어머니가 되었다.');
   P.ev.filter(e=>['freed','rise','fall','unwed'].includes(e.type)).forEach(e=>W.push(`${kAge(e.a)} 살에 ${e.t}.`));
+  if(P.ev.some(e=>e.type==='sujeol'))W.push('남편을 여읜 뒤 평생 수절하였다.');
+  P.ev.filter(e=>e.type==='jeongnyeo').forEach(e=>W.push(`${kAge(e.a)} 살에 나라에서 열녀문을 내려 그 절개를 기렸다.`));
   P.ev.filter(e=>e.type==='exile').forEach(e=>W.push(`${kAge(e.a)} 살에 ${euro(e.t)} 유배되기도 하였다.`));
   const wars=[...new Set(P.ev.filter(e=>e.type==='war').map(e=>e.t))];if(wars.length)W.push(`${wars.join(', ')}의 난리를 겪었다.`);
   P.ev.filter(e=>e.type==='rare').forEach(e=>W.push(e.t));

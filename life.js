@@ -346,13 +346,16 @@ function birth(given){
   const seo=!!cm||P.sub==='cheop'||(spouseP()&&(spouseP().kind==='cheop'||spouseP().mode==='cheop'))||(pr.unwed&&!(P.married&&P.spouse===pr.father));
   if(P.alive===false)return;
   const twins=chance(.03);
-  const mk=(fem,name)=>{const kid={id:uid(),name,female:fem,born:P.year,alive:true,adopted:false,married:false,grand:0,seo,father:pr.father||P.spouse,mother:cm?cm.id:undefined,st:kidStats(cm)};P.kids.push(kid);ev('child',kid.name,{female:fem});return kid;};
+  const partner=cm||P.people[pr.father]||spouseP();const meP={cls:P.cls};
+  const kcls=P.female?kidClass(partner,meP):kidClass(meP,partner);
+  const mk=(fem,name)=>{const kid={id:uid(),name,female:fem,born:P.year,alive:true,adopted:false,married:false,grand:0,seo,cls:kcls,father:pr.father||P.spouse,mother:cm?cm.id:undefined,st:kidStats(cm)};P.kids.push(kid);ev('child',kid.name,{female:fem});return kid;};
   const k1=mk(female,nm);
   if(twins){const f2=chance(.5)?female:!female;const k2=mk(f2,personName(P.cls==='cheonmin'?'cheonmin':P.cls,f2));
     const who=P.female?'':cm?iga(callOf(cm))+' ':'아내가 ';
     say(`${P.female?'쌍둥이를 낳았다!':who+'쌍둥이를 낳았다!'} ${f2===female?(female?'딸':'아들')+' 둘':'아들딸'}, ${gwawa(k1.name)} ${k2.name}${bat(k2.name)?'이었다':'였다'}.`,'big');ev('twins',k1.name+'·'+k2.name);}
   else say(`${P.female?`${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다.`:`${cm?iga(callOf(cm)):'아내가'} ${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다.`}${pr.guess===pr.sex?' 태몽이 맞았다.':''}`,'big');
   const kid=k1;
+  {const pc=partner?partner.cls:null;if(pc&&(pc==='cheonmin')!==(P.cls==='cheonmin')&&P.flags.kidRule){note('nobilaw');say(kcls==='cheonmin'?`${KID_RULE[P.flags.kidRule]}에 따라, 아이는 천인의 신분으로 태어났다.`:`${KID_RULE[P.flags.kidRule]}에 따라, 아이는 양인의 신분을 얻었다.`);}}
   fx({worry:-5},true);
   if(royalKid&&P.job&&P.job.k==='concubine'&&!female){promoteCon(2);}
   if(P.kids.filter(k=>!k.adopted).length===3)P.flags.askMore=1;
@@ -962,6 +965,8 @@ function yMajor(){
   if(P.job&&P.job.k==='concubine'&&P.job.lv>=6&&P.favor>=60&&P.year-(P.flags.qriseY||0)>=5&&chance(.06+royalSons()*.04))add(72,()=>queenRiseScene());
   {const sp=spouseP();if(P.female&&P.married&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.kingRole&&P.year-(P.flags.wriseY||0)>=5){const sons=P.kids.filter(k=>k.alive&&!k.female).length;if(sp.wifeDead||sons>=2&&chance(.08+sons*.04))add(60,()=>wifeRiseScene());}}
   if(!P.female&&!P.married&&P.year-(P.flags.pcheopY||0)>=3){const c=peopleOf('cheop').find(x=>x.alive);if(c&&chance(.5))add(57,()=>promoteCheopScene(c));}
+  if(P.female&&P.widowed&&!P.married&&!P.flags.widowAsked&&P.age>=18)add(62,()=>widowScene());
+  if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10&&P.st.fame>=45&&chance(.12+(P.st.fame-45)/300))add(61,()=>jeongnyeoScene());
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){
@@ -1003,6 +1008,7 @@ function yMajor(){
   return c[0][1]();
 }
 function canRemarry(){
+  if(P.flags.sujeol)return false;
   if(P.flags.noRemarry)return false;
   if(P.female&&P.cls==='yangban'&&P.year>=1485&&P.year<1894&&!(P.alt)){if(!P.seen.jaega){P.seen.jaega=1;note('jaega');say('양반가의 과부는 다시 시집갈 수 없었다. 수절의 세월이 시작되었다.');}return false;}
   return true;
