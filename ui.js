@@ -353,7 +353,7 @@ function sideLove(){
     const blur=!x.known&&P.st.wit<30;
     const nm=x.title&&x.kind!=='rival'?x.title:callOf(x);
     let bars='';
-    if(x.kind==='rival')bars=`<div class="hb r"><span>원한</span><span class="t"><i style="width:${x.grudge}%"></i></span><span>${GRUDGE[hLv(x.grudge)]}</span></div>`;
+    if(x.kind==='rival')bars=x.crushed?`<div class="fnote">${/화해/.test(x.note||'')?'묵은 감정을 풀었다.':'기세가 꺾여 다시는 그대를 넘보지 못한다.'}</div>`:`<div class="hb r"><span>원한</span><span class="t"><i style="width:${x.grudge}%"></i></span><span>${GRUDGE[hLv(x.grudge)]}</span></div><div class="hb"><span>기세</span><span class="t"><i style="width:${x.power==null?70:x.power}%"></i></span><span>${x.power==null?70:x.power}</span></div>`;
     else if(x.kind==='elder')bars=`<div class="hb"><span>사이</span><span class="t"><i style="width:${x.rel}%"></i></span><span>${x.rel>70?'두터움':x.rel>40?'무난':'싸늘함'}</span></div>`;
     else bars=`<div class="hb"><span>내 마음</span><span class="t"><i style="width:${x.h}%"></i></span><span>${HEART[hLv(x.h)]}</span></div><div class="hb"><span>그의 마음</span><span class="t ${blur?'blur':''}"><i style="width:${x.t}%"></i></span><span>${blur?'알 수 없음':HEART[hLv(x.t)]}</span></div>`;
     const open=V.openCard===x.id;

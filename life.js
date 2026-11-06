@@ -635,7 +635,7 @@ function yFlavor(){
     else{say(`어릴 적 벗 ${iga(fr.name)} 먼 곳으로 떠났다.`);fr.alive=false;fr.gone=true;}
   }
   // 악연 키우기
-  for(const r of peopleOf('rival')){if(r.alive){r.grudge=clamp(r.grudge+ri(1,6));}}
+  for(const r of peopleOf('rival')){if(r.alive&&!r.crushed&&P.year>=(r.quietUntil||0)){r.grudge=clamp(r.grudge+ri(1,4));}}
 }
 
 /* ---- 인연 생성 ---- */
@@ -934,8 +934,8 @@ function yMajor(){
     const aff=Object.values(P.people).find(x=>x.kind==='love'&&x.alive&&x.h>=55&&x.t>=55&&x.status!=='parted');
     if(P.married&&aff&&!P.flags.affairAsked&&chance(.3))add(36,()=>affairScene(aff));
     if(P.affair&&chance(.3))add(34,()=>{const x=P.people[P.affair];if(x)caughtAffair();P.affair=null;return null;});
-    const rv=peopleOf('rival').find(r=>r.alive&&r.grudge>=55);
-    if(rv&&chance(.3))add(32,()=>rivalScene(rv));
+    const rv=peopleOf('rival').find(r=>r.alive&&!r.crushed&&r.grudge>=55&&P.year>=(r.quietUntil||0));
+    if(rv&&chance(.2))add(32,()=>rivalScene(rv));
     if(P.cls==='cheonmin'&&P.sub==='nobi'&&P.wealth>=40&&!P.flags.napsokAsked)add(40,()=>napsokScene());
     if(P.female&&['yangban','jungin','sangmin'].includes(P.cls)&&P.st.know>=70&&P.st.brave>=45&&!P.married&&P.age<=30&&!Store.codex().rare.namjang&&!P.flags.namjang&&chance(.06))add(25,()=>namjangScene());
     if(P.flags.wasGisaeng&&P.married&&!P.flags.rare3&&P.year-(P.flags.wedY||0)>=5&&chance(.04))add(22,()=>{P.flags.rare3=1;rare('gisaeng2lady','정실이 세상을 떠나 그대가 집안의 안주인 자리에 올랐다. 훗날 남편이 정1품에 올라 그대는 정경부인의 칭호를 받았다. 기녀 출신으로는 전에 없던 일이라 하였다.');fx({fame:30});return null;});

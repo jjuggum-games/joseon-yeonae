@@ -336,11 +336,17 @@ function affairScene(x){
     {t:'몰래 만난다',p:.65,tags,fn:()=>{P.affair=x.id;x.status='lover';x.h=clamp(x.h+10);say(`남몰래 ${gwawa(nm)} 만나기 시작하였다.`,'big');ev('affair',x.id);}}]};
 }
 function rivalScene(r){
-  const nm=r.title||r.name;
-  return {kind:'major',title:'악연',pid:r.id,text:`${iga(nm)} 그대를 모함하는 말을 퍼뜨린다.`,opts:[
-    {t:'맞선다',p:clamp(.3+(P.st.wit+P.st.brave)/300),tags:['성공하면 상대 평판 ↓','실패하면 평판 ↓'],fn:()=>{if(chance(.3+(P.st.wit+P.st.brave)/300)){say(`${nm}의 거짓이 드러났다.`,'big');r.grudge=clamp(r.grudge+10);fx({fame:6});}else{say('맞섰으나 오히려 그대가 몰리고 말았다.');fx({fame:-12,worry:10});}}},
-    {t:'참고 견딘다',p:.8,safe:true,tags:['근심 ↑','평판 조금 ↓'],fn:()=>{fx({fame:-5,worry:10});say('입을 다물고 견디었다.');}},
-    {t:'화해를 청한다',p:clamp(.25+P.st.grace/200),tags:['악연이 풀릴 수 있음'],fn:()=>{if(chance(.25+P.st.grace/200)){r.grudge=clamp(r.grudge-45);say(`${gwawa(nm)} 묵은 감정을 풀었다.`,'big');}else{say('화해의 손길이 뿌리쳐졌다.');r.grudge=clamp(r.grudge+5);}}}]};
+  const nm=r.title||r.name;if(r.power==null)r.power=ri(60,80);
+  const pw=clamp(.3+(P.st.wit+P.st.brave)/300+(P.st.fame-(r.power||60))/400,.1,.92);
+  const pr=clamp(.25+P.st.grace/200-(r.grudge-50)/300,.05,.85);
+  return {kind:'major',title:'악연',pid:r.id,text:`${iga(nm)} 그대를 모함하는 말을 퍼뜨린다.${r.power<40?' 예전만 한 기세는 아니다.':''}`,opts:[
+    {t:'맞선다',sub:'이기면 상대의 기세와 평판이 꺾인다',p:pw,tags:['성공하면 상대 기세 ↓','실패하면 평판 ↓'],fn:()=>{
+      if(chance(pw)){r.power=clamp(r.power-ri(25,40));r.grudge=clamp(r.grudge-5);fx({fame:6});
+        if(r.power<=0){r.crushed=1;r.grudge=0;r.note=(r.note?r.note+' · ':'')+'꺾인 악연';say(`${nm}의 거짓이 낱낱이 드러났다. 사람들이 등을 돌려, ${nm}${bat(nm)?'은':'는'} 다시는 고개를 들지 못하였다.`,'big');ev('rivalwin',nm);}
+        else{r.quietUntil=P.year+ri(3,6);say(`${nm}의 거짓이 드러났다. 한동안은 잠잠할 것이다.`,'big');}}
+      else{r.power=clamp(r.power+10);r.quietUntil=P.year+2;say('맞섰으나 오히려 그대가 몰리고 말았다.');fx({fame:-12,worry:10});}}},
+    {t:'참고 견딘다',p:.8,safe:true,tags:['근심 ↑','평판 조금 ↓'],fn:()=>{fx({fame:-5,worry:10});r.grudge=clamp(r.grudge-8);r.quietUntil=P.year+ri(2,4);say('입을 다물고 견디었다. 소문은 차츰 잦아들었다.');}},
+    {t:'화해를 청한다',p:pr,tags:['악연이 풀릴 수 있음'],fn:()=>{if(chance(pr)){r.grudge=clamp(r.grudge-45);r.quietUntil=P.year+ri(4,7);if(r.grudge<25){r.crushed=1;r.note=(r.note?r.note+' · ':'')+'화해한 사이';}say(`${gwawa(nm)} 묵은 감정을 풀었다.`,'big');}else{say('화해의 손길이 뿌리쳐졌다.');r.grudge=clamp(r.grudge+5);r.quietUntil=P.year+2;}}}]};
 }
 function napsokScene(){
   P.flags.napsokAsked=1;
