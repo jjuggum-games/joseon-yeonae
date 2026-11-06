@@ -712,6 +712,7 @@ function seekLove(kind){
     o.title=fem?gh+'옹주':gh+'군';
     place=R(['종친의 잔치','왕실 사냥터','궁궐 후원','종묘 제례를 마친 길']);
   } else if(kind==='yangban'){o.cls='yangban';place=R(PLACES.yangban);}
+  else if(kind==='cheonmin'){o.cls='cheonmin';o.sub=R(['nobi','nobi','gisaeng','gwangdae']);if(o.sub==='gisaeng'&&!fem)o.sub='gwangdae';place=R(PLACES.cheonmin);}
   else {o.cls=R(['sangmin','sangmin','jungin']);place=R(PLACES[o.cls]);}
   o.place=place;
   const x=newPerson(o);
