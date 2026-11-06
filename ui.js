@@ -96,7 +96,7 @@ function mergeData(d,fromCloud){
   return n;
 }
 
-const LEN_INFO={short:['짧게','한 해가 약 10초','한 삶에 대략 10~15분'],normal:['보통','한 해가 약 18초','한 삶에 대략 20~25분'],long:['길게','한 해가 약 28초','한 삶에 대략 30~35분']};
+const LEN_INFO={short:['짧게','한 해가 약 15초','한 삶에 대략 15~20분'],normal:['보통','한 해가 약 27초','한 삶에 대략 30~35분'],long:['길게','한 해가 약 40초','한 삶에 대략 45~50분']};
 function lenNote(k){const i=LEN_INFO[k];return `<b>${i[0]}</b> · ${i[1]} · ${i[2]}<br><span class="muted">혼기(18~30세)는 조금 느리게, 어린 시절은 빠르게 흐릅니다. 선택을 고르는 시간이 들어간 대략의 시간이며, 2배속·4배속이나 ‘운명에 맡김’을 쓰면 더 짧아집니다.</span>`;}
 
 /* ===== 시작 화면 ===== */
@@ -648,3 +648,13 @@ applySettings();
 renderTitle();
 setInterval(loop,200);
 Cloud.init();
+
+/* 스페이스바: 멈춤 / 이어 가기 */
+document.addEventListener('keydown',e=>{
+  if(e.code!=='Space'&&e.key!==' ')return;
+  if(V.screen!=='play'||!P)return;
+  const t=e.target,tag=t&&t.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;
+  e.preventDefault();
+  G.paused=!G.paused;renderTop();
+});

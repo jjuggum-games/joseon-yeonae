@@ -109,7 +109,7 @@ function clsWord(){
   return '노비 집안';
 }
 function setYearMs(){
-  const base={short:10000,normal:18000,long:28000}[G.len]||18000;
+  const base={short:15000,normal:27000,long:40000}[G.len]||27000;
   const m=P.age>=18&&P.age<=30?1.5:P.age<8?.6:1;
   G.yearMs=base*m;
 }
