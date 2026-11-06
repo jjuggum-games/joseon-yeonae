@@ -342,8 +342,9 @@ function sideLove(){
   else if(V.filter==='rival')list=all.filter(x=>x.kind==='rival');
   else if(V.filter==='helper')list=all.filter(x=>x.kind==='helper');
   else list=all.filter(x=>x.kind==='elder');
-  const ord=x=>(P.target===x.id?-2:0)+(x.kind==='spouse'&&x.alive?0:1)+(x.alive?0:5)+(x.status==='parted'?3:0);
-  list.sort((a,b)=>ord(a)-ord(b)||b.h+b.t-a.h-a.t);
+  /* 처 → 첩 → 마음 깊은 순 (세상을 떠났거나 끊긴 인연은 뒤로) */
+  const ord=x=>(x.alive?0:20)+(x.status==='parted'||x.kind==='ex'?10:0)+(x.kind==='spouse'?0:x.kind==='cheop'?1:2);
+  list.sort((a,b)=>ord(a)-ord(b)||b.h-a.h||b.t-a.t);
   const card=x=>{
     const badge=x.kind==='spouse'?(x.alive?(P.female?(x.kingRole?'임금':'남편'):'아내'):'세상을 떠난 배우자'):x.kind==='ex'?'헤어진 배우자':x.kind==='friend'?'어릴 적 벗':x.kind==='rival'?(x.note||'악연'):x.kind==='helper'?x.role:x.kind==='elder'?x.title:x.kind==='cheop'?'첩':{acq:'아는 사이',crush:'짝사랑',their:'그가 연모함',mutual:'서로 연모',lover:'정인',parted:'인연이 끊김',betrothed:'정혼'}[x.status]||'';
     const off=!x.alive||x.status==='parted';

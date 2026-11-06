@@ -78,6 +78,7 @@ function buildSillok(){
   const W=[];
   if(P.peak){const t=jobTitle(P.peak),k=P.peak.k;
     if(k==='official')W.push(`문과에 급제하여 벼슬이 ${RANKS[P.peak.lv]}에 이르렀다.`);
+    else if(k==='military')W.push(P.peak.lv?`무과에 급제하여 무관으로서 ${t.replace(/\(.*\)/,'')}에 이르렀다.`:'무과를 준비하며 무예를 닦았다.');
     else if(k==='gisaeng'&&P.peak.lv>=3)W.push('명기로 이름을 팔도에 떨쳤다.');
     else if(k==='gisaeng')W.push(`${t}로 살았다.`);
     else if(k==='concubine')W.push(`후궁으로서 ${t}의 품계에 이르렀다.`);

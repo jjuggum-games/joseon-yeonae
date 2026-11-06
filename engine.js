@@ -248,11 +248,14 @@ function note(k){
   codex.notes[k]=1;Store.saveCodex();
   say(`${NOTES[k][0]}|${NOTES[k][1]}`,'note');
 }
-function jobTitle(j){if(!j)return '';const d=JOBS[j.k];return d.ladder[Math.min(j.lv,d.ladder.length-1)];}
+const COURT_DEPT={jimil:['지밀','wit'],chim:['침방','art'],su:['수방','art'],soju:['소주방','health'],saeng:['생과방','art'],sedap:['세답방','health']};
+function jobTitle(j){if(!j)return '';const d=JOBS[j.k];
+  if(j.k==='court'&&typeof P!=='undefined'&&P&&P.courtDept&&j.lv>=1){const n=COURT_DEPT[P.courtDept][0];return j.lv===1?n+' 나인':j.lv===2?n+' 상궁':P.courtDept==='jimil'?'제조상궁':'부제조상궁';}
+  return d.ladder[Math.min(j.lv,d.ladder.length-1)];}
 function setJob(k,lv){
   P.job={k,lv};const t=jobTitle(P.job);
   if(!P.titles.includes(t))P.titles.push(t);
-  const score=x=>x?((x.k==='official'?2:x.k==='queen'?5:x.k==='concubine'?3:x.k==='gisaeng'||x.k==='court'?1.4:1)*(x.lv+1)):0;
+  const score=x=>x?((x.k==='official'||x.k==='military'?2:x.k==='queen'?5:x.k==='concubine'?3:x.k==='gisaeng'||x.k==='court'?1.4:1)*(x.lv+1)):0;
   if(!P.peak||score(P.job)>=score(P.peak))P.peak={k,lv};
 }
 function statusLine(){

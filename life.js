@@ -376,9 +376,9 @@ function yJob(){
   if(k==='gisaeng'){if(J.lv===0&&a>=18){setJob('gisaeng',1);say(`기적에 ${eulreul(P.name)} 기명으로 올리고 기녀가 되었다.`,'big');note('gisaeng');}
     else if(J.lv===1&&a>=24&&P.st.art>=45&&chance(.25)){setJob('gisaeng',2);say('기방의 기생들을 거느리는 행수기생이 되었다.','big');}
     else if(J.lv>=1&&J.lv<3&&a>=20&&P.st.art>=60&&chance(.1+Math.max(0,P.st.fame-20)/300+(P.st.art-60)/400)){setJob('gisaeng',3);say(`${P.name}의 이름이 팔도에 퍼졌다. 사람들은 그대를 명기라 불렀다.`,'big');ev('fame','명기로 이름을 떨쳤다');}}
-  if(k==='court'){if(J.lv===0&&a>=18){setJob('court',1);say('관례를 치르고 정식 나인이 되었다.','big');}
-    else if(J.lv===1&&a>=28&&chance(.2+P.st.wit/250)){setJob('court',2);say('오랜 세월 끝에 상궁의 자리에 올랐다.','big');note('naemyeong');}
-    else if(J.lv===2&&a>=40&&chance(.1+P.st.wit/400)){setJob('court',3);say('궁녀들의 으뜸인 제조상궁이 되었다.','big');}}
+  if(k==='court'){if(J.lv===0&&a>=18){return courtDeptScene();}
+    else if(J.lv===1&&a>=25&&chance(.2+(P.st[courtStat()]||40)/200)){setJob('court',2);say(`오랜 세월 끝에 ${jobTitle(P.job)}의 자리에 올랐다.`,'big');note('naemyeong');}
+    else if(J.lv===2&&a>=40&&chance(.1+(P.st[courtStat()]||40)/400)){setJob('court',3);say(P.courtDept==='jimil'?'궁녀들의 으뜸인 제조상궁이 되었다.':'궁의 살림을 맡는 부제조상궁이 되었다.','big');}}
   const examY=isGwageoYear(P.year)||(P.flags.byeolsi=chance(.35));
   if(k==='scholar'&&examY&&a>=16&&a<=60&&(P.sub!=='seo'||P.year>=1777)){
     note('gwageo');const exn=isGwageoYear(P.year)?'식년시':'별시';
@@ -386,6 +386,11 @@ function yJob(){
     else{if(chance(.06+Math.max(0,P.st.know-30)/180)){const lv=P.st.know>80?4:P.st.know>65?2:0;setJob('official',lv);say(`문과에 급제하였다! ${RANKS[lv]} 벼슬을 받았다.`,'big');fx({fame:15});ev('job','문과에 급제하였다');P.home=P.cls==='yangban'?'사랑채 딸린 기와집':P.home;}else say('대과에 나아갔으나 낙방하였다.');}
   } else if(k==='scholar'&&P.sub==='seo'&&examY&&a>=18&&!P.seen.seoNo){P.seen.seoNo=1;say('서얼이라 문과에 나아갈 수 없었다. 붓을 쥔 손이 떨렸다.');fx({worry:10},true);}
   if(k==='official'&&J.lv<16&&chance(.1+(P.st.know+P.st.wit-80)/420+P.st.fame/900)){const up=chance(.25)?2:1;setJob('official',Math.min(16,J.lv+up));say(`${euro(RANKS[P.job.lv])} 승진하였다.`,P.job.lv>=12?'big':'n');if(P.job.lv>=12)ev('job',`${RANKS[P.job.lv]}에 올랐다`);}
+  if(k==='military'){
+    if(J.lv===0&&examY&&a>=17&&a<=50){note('mugwa');if(chance(.1+Math.max(0,P.st.brave-30)/170+P.st.art/1000)){setJob('military',1);say(`${isGwageoYear(P.year)?'식년시':'별시'} 무과에 급제하였다! ${jobTitle(P.job)} 자리를 받았다.`,'big');fx({fame:12});ev('job','무과에 급제하였다');}else say('무과를 보았으나 활이 과녁을 비껴갔다.');}
+    else if(J.lv>=1&&J.lv<6&&(J.lv<5||P.flags.warYear||chance(.15))&&chance(.04+Math.max(0,P.st.brave+P.st.wit-90)/650+P.st.fame/1500+(P.flags.warYear?.12:0))){setJob('military',J.lv+1);say(`${euro(jobTitle(P.job))} 올랐다.`,J.lv+1>=4?'big':'n');if(P.job.lv>=4)ev('job',`${jobTitle(P.job)}에 올랐다`);}
+  }
+  if(k==='soldier'&&J.lv>=1&&examY&&a<=45&&P.st.brave>=55&&chance(.15)){setJob('military',1);say(`군공을 인정받아 무과에 나아가 급제하였다. ${jobTitle(P.job)} 자리를 받았다.`,'big');ev('job','무과에 급제하였다');}
   if(['doctor','interp','painter','uinyeo','gwangdae','weaver','soldier','hunjang','sword','yein'].includes(k)&&J.lv<d.ladder.length-1&&a>=15){
     const st=P.st[d.stat]||P.st.art;
     if(chance(.1+(st-35)/250+(J.lv===0&&a>=20?.15:0))){setJob(k,J.lv+1);say(`${iga(d.ladder[P.job.lv])} 되었다.`+(P.job.lv===d.ladder.length-1?' 솜씨가 널리 알려졌다.':''),'big');if(P.job.lv===d.ladder.length-1)ev('job',`${iga(d.ladder[P.job.lv])} 되었다`);}}
@@ -442,6 +447,7 @@ function courtPush(){
 const JOB_DESC={
   scholar:['과거 공부','서당과 향교에서 글을 읽어 소과·문과에 나아간다. 학식이 중요하다.'],
   official:['벼슬살이','조정에서 품계를 쌓는다.'],
+  military:['무과 준비','활쏘기와 말타기, 병서를 익혀 무과에 나아간다. 급제하면 무관이 되어 병마절도사까지 오를 수 있다. 담력이 중요하다.'],
   hunjang:['서당에 다니며 글공부','글을 깨쳐 훗날 훈장이 될 수도 있다. 학식이 중요하다.'],
   sword:['검을 배운다','무예를 갈고닦아 이름난 검객이 된다. 담력이 중요하다.'],
   soldier:['군에 든다','군졸에서 초관·만호로 오른다. 담력이 중요하다.'],
@@ -470,16 +476,17 @@ function jobChoices(){
   if(P.exile)return {list:[],why:'유배 중에는 생업을 바꿀 수 없다.'};
   const F=P.female;let L=[];
   if(P.cls==='yangban'){
-    if(P.sub==='seo')L=F?['lady','weaver','hunjang','sword']:['scholar','sword','interp','doctor','painter','merchant'];
-    else L=F?['lady','weaver','hunjang','sword']:['scholar','sword','farmer','merchant','painter'];
-  } else if(P.cls==='jungin')L=F?['uinyeo','weaver','merchant','hunjang','yein']:['doctor','interp','painter','merchant','hunjang','sword'];
-  else if(P.cls==='sangmin')L=F?['weaver','merchant','farmer','hunjang','yein','uinyeo','gisaeng','court']:['farmer','merchant','soldier','sword','hunjang','yein','painter'];
+    if(P.sub==='seo')L=F?['lady','weaver','hunjang','sword']:['scholar','military','sword','interp','doctor','painter','merchant'];
+    else L=F?['lady','weaver','hunjang','sword']:['scholar','military','sword','farmer','merchant','painter'];
+  } else if(P.cls==='jungin')L=F?['uinyeo','weaver','merchant','hunjang','yein']:['doctor','interp','painter','military','merchant','hunjang','sword'];
+  else if(P.cls==='sangmin')L=F?['weaver','merchant','farmer','hunjang','yein','uinyeo','gisaeng','court']:['farmer','merchant','soldier','military','sword','hunjang','yein','painter'];
   else if(P.sub==='gwangdae')L=['gwangdae','yein'];
   else L=F?['slave','gisaeng','court']:['slave'];
   if(a>17)L=L.filter(k=>k!=='court');
   if(a>24)L=L.filter(k=>k!=='gisaeng');
   if(P.married)L=L.filter(k=>!['gisaeng','court'].includes(k));
   if(P.job&&P.job.k==='official')L=['official',...L.filter(k=>k!=='scholar')];
+  if(P.job&&P.job.k==='military'&&P.job.lv>=1)L=['military',...L.filter(k=>k!=='military')];
   if(P.job&&!L.includes(P.job.k)&&JOB_DESC[P.job.k])L.unshift(P.job.k);
   return {list:L,why:L.length<=1&&P.sub==='nobi'&&!F?'노비 사내아이에게 고를 수 있는 길은 없었다. 면천해야 다른 길이 열린다.':''};
 }
@@ -902,7 +909,7 @@ function yMajor(){
       if(isJoseon(y)&&chance(.035))add(65,()=>haremScene());
     }
     if(!P.female&&P.cls==='yangban'&&!P.married&&P.age<=22&&P.sub!=='seo'&&chance(.025))add(60,()=>bumaScene());
-    if(P.court&&P.job&&P.job.k==='court'&&P.job.lv>=1&&P.age<=32&&P.st.look>=50&&!P.married&&chance(.07))add(66,()=>seungeunScene());
+    if(P.court&&P.job&&P.job.k==='court'&&P.job.lv>=1&&P.age<=32&&P.st.look>=50&&!P.married&&chance(P.courtDept==='jimil'?.12:.04))add(66,()=>seungeunScene());
     if(P.sub==='gisaeng'&&P.job&&P.job.lv>=1&&y>=1494&&y<=1505&&P.age<=28&&P.st.art>=45&&!P.married&&chance(.12))add(66,()=>seungeunScene(true));
     // 고백·혼담
     const mut=Object.values(P.people).find(x=>x.kind==='love'&&x.alive&&x.status==='mutual'&&!x.asked);

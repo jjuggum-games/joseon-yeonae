@@ -488,3 +488,17 @@ function takeCheopScene(x){
       say(`${eulreul(nm)} 첩으로 들였다. ${sp?callOf(sp)+'의 낯빛이 어두워졌다.':''}`,'big');}},
     {t:'아직은 미룬다',p:null,safe:true,tags:[],fn:()=>{say('마음을 품은 채 때를 기다리기로 하였다.');}}]};
 }
+
+/* 궁녀의 처소 정하기 */
+function courtStat(){return P.courtDept?COURT_DEPT[P.courtDept][1]:'wit';}
+function courtDeptScene(){
+  const D=[['jimil','지밀','임금과 왕비의 침전에서 곁을 모신다. 가장 높은 처소라 출세가 빠르고, 임금의 눈에 들 일도 많다.','통찰'],
+    ['chim','침방','궁중의 옷을 짓는다.','재주'],['su','수방','옷과 장식에 수를 놓는다.','재주'],
+    ['soju','소주방','수라와 잔칫상을 차린다.','건강'],['saeng','생과방','다과와 음료를 만든다.','재주'],['sedap','세답방','빨래와 다듬이를 맡는다. 고되지만 무난하다.','건강']];
+  const opts=D.map(([k,n,sub,st])=>{const v=P.st[COURT_DEPT[k][1]]||0;const hard=k==='jimil';const p=hard?clamp(.25+P.st.wit/200+P.st.look/400):null;
+    return {t:`${n} 나인`,sub,p,tags:[`${iga(st)} 중요`,...(hard?['임금의 눈에 들 수 있음']:[])],fn:()=>{
+      if(hard&&!chance(p)){P.courtDept=R(['chim','su','saeng']);setJob('court',1);say(`지밀에 들고자 하였으나 뽑히지 못하고 ${COURT_DEPT[P.courtDept][0]}에 배치되었다.`,'big');return null;}
+      P.courtDept=k;setJob('court',1);say(`관례를 치르고 ${n}의 정식 나인이 되었다.`,'big');note('gungso');}};});
+  if(P.st.know>=35)opts.push({t:'내의원 의녀로 간다',sub:'궁녀가 아니라 의술을 익혀 궁중 여인들을 돌본다. 혼인하기도 한결 수월하다.',p:null,tags:['학식이 중요','신분: 의녀'],fn:()=>{P.court=false;P.home='내의원 근처';setJob('uinyeo',1);say('의술에 밝다는 말이 돌아 내의원 의녀로 뽑혔다.','big');note('uinyeo');}});
+  return {kind:'major',title:'궁녀 · 처소',text:'관례를 치를 나이가 되었다. 생각시를 벗고 정식 나인이 되면 평생 일할 처소가 정해진다. 어느 처소로 가겠는가.',opts};
+}
