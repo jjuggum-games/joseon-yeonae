@@ -357,7 +357,7 @@ function yJob(){
     if(P.cls==='yangban'&&!P.female&&a===10)push=['scholar','아버지가 서당에 보내 글을 읽혀 과거를 보게 하려 한다.'];
     else if(P.cls==='yangban'&&P.female&&a===10)push=['lady','어머니가 안채에서 규방 살림을 익히라 한다.'];
     else if(P.cls==='jungin'&&a===12)push=P.female?['uinyeo','부모가 의녀가 되도록 의술을 배우라 한다.']:[R(['doctor','interp','painter']),'아버지가 집안의 업을 이으라 한다.'];
-    else if(P.cls==='sangmin'&&a===12)push=P.female?['weaver','어머니가 삯바느질을 배워 살림을 도우라 한다.']:[chance(.7)?'farmer':'merchant','아버지가 집안일을 이어 받으라 한다.'];
+    else if(P.cls==='sangmin'&&a===12)push=P.female?['weaver','어머니가 삯바느질을 배워 살림을 도우라 한다.']:[chance(.7)?'farmer':'merchant','아버지가 집안일을 이어받으라 한다.'];
     else if(P.sub==='gwangdae'&&a===10)push=['gwangdae','아버지가 놀이패를 따라 줄타기와 소리를 배우라 한다.'];
     else if(P.sub==='nobi'&&a===8){setJob('slave',0);say('주인집 일을 거들기 시작하였다. 노비의 아이에게 주인의 명은 거스를 수 없는 것이었다.');}
     if(push){P.flags.careerAsked=1;return parentPush(push[0],push[1]);}
@@ -452,7 +452,7 @@ const JOB_DESC={
   yein:['예인의 길','사당패를 따라 소리와 춤을 익혀 명창·명무가 된다. 재주가 중요하다.'],
   gisaeng:['기방에 들어간다','기적에 이름을 올리고 가무와 시서를 익힌다. 명기가 될 수도 있다.'],
   court:['궁녀로 들어간다','궁에 들어가 생각시가 된다. 다시는 궁을 나올 수 없다.'],
-  lady:['규방 살림','집안 살림을 익혀 안주인·종부가 된다. 기품이 중요하다.'],
+  lady:['규방 살림','집안 살림을 익혀 안주인·종부가 된다. 매력이 중요하다.'],
   slave:['주인집 일','시키는 일을 하며 산다.']
 };
 const JOB_TAGS={gisaeng:['신분 변화: 천민(기적)','평판 ↓','다시 벗어나려면 속량해야 함'],court:['궁에 매임','혼인할 수 없음'],yein:['떠돌이 삶','평판 조금 ↓'],sword:[],hunjang:[]};
@@ -499,16 +499,9 @@ function careerScene(){
 function availFoci(){
   const a=P.age;
   if(a<7)return {list:[],why:'아직 어려 뛰놀며 자랐다.'};
-  if(a<18){
-    if(P.sub==='nobi')return {list:['wit','health','art','brave','rest'],why:''};
-    if(P.court)return {list:['grace','art','wit','know','health','rest'],why:'',forced:false};
-    if(P.cls==='yangban'&&P.female)return {list:['grace','art','know','wit','health','rest'],why:'',forced:false};
-    if(P.sub==='gisaeng')return {list:['art','grace','know','wit','health','rest'],why:'',forced:false};
-    if(P.cls==='sangmin'||P.sub==='gwangdae')return {list:['health','art','wit','rest'],why:''};
-    return {list:['know','grace','art','wit','brave','rest'],why:''};
-  }
-  const L=['know','art','grace','wit','health','wealth','love','brave','rest'];
-  if(highPlace(P)||P.realSpouse)L.push('power');
+  const L=['grace','know','art','wit','brave','health'];
+  if(a>=18){L.push('wealth','love');if(highPlace(P)||P.realSpouse)L.push('power');}
+  L.push('rest');
   return {list:L,why:''};
 }
 function defyFocus(){
@@ -728,7 +721,7 @@ function spouseScene(x){
     ['talk','임금께 시를 지어 올린다','글솜씨와 마음이 함께 전해진다'],
     ['outing','후원 산책길에 모신다',G.fest?`${G.fest.n} 놀이를 함께 즐긴다`:'꽃이 핀 후원을 함께 거닌다'],
     ['care','수라와 탕약을 손수 살핀다','정성이 눈에 띈다'],
-    ['gift','손수 수놓은 주머니를 올린다',x.known?`${taste(x.taste).n}을(를) 좋아하신다는 것을 안다`:'임금의 취향을 알면 더 잘 통한다']
+    ['gift','손수 수놓은 주머니를 올린다',x.known?`${eulreul(taste(x.taste).n)} 좋아하신다는 것을 안다`:'임금의 취향을 알면 더 잘 통한다']
   ]:[
     ['talk','속마음을 터놓는다','밤늦도록 이야기를 나눈다'],
     ['outing','함께 나들이를 간다',G.fest?`${G.fest.n} 구경을 함께 간다`:'꽃구경이나 달구경을 함께 간다'],

@@ -97,7 +97,7 @@ function mergeData(d,fromCloud){
 }
 
 const LEN_INFO={short:['짧게','한 해가 약 15초','한 삶에 대략 15~20분'],normal:['보통','한 해가 약 27초','한 삶에 대략 30~35분'],long:['길게','한 해가 약 40초','한 삶에 대략 45~50분']};
-function lenNote(k){const i=LEN_INFO[k];return `<b>${i[0]}</b> · ${i[1]} · ${i[2]}<br><span class="muted">혼기(18~30세)는 조금 느리게, 어린 시절은 빠르게 흐릅니다. 선택을 고르는 시간이 들어간 대략의 시간이며, 2배속·4배속이나 ‘운명에 맡김’을 쓰면 더 짧아집니다.</span>`;}
+function lenNote(k){const i=LEN_INFO[k];return `<b>${i[0]}</b> · ${i[1]} · ${i[2]}<br><span class="muted">혼기(18~30세)는 조금 느리게, 어린 시절은 빠르게 흐릅니다. 선택지를 고르는 시간까지 넣은 대략의 시간이며, 2배속·4배속이나 ‘운명에 맡김’을 쓰면 더 짧아집니다.</span>`;}
 
 /* ===== 시작 화면 ===== */
 function renderTitle(){
@@ -225,30 +225,30 @@ function renderMe(){
     <div class="sec">올해의 중점</div>
     ${fl.length?`<div class="foci">${FOCI.filter(f=>fl.includes(f.k)).map(f=>`<button class="btn ${P.focus===f.k?'on':''}" data-a="focus" data-v="${f.k}" title="${esc(FOCUS_DESC[f.k][0])}">${f.n}</button>`).join('')}</div>
       <div class="focusdesc">${focusNote(P.focus)}</div>
-      <div class="fnote">${'언제든 바꿀 수 있고, 바꿔도 세월은 멈추지 않습니다. 이와 별도로 나이와 직책에 따라 눈치·기품 같은 능력치가 조금씩 저절로 오릅니다.'}</div>`:`<div class="fnote">${esc(av.why||'')}</div>`}
+      <div class="fnote">${'언제든 바꿀 수 있고, 바꿔도 세월은 멈추지 않습니다. 이와 별도로 나이와 직책에 따라 통찰·매력 같은 능력치가 조금씩 저절로 오릅니다.'}</div>`:`<div class="fnote">${esc(av.why||'')}</div>`}
     ${P.titles.length?`<div class="sec">지나온 직책</div><div>${P.titles.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>`:''}`;
 }
 const FOCUS_DESC={
-  know:['학식 +3 안팎','과거 급제, 시 주고받기, 남장 과거 같은 일에 유리합니다.'],
-  art:['재주 +3 안팎 (특기가 늘어남)','기녀·광대·화원 같은 길의 출세와 명기 되기에 중요합니다.'],
-  grace:['매력 +3 안팎','첫 호감, 간택과 승은, 시댁 어른과의 사이, 화해에 유리합니다.'],
-  wit:['눈치 +3 안팎','상대의 마음과 선택지의 가능성이 또렷이 보이고, 궁중암투와 갈림길에서 유리합니다.'],
-  health:['건강 +3, 근심 -3 안팎','오래 살고, 병과 해산을 이겨 내는 데 도움이 됩니다.'],
-  wealth:['한 해 벌이가 늘어남','재산이 빨리 모여 객주·부농이 되거나 면천의 값을 마련하기 쉽습니다.'],
-  love:['만난 사람들과의 정이 조금씩 오름','인연·배우자의 내 마음 +2, 그의 마음 +3 안팎. 인연 사건의 성공 가능성도 오릅니다.'],
-  brave:['담력 +3 안팎','달아나기, 간택 피하기, 의병, 모함에 맞서기 같은 위험한 선택에 유리합니다.'],
-  power:['눈치 +1, 세력이 쌓임','역사의 갈림길에서 정사를 바꿀 가능성이 오릅니다. 궁이나 조정 가까이 있을 때만 고를 수 있습니다.'],
-  rest:['근심 -5, 건강 +1 안팎','근심이 70을 넘으면 해마다 건강이 깎이니, 그럴 때 쉬어 가십시오.']
+  grace:['해마다 매력이 2~4씩 오릅니다.','첫 호감, 간택과 승은, 시댁 어른과의 사이, 화해에 유리합니다.'],
+  know:['해마다 학식이 2~4씩 오릅니다.','과거 급제, 시 주고받기, 남장 과거 같은 일에 유리합니다.'],
+  art:['해마다 재주가 2~4씩 오르고, 특기 솜씨가 늘어납니다.','기녀·광대·화원 같은 길의 출세와 명기 되기에 중요합니다.'],
+  wit:['해마다 통찰이 2~4씩 오릅니다.','상대의 마음과 선택지의 가능성이 또렷이 보이고, 궁중암투와 역사의 갈림길에서 유리합니다.'],
+  brave:['해마다 담력이 2~4씩 오릅니다.','달아나기, 간택 피하기, 의병, 모함에 맞서기 같은 위험한 선택에 유리합니다.'],
+  health:['해마다 건강이 2~4씩 오르고, 근심이 2~4씩 줄어듭니다.','오래 살고, 병과 해산을 이겨 내는 데 도움이 됩니다.'],
+  wealth:['한 해 벌이가 늘어납니다.','재산이 빨리 모여 객주·부농이 되거나 면천할 값을 마련하기 쉽습니다.'],
+  love:['만난 사람들과의 정이 조금씩 깊어집니다.','마음에 둔 사람이 있으면 그 사람에게 몰아서 오르고, 인연 사건의 성공 가능성도 오릅니다.'],
+  power:['통찰이 조금 오르고, 세력이 쌓입니다.','역사의 갈림길에서 정사를 바꿀 가능성이 오릅니다. 궁이나 조정 가까이 있을 때만 고를 수 있습니다.'],
+  rest:['해마다 근심이 4~6씩 줄고, 건강이 조금 오릅니다.','근심이 70을 넘으면 해마다 건강이 깎이니, 그럴 때 쉬어 가십시오.']
 };
 const STAT_HELP={
   look:'용모와 기품을 합친 것입니다. 처음 만난 사람의 첫 호감을 크게 좌우하고, 높으면 사람들 눈에 띄어 먼저 다가오는 이가 생깁니다. 간택·승은·후궁의 총애, 시댁 어른과의 사이, 화해에도 유리합니다. 마흔이 넘으면 조금씩 줄어듭니다.',
   know:'시와 서책을 좋아하는 사람에게 첫 호감을 얻습니다. 과거 급제, 시 주고받기, 의원·역관·훈장의 출세, 남장 과거에 유리합니다.',
   art:'특기 솜씨입니다. 음률이나 그림을 좋아하는 사람에게 첫 호감을 얻고, 솜씨가 소문나면 먼저 다가오는 이가 생깁니다. 기녀·예인·광대·화원·침모의 출세와 명기 되기에 중요합니다.',
-  wit:'높으면 상대의 마음과 선택지의 가능성이 또렷이 보입니다(30 아래면 흐릿함). 인연 사건 성공, 승진, 후궁의 총애, 갈림길과 악연에 맞서기에 유리합니다.',
-  brave:'무예를 좋아하는 사람에게 첫 호감을 얻습니다. 달아나기, 간택이나 부모의 뜻 거스르기, 의병, 악연에 맞서기 같은 위험한 선택의 성공에 영향을 줍니다.',
-  health:'낮으면 병들거나 일찍 세상을 떠나기 쉽습니다. 마흔이 넘으면 해마다 조금씩 줄고, 몸 돌보기로 지킬 수 있습니다.',
+  wit:'사람의 속내와 일의 앞뒤를 꿰뚫어 보는 힘입니다. 담력이 위험을 무릅쓰는 배짱이라면, 통찰은 무엇이 위험한지 미리 알아보는 눈입니다. 높으면 상대의 마음과 선택지의 가능성이 또렷이 보입니다(30 아래면 흐릿함). 인연 사건 성공, 승진, 후궁의 총애, 갈림길과 악연에 맞서기에 유리합니다.',
+  brave:'겁 없이 나서는 배짱입니다. 무예를 좋아하는 사람에게 첫 호감을 얻습니다. 달아나기, 간택이나 부모의 뜻 거스르기, 의병, 악연에 맞서기 같은 위험한 선택의 성공에 영향을 줍니다.',
+  health:'낮으면 병들거나 일찍 세상을 떠나기 쉽습니다. 마흔이 넘으면 해마다 조금씩 줄고, 건강 돌보기로 지킬 수 있습니다.',
   fame:'세간의 평판입니다. 높으면 처음 만난 사람도 소문으로 알고 반가워하며, 간택, 벼슬 승진, 명기 되기, 역사의 갈림길에서 유리합니다. 소문이나 추문이 나면 깎입니다.',
-  worry:'높을수록 나쁩니다. 70을 넘으면 해마다 건강이 깎입니다. 놀며 쉬기나 몸 돌보기로 줄일 수 있습니다.'
+  worry:'높을수록 나쁩니다. 70을 넘으면 해마다 건강이 깎입니다. 놀며 쉬기나 건강 돌보기로 줄일 수 있습니다.'
 };
 function focusNote(k){const d=FOCUS_DESC[k];const f=FOCI.find(x=>x.k===k);if(!d||!f)return '';return `<b>${f.n}</b> · ${d[0]}<br>${d[1]}`;}
 function stageOf(e){
@@ -288,7 +288,7 @@ function renderFeed(force){
 }
 function awayHtml(){
   const a=V.away;const n=a.n;
-  return `<div class="awaycard"><b>그대가 자리를 비운 사이 ${n}해가 흘렀다.</b>${a.lines.length?`<ul>${a.lines.slice(-8).map(l=>`<li>${l.a}세 · ${fmt(l.t)}</li>`).join('')}</ul>`:'<div class="serif muted">큰일 없이 세월이 흘렀다.</div>'}<button class="btn sm" data-a="awayclose">닫기</button></div>`;
+  return `<div class="awaycard"><b>그대가 자리를 비운 사이 ${n}년이 흘렀다.</b>${a.lines.length?`<ul>${a.lines.slice(-8).map(l=>`<li>${l.a}세 · ${fmt(l.t)}</li>`).join('')}</ul>`:'<div class="serif muted">큰일 없이 세월이 흘렀다.</div>'}<button class="btn sm" data-a="awayclose">닫기</button></div>`;
 }
 function renderScene(){
   const box=$('#scene');if(!box)return;
@@ -352,7 +352,7 @@ function sideLove(){
   const seek=V.filter==='love'&&!canSeek?`<div class="seek"><div class="fnote" style="margin:0">열여덟 살이 되면 새 인연을 찾아 나설 수 있습니다.</div></div>`:V.filter==='love'&&canSeek?`<div class="seek"><div class="sec" style="margin-top:0">새 인연 찾아 나서기</div>${seekWait?'<div class="fnote">올해는 이미 인연을 찾아 나섰다. 해가 바뀌면 다시 나설 수 있다.</div>':`<div class="foci"><button class="btn sm" data-a="seek" data-v="royal">왕족</button><button class="btn sm" data-a="seek" data-v="yangban">양반</button><button class="btn sm" data-a="seek" data-v="common">평민</button></div>${seekWarn?`<div class="fnote" style="color:var(--bad)">${seekWarn}</div>`:''}<div class="fnote">마음에 드는 사람이 없으면, 어느 신분의 사람을 만나러 갈지 고르십시오. 누구를 만날지는 운에 달렸습니다. 한 해에 한 번 나설 수 있고, 세월은 멈추지 않습니다.</div>`}</div>`:'';
   return `${seek}<div class="filters">${F.map(([k,n])=>`<button class="btn sm ${V.filter===k?'on':''}" data-a="filter" data-v="${k}">${n}</button>`).join('')}</div>
     ${list.length?list.map(card).join(''):`<div class="muted serif" style="font-size:.9em">${V.filter==='love'?(P.age<18?'열여덟이 되면 인연이 찾아옵니다. 지금은 벗과 어울릴 나이입니다.':'아직 마음에 둔 이가 없다.'):'아직 없다.'}</div>`}
-    ${V.filter==='love'?'<div class="fnote">꼬시고 싶은 사람에게 <b>마음에 두기</b>를 눌러 두면, 두어 해에 한 번 그 사람과의 일이 찾아오고 ‘인연 돌보기’ 중점도 그 사람에게 몰아서 오릅니다. 정하지 않으면 드물게 무작위로 찾아옵니다. 눈치가 높으면 상대의 마음이 또렷이 보입니다.</div>':''}`;
+    ${V.filter==='love'?'<div class="fnote">마음이 가는 사람에게 <b>마음에 두기</b>를 눌러 두면, 두어 해에 한 번 그 사람과의 일이 찾아오고 ‘인연 돌보기’ 중점도 그 사람에게 몰아서 오릅니다. 정하지 않으면 드물게 무작위로 찾아옵니다. 통찰이 높으면 상대의 마음이 또렷이 보입니다.</div>':''}`;
 }
 function sideFam(){
   const nd=(name,sub,cls='')=>`<div class="nd ${cls}">${esc(name)}<small>${esc(sub)}</small></div>`;
@@ -392,8 +392,8 @@ function showLetter(id){const l=P.letters.find(x=>x.id===id);if(!l)return;modal(
 function showGuide(){modal(`<div class="guide"><h3>처음 오신 그대에게</h3><ol>
   <li>세월은 저절로 흐릅니다. 혼인, 인연, 역사의 갈림길처럼 <b>중요한 순간에만 멈춥니다.</b></li>
   <li>왼쪽의 <b>올해의 중점</b>은 언제든 바꿀 수 있고, 바꿔도 세월은 멈추지 않습니다.</li>
-  <li>선택지에는 <b>가능성</b>과 <b>바뀌는 것</b>이 표시됩니다. 눈치가 낮으면 가능성이 흐릿하게 보입니다.</li>
-  <li>오른쪽 <b>인연</b> 탭에서 사람마다 쌓인 정을 볼 수 있습니다. 꼬시고 싶은 사람에게 <b>마음에 두기</b>를 눌러 두면 두어 해에 한 번 그 사람과의 일이 찾아옵니다.</li>
+  <li>선택지에는 <b>가능성</b>과 <b>바뀌는 것</b>이 표시됩니다. 통찰이 낮으면 가능성이 흐릿하게 보입니다.</li>
+  <li>오른쪽 <b>인연</b> 탭에서 사람마다 쌓인 정을 볼 수 있습니다. 마음이 가는 사람에게 <b>마음에 두기</b>를 눌러 두면 두어 해에 한 번 그 사람과의 일이 찾아옵니다.</li>
   <li>점선 밑줄이 그어진 말을 누르면 풀이가 나옵니다. 선택은 되돌릴 수 없습니다.</li></ol>
   <div class="rowbtns"><button class="btn pri" data-a="close">알겠소</button></div></div>`);}
 function showJobs(){

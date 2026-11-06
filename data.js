@@ -254,21 +254,21 @@ const JOBS = {
   painter:{n:'화원',ladder:['도화서 생도','화원','이름난 화원'],stat:'art'},
   soldier:{n:'군졸',ladder:['군졸','초관','만호'],stat:'brave'}
 };
-const STATS = [['look','매력'],['know','학식'],['art','재주'],['wit','눈치'],['brave','담력']];
+const STATS = [['look','매력'],['know','학식'],['art','재주'],['wit','통찰'],['brave','담력']];
 const STATES = [['health','건강'],['fame','평판'],['worry','근심']];
 const STATN = Object.fromEntries([...STATS,...STATES,['grace','매력']]);
 const ARTS = ['가무','음률','그림','바느질','무예','시문'];
 
 /* 올해의 중점 */
 const FOCI = [
-  {k:'know',n:'글공부',st:{know:3}},
+  {k:'grace',n:'매력 가꾸기',st:{look:3}},
+  {k:'know',n:'학식 쌓기',st:{know:3}},
   {k:'art',n:'재주 익히기',st:{art:3}},
-  {k:'grace',n:'예법과 몸단장',st:{look:3}},
-  {k:'wit',n:'사람 살피기',st:{wit:3}},
-  {k:'health',n:'몸 돌보기',st:{health:3,worry:-3}},
+  {k:'wit',n:'통찰 기르기',st:{wit:3}},
+  {k:'brave',n:'담력 기르기',st:{brave:3}},
+  {k:'health',n:'건강 돌보기',st:{health:3,worry:-3}},
   {k:'wealth',n:'재산 모으기',st:{},wealth:1},
   {k:'love',n:'인연 돌보기',st:{},love:1},
-  {k:'brave',n:'담력 기르기',st:{brave:3}},
   {k:'power',n:'세력 모으기',st:{wit:1},power:1},
   {k:'rest',n:'놀며 쉬기',st:{worry:-5,health:1}}
 ];

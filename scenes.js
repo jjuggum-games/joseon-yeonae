@@ -401,7 +401,7 @@ function willScene(){
   if(sons.length&&kids.length>1)opts.push({t:'맏아들에게 몰아준다',sub:'집안의 대를 잇게 한다',p:null,fn:()=>{P.heirs=`가산은 맏아들 ${sons[0].name}에게 물려주었다.`;return finishLife();}});
   if(kids.length>1)opts.push({t:'아들딸 고르게 나눈다',p:null,fn:()=>{P.heirs=`가산은 ${kids.length}남매에게 고르게 나누어 주었다.`;return finishLife();}});
   else opts.push({t:`${kids[0].female?'외동딸':'외아들'} ${kids[0].name}에게 물려준다`,p:null,fn:()=>{P.heirs=`가산은 ${kids[0].female?'외동딸':'외아들'} ${kids[0].name}에게 물려주었다.`;return finishLife();}});
-  opts.push({t:'일부를 어려운 이웃에게 남긴다',p:null,fn:()=>{P.heirs='가산의 얼마를 굶주린 이웃에게 나누어 주라 하였다.';fx({fame:5},true);return finishLife();}});
+  opts.push({t:'일부를 어려운 이웃에게 남긴다',p:null,fn:()=>{P.heirs='가산의 일부를 굶주린 이웃에게 나누어 주라 하였다.';fx({fame:5},true);return finishLife();}});
   return {kind:'death',title:'유언',text:`남길 재산은 ${money(P.wealth)}. 어떻게 나눌 것인가.`,opts};
 }
 function closeScene(){
