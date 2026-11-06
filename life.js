@@ -714,13 +714,13 @@ function targetP(){const x=P.target&&P.people[P.target];if(!x||!x.alive||x.statu
 function yLoveEvent(){
   if(!loveAllowed())return;
   const tg=targetP();
-  if(tg){
+  if(tg&&tg.kind!=='spouse'){
     if(P.lastLove&&P.year-P.lastLove<2)return;
     if(!chance(G.fest?.7:.5))return;
     P.lastLove=P.year;return loveScene(tg);
   }
-  /* 배우자와의 일은 사이가 틀어졌을 때만 찾아온다 */
-  const pool=Object.values(P.people).filter(x=>(x.kind==='love'&&x.status!=='parted'||x.kind==='spouse'&&(x.t<35||x.h<30))&&x.alive);
+  /* 혼인한 뒤의 배우자와는 따로 인연 사건이 뜨지 않는다 */
+  const pool=Object.values(P.people).filter(x=>x.kind==='love'&&x.status!=='parted'&&x.alive);
   if(!pool.length)return;
   if(P.lastLove&&P.year-P.lastLove<2)return;
   if(!chance(.3))return;
