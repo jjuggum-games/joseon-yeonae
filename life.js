@@ -517,6 +517,7 @@ function availFoci(){
   const a=P.age;
   if(a<7)return {list:[],why:'아직 어려 뛰놀며 자랐다.'};
   const L=['grace','know','art','wit','brave','health'];
+  if(a>=12)L.push('fame');
   if(a>=18){L.push('wealth','love');if(highPlace(P)||P.realSpouse)L.push('power');}
   L.push('rest');
   return {list:L,why:''};

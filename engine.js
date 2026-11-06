@@ -257,7 +257,10 @@ function jobTitle(j){if(!j)return '';const d=JOBS[j.k];
   if(j.k==='court'&&typeof P!=='undefined'&&P&&P.courtDept&&j.lv>=1){const n=COURT_DEPT[P.courtDept][0];return j.lv===1?n+' 나인':j.lv===2?n+' 상궁':P.courtDept==='jimil'?'제조상궁':'부제조상궁';}
   return d.ladder[Math.min(j.lv,d.ladder.length-1)];}
 function setJob(k,lv){
-  P.job={k,lv};const t=jobTitle(P.job);
+  const prev=P.job;
+  P.job={k,lv};
+  /* 승진하거나 급제하면 평판이 크게 오른다 */
+  if(prev&&typeof fx==='function'&&((prev.k===k&&lv>prev.lv)||(prev.k!==k&&['official','military'].includes(k))||(prev.k==='scholar'&&k==='scholar'&&lv>prev.lv)))fx({fame:ri(6,12)+Math.min(8,lv)});const t=jobTitle(P.job);
   if(!P.titles.includes(t))P.titles.push(t);
   const score=x=>x?((x.k==='official'||x.k==='military'?2:x.k==='queen'?5:x.k==='concubine'?3:x.k==='gisaeng'||x.k==='court'?1.4:1)*(x.lv+1)):0;
   if(!P.peak||score(P.job)>=score(P.peak))P.peak={k,lv};

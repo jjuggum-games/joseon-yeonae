@@ -268,6 +268,7 @@ const FOCI = [
   {k:'wit',n:'통찰 기르기',st:{wit:3}},
   {k:'brave',n:'담력 기르기',st:{brave:3}},
   {k:'health',n:'건강 돌보기',st:{health:3,worry:-3}},
+  {k:'fame',n:'평판 쌓기',st:{fame:3}},
   {k:'wealth',n:'재산 모으기',st:{},wealth:1},
   {k:'love',n:'인연 돌보기',st:{},love:1},
   {k:'power',n:'세력 모으기',st:{wit:1},power:1},
