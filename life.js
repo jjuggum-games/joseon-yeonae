@@ -10,7 +10,7 @@ const Store={
   codex(){if(!this._codex)this._codex=Object.assign({cls:{},titles:{},kings:{},branches:{},rare:{},notes:{}},this.get(this.k.codex,{}));return this._codex;},
   saveCodex(){this.put(this.k.codex,this.codex());this.changed('codex');},
   hist(){return this.get(this.k.hist,[]);},
-  addHist(h){const a=this.hist();a.unshift(h);this.put(this.k.hist,a.slice(0,300));this.changed('hist',h);},
+  addHist(h){const a=this.hist();a.unshift(h);a.forEach((x,i)=>{if(i>=15&&x.log)delete x.log;});let b=a.slice(0,300);if(!this.put(this.k.hist,b)){b.forEach((x,i)=>{if(i>=1&&x.log)delete x.log;});this.put(this.k.hist,b);}this.changed('hist',h);},
   saveCur(){if(!P)return;if(P.dead||P.closed){this.clearCur();return;}this.put(this.k.cur,P);this.changed('cur');},
   loadCur(){return this.get(this.k.cur,null);},
   clearCur(){try{localStorage.removeItem(this.k.cur);}catch(e){}this.changed('cur');},

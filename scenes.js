@@ -447,6 +447,8 @@ function finishLife(closed){
   Store.saveCodex();
   const h={id:P.id,name:displayName(),sur:P.sur,bon:P.bon,cls:P.cls,female:P.female,born:P.born,death:P.deathYear,age:P.age,closed:!!closed,
     title:sl.title,epithet:sl.epithet,kids:P.kids.filter(k=>!k.adopted).length,origin:originText(P),alt:P.alt?P.alt.title:null,sillok:sl,peak:P.peak?jobTitle(P.peak):''};
+  /* 한 해 한 해의 기록 (가볍게 줄여서) */
+  h.log=P.feed.map(e=>[e.y,e.a,e.lab+(e.gz?' '+e.gz:''),e.lines.filter(l=>l.c!=='chg').map(l=>[l.c==='big'?1:0,l.t])]).filter(r=>r[3].length);
   Store.addHist(h);Store.clearCur();
   if(typeof UI!=='undefined')UI.onEnd(h);
   return null;
@@ -538,7 +540,7 @@ function throneScene(){
   const nm=self?displayName():callOf(x);const tt=self?(P.job?jobTitle(P.job):'왕자'):(x.title||nm);
   P.flags.throneY=P.year;
   const p=clamp(.06+(P.st.wit+P.st.fame)/650+(P.focus==='power'?.1:0)+(P.flags.throneWait||0)*.06,.05,.6);
-  const kingName=tt.replace(/(대군|군|왕자)$/,'')+'왕';
+  const base=tt.replace(/(대군|군|왕자|세자)$/,'').trim();const kingName=(base||(self?P.name:(x&&x.name))||'새')+'왕';
   return {kind:'major',title:'보위를 넘보다',pid:x?x.id:undefined,text:`${self?'그대의 몸에 흐르는 것은 왕실의 피다.':`${eunneun(nm)} 왕실의 핏줄이다.`} 요사이 임금의 자리가 흔들린다는 말이 궐 안팎에 돈다. ${self?'스스로 보위에 오를':`${eulreul(nm)} 보위에 올릴`} 수 있다면, 그대는 ${self?'임금':'중전'}이 될 것이다. 그러나 실패하면 역모다.`,opts:[
     {t:'세력을 모아 거사를 꾀한다',sub:'통찰과 평판, 세력 모으기가 도움이 된다',p,tags:['역사의 갈림길','실패하면 유배나 사약'],fn:()=>{
       note('branch');

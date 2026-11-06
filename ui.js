@@ -488,7 +488,7 @@ function renderSillok(h,fresh){
     <div class="mt">${esc(sl.origin)} · ${sl.born}–${sl.death} · ${h.closed?'실록이 닫힘':'향년 '+sl.age+'세'}</div>
     ${sl.sections.map(s=>`<div class="s ${s.alt?'alt':''} ${s.verdict?'v':''}"><h4>${esc(s.h)}</h4><p>${fmt(s.b)}</p></div>`).join('')}
     ${sl.letter?`<div class="s"><h4>남은 서찰</h4><div class="lttr">${esc(sl.letter.text)}</div><div class="muted" style="font-size:.8em;text-align:right">— ${esc(sl.letter.from)}${sl.letter.from==='그대'?'가 남긴 글':'의 글'}, ${sl.letter.y}년</div></div>`:''}
-    </div>${newc}
+    </div>${lifeLog(h)}${newc}
     <div class="rowbtns" style="margin-top:22px">
       <button class="btn" data-a="saveimg">이미지로 저장</button>${!window.claude&&navigator.canShare?'<button class="btn" data-a="shareimg">이미지 공유</button>':''}
       <button class="btn" data-a="copytext">글로 복사</button>
@@ -715,6 +715,7 @@ document.addEventListener('click',async e=>{
     case 'copycode':try{await navigator.clipboard.writeText($('#codeOut').value);toast('옮기기 코드를 복사했습니다.');}catch(err){$('#codeOut').select();toast('코드를 길게 눌러 직접 복사해 주십시오.');}break;
     case 'savecode':{let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(err){}if(!dl){toast('이 화면에서는 파일 저장을 쓸 수 없습니다. 코드 복사를 이용해 주십시오.');return;}try{await dl.save({filename:'조선연애실록-기록.txt',data:$('#codeOut').value});}catch(err){}break;}
     case 'loadcode':{try{const d=await readCode($('#codeIn').value);const n=mergeData(d);toast(`기록을 합쳤습니다. 새로 들어온 삶 ${n}개.`);renderTransfer();}catch(err){toast('코드를 읽지 못하였습니다. 처음부터 끝까지 빠짐없이 붙여 넣었는지 확인해 주십시오.');}break;}
+    case 'lljump':{const e=document.getElementById('llLast');if(e){e.open=true;e.scrollIntoView({behavior:'smooth',block:'start'});}break;}
     case 'saveimg':if(V.viewing)saveImage(V.viewing.sillok,'save');break;
     case 'shareimg':if(V.viewing)saveImage(V.viewing.sillok,'share');break;
     case 'copytext':{const h=V.viewing;if(!h)return;try{await navigator.clipboard.writeText(sillokText(h.sillok));toast('실록을 글로 복사했습니다.');}catch(err){toast('복사하지 못하였습니다.');}break;}
@@ -739,3 +740,12 @@ document.addEventListener('keydown',e=>{
 });
 
 document.addEventListener('change',e=>{const s=e.target.closest&&e.target.closest('select[data-kedu]');if(!s||!P)return;const k=P.kids.find(x=>x.id===s.dataset.kedu);if(!k)return;k.edu=s.value;Store.saveCur();say(`${k.female?'딸':'아들'} ${k.name}의 배움을 ‘${EDU[k.edu][0]}’ 쪽으로 정하였다.`);V.dirty.feed=1;toast(`${k.name}: ${EDU[k.edu][0]}`);});
+
+function lifeLog(h){
+  const L=h.log;if(!L||!L.length)return '';
+  const last=L.length-1;
+  return `<details class="lifelog"><summary>한 해 한 해의 기록 펼쳐 보기 <span class="muted">(${L.length}해)</span></summary>
+    <div class="ll-tools"><button class="btn sm ghost" data-a="lljump">마지막 해로</button></div>
+    ${L.map((r,i)=>`<details class="ll-y" ${i===last?'open id="llLast"':''}><summary><b>${esc(r[2])}</b> <span class="muted">· ${r[1]}세</span></summary>${r[3].map(([b,t])=>`<p class="${b?'big':''}">${fmt(t)}</p>`).join('')}</details>`).join('')}
+  </details>`;
+}
