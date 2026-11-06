@@ -380,9 +380,20 @@ function yEnd(){
 }
 function causeText(){
   if(P.cause)return P.cause;
-  const a=P.age;
-  if(a>=70)return '천수를 누리고';if(a>=55)return '노환으로';
-  return R(['병을 얻어','열병을 앓다가','갑작스러운 병으로','오래 앓던 끝에']);
+  const a=P.age,y=P.year;
+  /* 조선 사람들이 실제로 앓고 겪던 일들 */
+  const L=[];const add=(w,t)=>L.push([t,w]);
+  if(a>=70)add(10,'천수를 누리고');
+  if(a>=55){add(4,'노환으로');add(3,'중풍으로 쓰러져');add(2,'기력이 쇠하여');add(1,'소갈증(당뇨)이 깊어져');add(2,'해수병(기침병)이 도져');}
+  if(a>=40){add(2,'등창이 도져');add(1,'중풍으로 쓰러져');add(1,'소갈증(당뇨)이 깊어져');add(1,'적취(배 속 덩어리)를 앓다가');}
+  add(3,'염병(장티푸스)을 앓다가');add(2,'학질(말라리아)에 걸려');add(2,'이질을 앓다가');add(2,'노채(폐결핵)로 오래 앓다가');
+  add(1,'토사곽란으로');add(1,'종기가 덧나');add(1,'홍역을 앓다가');add(1,'갑작스러운 병으로');add(1,'급체하여');
+  if(a<60){add(.5,'물에 빠져');add(.4,'낙상하여');}
+  if(!['yangban','royal'].includes(P.cls)){add(.6,'산에서 호환(범에게 물림)을 당하여');add(.6,'고된 일 끝에 병을 얻어');}
+  if(P.female&&a<45)add(.8,'산후병으로');
+  if(y>=1821)add(typeof PLAGUES!=='undefined'&&PLAGUES.includes(y)?8:1,'괴질(콜레라)에 걸려');
+  if(P.st.worry>70)add(3,'화병이 깊어져');
+  return wpick(L);
 }
 function deathScene(){
   P.dying=true;
