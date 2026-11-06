@@ -173,6 +173,9 @@ function marryOpts(x,afterFail){
 function refuse(x,afterFail){say('집안 어른들이 펄쩍 뛰며 반대하였다. 혼인은 이루어지지 않았다.','big');fx({worry:12,fame:-3});x.blocked=P.year;return null;}
 function marryScene(x){
   const nm=callOf(x);
+  if(x.isKing&&P.female)return {kind:'major',title:'임금의 여인',pid:x.id,text:`임금에게 혼인이란 없다. 그 곁에 서려면 후궁으로 들어가야 한다. 한번 들어가면 다시는 궁을 나올 수 없다.`,opts:[
+    {t:'후궁으로 들어간다',p:clamp(.35+x.h/200),tags:['신분 변화: 후궁','다른 인연은 끊어짐'],fn:()=>{if(!chance(clamp(.35+x.h/200))){say('임금의 마음은 아직 그대에게 오지 않았다.');x.blocked=P.year;return null;}delete P.people[x.id];if(P.target===x.id)P.target=null;const k=realKing(P.year);kingSpouse(k);setJob('concubine',0);P.favor=60;say('임금의 부름을 받아 후궁으로 궁에 들었다.','big');ev('seungeun',k.n);Object.values(P.people).forEach(y=>{if(y.kind==='love'&&y.status!=='parted')y.status='parted';});}},
+    {t:'마음만 간직한다',p:null,safe:true,tags:[],fn:()=>{say('임금을 향한 마음을 가슴에 묻었다.');}}]};
   if(P.married&&!P.female)return takeCheopScene(x);
   return {kind:'major',title:'청혼',pid:x.id,text:`${P.court?'궁녀의 몸이다. 혼인이 이루어지면 궁을 떠나야 하고, 평판이 크게 깎인다. ':''}${P.preg&&P.preg.father===x.id?'뱃속의 아이를 생각하며, ':''}${nm}에게 혼인을 청한다. ${nm}${bat(nm)?'은':'는'} ${personInfo(x)}이다. 신분에 따라 맺어지는 길이 다르다.`,opts:[...marryOpts(x),{t:'아직은 미룬다',p:null,safe:true,tags:[],fn:()=>{say('혼인을 미루었다.');}}]};
 }
@@ -248,6 +251,14 @@ function wed(x,silent,elope){
   if(!x.rank&&x.cls==='yangban'&&!x.female)x.rank=ri(0,9);
   P.spouse=x.id;P.married=true;P.widowed=false;P.flags.wedY=P.year;P.rejects=0;
   ev('marry',x.id,{love,elope:!!elope,mode:x.mode||'wife'});
+  if(P.female&&x.seja){setJob('queen',0);P.court=true;P.home='세자궁(동궁)';}
+  else if(!P.female&&x.cls==='royal'&&x.female&&!(P.job&&P.job.k==='buma')){setJob('buma',0);}
+  /* 혼인한 여인은 무엇이든 자리가 생긴다 */
+  else if(P.female&&!x.kingRole){
+    if(x.cls==='royal'&&!(P.job&&['queen','concubine'].includes(P.job.k)))setJob('royalwife',/대군/.test(x.title||'')?1:0);
+    else if(['yangban','jungin','royal'].includes(P.cls)&&(!P.job||!JOB_KEEP.includes(P.job.k)||P.job.k==='lady'))setJob('lady',1);
+    else if(!P.job||!JOB_KEEP.includes(P.job.k))setJob('housewife',0);
+  }
   const cx=Store.codex();
   if(silent)return;
   note('honrye');
@@ -261,7 +272,7 @@ function wed(x,silent,elope){
   if(P.female){
     if(P.year>=1600){say('혼례를 치르고 신행길에 올라 시댁으로 들어갔다.');P.home=`시댁 (${HOMES[x.cls==='royal'?'yangban':x.cls]||'초가'})`;}
     else{say('혼례 뒤 한동안 신랑이 친정에 머물렀다. 몇 해 뒤 시댁으로 옮겨 갔다.');P.home=`시댁 (${HOMES[x.cls==='royal'?'yangban':x.cls]||'초가'})`;}
-    if(['yangban','jungin','royal'].includes(P.cls))setJob('lady',1);
+
     if(chance(.45)&&x.cls!=='cheonmin'){P.flags.jongga=1;}
     if(x.cls!=='cheonmin'){const el=newPerson({kind:'elder',female:true,cls:x.cls,born:P.year-ri(40,52),title:'시어머니',rel:ri(25,60)});el.name='시어머니';P.elder=el.id;}
     if(P.cls==='yangban'&&chance(.3)){const r=newPerson({kind:'rival',female:true,cls:'yangban',born:P.year-ri(18,30),grudge:25});r.title=`동서 ${r.sur}씨`;r.note='시댁의 동서';}
@@ -518,4 +529,29 @@ function courtDeptScene(){
       P.courtDept=k;setJob('court',1);say(`관례를 치르고 ${n}의 정식 나인이 되었다.`,'big');note('gungso');}};});
   if(P.st.know>=35)opts.push({t:'내의원 의녀로 간다',sub:'궁녀가 아니라 의술을 익혀 궁중 여인들을 돌본다. 혼인하기도 한결 수월하다.',p:null,tags:['학식이 중요','신분: 의녀'],fn:()=>{P.court=false;P.home='내의원 근처';setJob('uinyeo',1);say('의술에 밝다는 말이 돌아 내의원 의녀로 뽑혔다.','big');note('uinyeo');}});
   return {kind:'major',title:'궁녀 · 처소',text:'관례를 치를 나이가 되었다. 생각시를 벗고 정식 나인이 되면 평생 일할 처소가 정해진다. 어느 처소로 가겠는가.',opts};
+}
+
+const JOB_KEEP=['gisaeng','court','uinyeo','weaver','merchant','farmer','jumo','mudang','nurse','herb','hunjang','yein','sanpa','bangmul','haenyeo','dyer','poet','slave','gwangdae','sword','monk','queen','concubine','royalwife','lady'];
+/* 왕실과 혼인한 이가 보위를 넘보는 일 */
+function throneScene(){
+  const self=!P.female&&P.cls==='royal';const x=self?null:spouseP();
+  const nm=self?displayName():callOf(x);const tt=self?(P.job?jobTitle(P.job):'왕자'):(x.title||nm);
+  P.flags.throneY=P.year;
+  const p=clamp(.06+(P.st.wit+P.st.fame)/650+(P.focus==='power'?.1:0)+(P.flags.throneWait||0)*.06,.05,.6);
+  const kingName=tt.replace(/(대군|군|왕자)$/,'')+'왕';
+  return {kind:'major',title:'보위를 넘보다',pid:x?x.id:undefined,text:`${self?'그대의 몸에 흐르는 것은 왕실의 피다.':`${eunneun(nm)} 왕실의 핏줄이다.`} 요사이 임금의 자리가 흔들린다는 말이 궐 안팎에 돈다. ${self?'스스로 보위에 오를':`${eulreul(nm)} 보위에 올릴`} 수 있다면, 그대는 ${self?'임금':'중전'}이 될 것이다. 그러나 실패하면 역모다.`,opts:[
+    {t:'세력을 모아 거사를 꾀한다',sub:'통찰과 평판, 세력 모으기가 도움이 된다',p,tags:['역사의 갈림길','실패하면 유배나 사약'],fn:()=>{
+      note('branch');
+      if(chance(p)){
+        const from=P.year+1;P.alt={year:P.year,king:kingName,from};ev('branch',`${self?'그대':nm}${self?'가':bat(nm)?'이':'가'} 보위에 올라 ${iga(kingName)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});
+        if(self){setJob('king',0);P.home='대전';P.court=true;say(`거사가 성공하였다. 이듬해 그대가 보위에 올랐다. 이 판의 역사에서 그대는 ${kingName}이다.`,'big');}
+        else{x.kingRole=true;x.title=kingName;x.rank=20;setJob('queen',1);P.home='중궁전';P.court=true;say(`거사가 성공하였다. ${iga(nm)} 보위에 올라 ${iga(kingName)} 되었고, 그대는 중전이 되었다.`,'big');}
+        fx({fame:30,worry:-10});
+      } else {
+        say('거사가 미리 새어 나갔다. 역모로 몰렸다.','big');fx({fame:-25,worry:25});
+        if(x&&chance(.5)){x.alive=false;say(`${iga(nm)} 사약을 받았다.`,'big');P.married=false;P.widowed=true;P.ev.push({type:'widow',y:P.year,a:P.age,t:nm});}
+        punish({});
+      }}},
+    {t:'때를 기다린다',sub:'세력을 더 모은 뒤 다시 노린다',p:null,safe:true,tags:['다음 기회에 성공 가능성 ↑'],fn:()=>{P.flags.throneWait=(P.flags.throneWait||0)+1;say('은밀히 사람을 모으며 때를 기다렸다.');}},
+    {t:'욕심을 버린다',p:null,safe:true,tags:['근심 ↓'],fn:()=>{P.flags.noThrone=1;fx({worry:-6});say(self?'보위에 대한 마음을 접고 조용히 살기로 하였다.':`${eulreul(nm)} 말려, 보위에 대한 마음을 접게 하였다.`);}}]};
 }
