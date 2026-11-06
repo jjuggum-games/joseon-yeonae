@@ -44,20 +44,23 @@ const Music={
     this.ensure();
     if(SET.music)this.play(true);
   },
-  want(m){this.mode=m;if(!SET.music||!this.unlocked||document.hidden){this.stop();return;}this.play();},
+  want(m){this.mode=m;if(!SET.music||!this.unlocked){this.pause();return;}this.play();},
   play(force){
     const m=this.mode||'calm';this.ensure();
-    if(!force&&this.cur===m&&!this.el.paused)return;
+    /* 같은 분위기의 곡이 이미 걸려 있으면 처음부터 다시 틀지 않고 멈춘 자리에서 이어 튼다 */
+    if(!force&&this.cur===m&&this.el.src){if(this.el.paused)this.resume();return;}
     const list=this.tr[m];const src=m==='calm'?list[this.ci%list.length]:R(list);
     this.cur=m;this.el.loop=m==='sad';this.el.src=src;this.el.volume=.5;
-    const p=this.el.play();if(p&&p.catch)p.catch(()=>{this.blocked=true;this.cur=null;});
+    this.resume();
   },
-  onEnd(){if(this.cur==='tense')this.mode='calm';else if(this.cur==='calm')this.ci++;this.cur=null;if(SET.music&&!document.hidden)this.play();},
-  stop(){if(this.el&&!this.el.paused)this.el.pause();this.cur=null;}
+  resume(){if(!this.el||!this.el.src)return;const p=this.el.play();if(p&&p.catch)p.catch(()=>{this.blocked=true;});},
+  onEnd(){if(this.cur==='tense')this.mode='calm';else if(this.cur==='calm')this.ci++;this.cur=null;if(SET.music)this.play();},
+  pause(){if(this.el&&!this.el.paused)this.el.pause();},
+  stop(){this.pause();}
 };
 ['click','touchend','keydown'].forEach(t=>document.addEventListener(t,()=>{
   if(!Music.unlocked){Music.unlock();return;}
-  if(Music.blocked&&SET.music){Music.blocked=false;Music.play(true);}
+  if(Music.blocked&&SET.music){Music.blocked=false;Music.play();}
 },true));
 
 /* ===== 클라우드 (Claude 계정에 로그인한 경우) ===== */
@@ -570,9 +573,9 @@ function frame(){
 }
 function loop(){const now=performance.now();if(V.screen==='play'&&P&&!P.dead&&!P.closed){if(tick(now))V.dirty.feed=1;}else G.lastT=now;frame();}
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){G.hidden=true;if(V.screen==='play'&&P){G.away={y0:P.year,lines:[]};Store.saveCur();Cloud.flush&&Cloud.on&&Cloud.flush('cur');}Music.stop();}
+  if(document.hidden){G.hidden=true;if(V.screen==='play'&&P){G.away={y0:P.year,lines:[]};Store.saveCur();Cloud.flush&&Cloud.on&&Cloud.flush('cur');}}
   else{G.hidden=false;loop();if(G.away&&P&&V.screen==='play'){const n=P.year-G.away.y0;if(n>=1||G.away.lines.length)V.away={n,lines:G.away.lines};V.dirty.feed=V.dirty.top=V.dirty.me=V.dirty.side=1;}G.away=null;
-    if(V.screen==='play'&&G.scene&&G.scene.kind==='death')Music.want('sad');else if(V.screen==='end')Music.want('sad');else Music.want('calm');}
+    if(SET.music&&Music.unlocked&&Music.el&&Music.el.paused)Music.resume();}
 });
 
 /* ===== 클릭 ===== */
@@ -594,7 +597,7 @@ document.addEventListener('click',async e=>{
     case 'pause':G.paused=!G.paused;renderTop();break;
     case 'speed':G.speed=+v;SET.speed=+v;Store.saveSettings(SET);renderTop();break;
     case 'auto':G.auto=!G.auto;SET.auto=G.auto;Store.saveSettings(SET);if(G.auto&&G.scene)G.autoAt=performance.now()+800;renderTop();break;
-    case 'music':SET.music=!SET.music;saveSet();if(SET.music){Music.unlock();Music.mode=Music.mode||'calm';Music.play(true);}else Music.stop();
+    case 'music':SET.music=!SET.music;saveSet();if(SET.music){Music.unlock();Music.mode=Music.mode||'calm';Music.play();}else Music.pause();
       if(V.screen==='title')renderTitle();else if(V.screen==='play'){renderTop();if($('#modal'))showSettings();}break;
     case 'font':SET.font=(SET.font+1)%3;saveSet();renderTitle();break;
     case 'dark':SET.dark=!SET.dark;saveSet();renderTitle();break;
