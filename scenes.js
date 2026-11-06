@@ -450,7 +450,7 @@ function homeScene(){
       {t:'딱 잘라 거절한다',p:null,safe:true,tags:['평판 조금 ↓'],fn:()=>{fx({fame:-3});say(`${iga(who)} 서운한 얼굴로 돌아갔다.`);}}]};});
   if(parentAlive()&&P.age>=25)L.push(()=>{const c=amt(.12);const pw=P.parents.f.alive&&P.parents.m.alive?R(['아버지','어머니']):P.parents.f.alive?'아버지':'어머니';
     return {kind:'major',title:'집안 · 부모',text:`${pw}가 병석에 누웠다는 기별이 왔다. 약값도 들고, 곁을 지키려면 손이 많이 간다.`,opts:[
-      {t:'곁에서 정성껏 모신다',sub:'약값과 품이 든다',p:null,tags:['재산 ↓','평판 ↑','부모와 사이 ↑'],fn:()=>{prel();P.parentRel=clamp(P.parentRel+12);fx({wealth:-c,fame:6,worry:5,health:-2});say(`${pw}의 곁을 지키며 탕약을 달였다. 효성이 지극하다는 말이 고을에 퍼졌다.`);}},
+      {t:'곁에서 정성껏 모신다',sub:'약값과 품이 든다',p:null,tags:['재산 ↓','평판 ↑','부모와 사이 ↑'],fn:()=>{P.flags.filial=1;prel();P.parentRel=clamp(P.parentRel+12);fx({wealth:-c,fame:6,worry:5,health:-2});say(`${pw}의 곁을 지키며 탕약을 달였다. 효성이 지극하다는 말이 고을에 퍼졌다.`);}},
       {t:'약값만 보낸다',p:null,tags:['재산 ↓'],fn:()=>{fx({wealth:-c*.6});say('약값을 보내고 소식만 기다렸다.');}},
       ...(sib.length?[{t:'형제에게 맡긴다',p:null,safe:true,tags:['부모와 사이 ↓'],fn:()=>{prel();P.parentRel=clamp(P.parentRel-8);fx({worry:3});say('형제에게 병구완을 맡겼다. 마음 한쪽이 무거웠다.');}}]:[])]};});
   if(sib.length&&free&&W>=U*8)L.push(()=>{const s=sib[0];const nm=s.name;const c=amt(.25);
@@ -459,7 +459,7 @@ function homeScene(){
       {t:'정중히 사양한다',p:null,safe:true,tags:[],fn:()=>{say(`${nm}에게 형편이 어렵다며 사양하였다.`);}}]};});
   if(fam||chance(.25)&&W>=U*10)L.push(()=>{const c=amt(.15);
     return {kind:'major',title:'고을 · 흉년',text:`${fam?'흉년이 들어':'봄 보릿고개에'} 고을에 굶는 이가 늘었다. 이웃들이 그대의 집 앞을 기웃거린다.`,opts:[
-      {t:'곳간을 열어 나눈다',p:null,tags:['재산 ↓','평판 크게 ↑'],fn:()=>{fx({wealth:-c,fame:10,worry:-3});say('곳간을 열어 죽을 쑤어 나누었다. 사람들이 그대의 집을 향해 절을 하였다.','big');}},
+      {t:'곳간을 열어 나눈다',p:null,tags:['재산 ↓','평판 크게 ↑'],fn:()=>{P.flags.charity=1;fx({wealth:-c,fame:10,worry:-3});say('곳간을 열어 죽을 쑤어 나누었다. 사람들이 그대의 집을 향해 절을 하였다.','big');}},
       {t:'조금만 나눈다',p:null,tags:['재산 조금 ↓','평판 ↑'],fn:()=>{fx({wealth:-c*.3,fame:3});say('쌀 몇 됫박을 나누어 주었다.');}},
       {t:'문을 걸어 잠근다',p:null,safe:true,tags:['평판 ↓'],fn:()=>{fx({fame:-5});say('문을 걸어 잠갔다. 담 너머로 원망하는 소리가 들렸다.');}}]};});
   if(free&&W>=U*25&&!P.flags.bigHome)L.push(()=>{const c=amt(.3);

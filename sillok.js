@@ -153,7 +153,50 @@ function verdict(ep,dn){
     '긴 세월을 견딘 사람':'많은 이를 먼저 보내고 오래 살았다. 그 세월의 무게를 홀로 견디었다.',
     '난세를 살다 간 한 사람':'크게 이름을 남기지는 않았으나, 제 몫의 사랑과 슬픔을 다 겪고 갔다.'
   };
-  return `${m[ep]||m['난세를 살다 간 한 사람']}`;
+  /* 첫머리: 별호에 맞춘 한마디 */
+  const GEN=['크게 이름을 남기지는 않았으나, 제 몫의 사랑과 슬픔을 다 겪고 갔다.','화려하지는 않았으나 하루하루를 묵묵히 살아 냈다.','세상의 큰 물결 속에서 작은 배 한 척처럼 제 길을 저어 갔다.','남들 눈에 띄는 삶은 아니었으나, 곁에 있던 이들에게는 그 하나가 온 세상이었다.'];
+  const head=ep==='난세를 살다 간 한 사람'||!m[ep]?R(GEN):m[ep];
+  /* 삶의 여러 면을 두루 짚는다 */
+  const T=[];const add=(w,t)=>T.push([w,t]);
+  const pk=P.peak,jt=pk?jobTitle(pk):'';
+  if(pk&&pk.k==='official'&&pk.lv>=12)add(5,R([`붓 한 자루로 ${RANKS[pk.lv]}에 이르렀으니 조정에서 그 이름을 모르는 이가 없었다.`,`벼슬이 ${RANKS[pk.lv]}에 이르렀으나, 높은 자리일수록 바람도 거세었다.`]));
+  else if(pk&&pk.k==='official')add(3,R(['벼슬길에 나아갔으나 크게 현달하지는 못하였다. 그래도 맡은 고을의 백성들은 그를 기억하였다.','작은 벼슬이나마 성실히 지켰다.']));
+  if(pk&&pk.k==='military'&&pk.lv>=4)add(5,`활과 칼로 ${jt.replace(/\(.*\)/,'')}에 올랐으니, 변방의 바람이 그를 단련하였다.`);
+  if(pk&&pk.k==='scholar'&&pk.lv===0&&P.age>=40)add(3,'평생 과거에 매달렸으나 끝내 이름을 올리지 못하였다. 그래도 글 읽는 소리는 그치지 않았다.');
+  if(pk&&pk.k==='merchant'&&pk.lv>=2)add(4,'맨손으로 시작해 거상이 되었으니, 장사의 눈이 남달랐다.');
+  if(pk&&pk.k==='farmer'&&pk.lv>=2)add(3,'땅을 일구어 부농이 되었다. 흙은 정직하여 흘린 땀만큼 돌려주었다.');
+  if(pk&&['doctor','uinyeo'].includes(pk.k)&&pk.lv>=2)add(4,'그 손을 거쳐 살아난 이가 적지 않았다.');
+  if(pk&&['painter','yein','gwangdae','weaver'].includes(pk.k)&&pk.lv>=2)add(4,'그 솜씨는 사람들 입에 오래 오르내렸다.');
+  if(pk&&pk.k==='court'&&pk.lv>=2)add(4,`평생을 궁에서 보내며 ${jt}에 이르렀다. 담장 안의 세월은 길고도 고요하였다.`);
+  if(P.ev.some(e=>e.type==='freed'))add(5,'태어날 때 정해진 굴레를 벗었으니, 그 걸음이 가볍지 않았다.');
+  if(P.ev.some(e=>e.type==='exile'))add(4,R(['한때 유배의 쓴맛을 보았으나 꺾이지 않았다.','유배지의 바람을 맞으며 세상의 무상함을 알았다.']));
+  const wars=P.ev.filter(e=>e.type==='war').length;if(wars)add(3,R(['난리를 겪고도 살아남았으니 그것만으로도 장한 일이었다.','전란의 불길 속에서 목숨을 부지하였다.']));
+  if(P.flags.charity)add(5,'흉년에 곳간을 열어 굶주린 이웃을 먹였으니, 고을 사람들이 오래도록 그 덕을 일컬었다.');
+  if(P.flags.filial)add(4,'병든 부모를 곁에서 모셨으니 효성이 지극하였다.');
+  if(P.flags.bigHome)add(2,'살림을 일으켜 집을 넓혀 지었다.');
+  if(P.wealth>={royal:3000,yangban:600,jungin:400,sangmin:120,cheonmin:30}[P.cls])add(3,P.kids.some(k=>k.alive)?'재물이 넉넉하여 자손에게 걱정을 남기지 않았다.':'재물이 넉넉하여 평생 궁색함을 몰랐다.');
+  else if(P.wealth<1&&P.age>=40)add(2,'가난을 벗어나지 못하였으나 비굴하지 않았다.');
+  const liveKids=P.kids.filter(k=>k.alive).length,lost=P.kids.filter(k=>!k.alive).length;
+  if(lost>=2)add(4,'자식을 여럿 먼저 보내는 아픔을 겪었다. 그 슬픔은 말로 다할 수 없었다.');
+  if(liveKids>=4)add(3,'자손이 번성하여 집안에 웃음소리가 끊이지 않았다.');
+  if(P.kids.length===0&&P.age>=40)add(2,'슬하에 자식은 없었으나, 그 마음은 다른 이들에게 고루 나누어졌다.');
+  if(P.kids.some(k=>k.edu===1))add(2,'자식에게 글을 가르쳐 집안의 앞날을 열었다.');
+  if(P.st.fame>=75)add(3,'세상의 평판이 높아 그를 아는 이마다 칭송하였다.');
+  else if(P.st.fame<=15&&P.age>=30)add(3,'세상의 손가락질을 받기도 하였으나, 사람의 일은 겉으로만 알 수 없는 법이다.');
+  if(P.st.know>=85)add(2,'학식이 깊어 그와 이야기를 나눈 이들은 모두 탄복하였다.');
+  if(P.st.art>=85)add(2,'손끝에서 나온 것마다 사람들의 눈길을 붙잡았다.');
+  if(P.st.brave>=85)add(2,'담대하여 위험 앞에서 물러서는 법이 없었다.');
+  if(P.st.wit>=85)add(2,'사람의 속을 꿰뚫어 보았으니 그를 속이는 이가 없었다.');
+  if(P.age>=80)add(3,`${kAge(P.age)} 해를 살았으니 그 시대에 보기 드문 장수였다.`);
+  else if(P.age<30&&P.age>=18)add(4,'너무 이른 나이에 떠나, 남은 이들의 슬픔이 컸다.');
+  if(P.flags.elope)add(3,'사랑을 위해 고향과 가문을 버린 일은 두고두고 이야깃거리가 되었다.');
+  if(P.cheopN>=2)add(2,'처첩을 여럿 두어 집안이 늘 시끄러웠다.');
+  if(P.ev.some(e=>e.type==='sobak'))add(3,'소박을 맞는 수모를 겪고도 스스로를 일으켜 세웠다.');
+  /* 무게에 따라 한두 가지를 고르되, 첫머리와 겹치지 않게 */
+  const pick=[];const KW=['손가락질','이름','자손','부부','사랑'];const pool=T.filter(([,t])=>!head.includes(t.slice(0,8))&&!KW.some(k=>head.includes(k)&&t.includes(k))&&!(/백년해로|정 깊은/.test(ep)&&/소박/.test(t)));
+  for(let i=0;i<2&&pool.length;i++){const t=wpick(pool.map((x,j)=>[j,x[0]]));pick.push(pool[t][1]);pool.splice(t,1);}
+  const tail=R(['','','후세가 그 삶을 어떻게 여길지는 알 수 없으나, 제 몫의 세월을 다 살았다.','한 사람의 일생으로 보면 모자람도 넘침도 있었으니, 그것이 곧 사람의 삶이다.',...(head.includes('이름')?[]:['그 이름은 크게 남지 않았으나 그를 아는 이들의 마음에는 오래 남았다.'])]);
+  return [head,...pick,tail].filter(Boolean).join(' ');
 }
 function sillokText(sl){
   let t=`《${sl.title}》\n${sl.origin} · ${sl.born}–${sl.death} · 향년 ${sl.age}세\n\n`;
