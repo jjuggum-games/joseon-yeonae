@@ -437,7 +437,7 @@ function homeScene(){
   const U=UNIT[P.cls]||.5;const W=P.wealth;const amt=f=>Math.max(U*f*10,W*f);
   const free=!(P.cls==='cheonmin'&&P.sub==='nobi');
   const sib=(P.sibs||[]).filter(s=>s.alive);
-  const kid=P.kids.find(k=>k.alive&&!k.edu&&P.year-k.born>=7&&P.year-k.born<=13);
+  const kid=P.kids.find(k=>k.alive&&(!k.edu||k.edu==='play')&&P.year-k.born>=7&&P.year-k.born<=13);
   const fam=typeof FAMINES!=='undefined'&&FAMINES.includes(P.year);
   const L=[];
   if(free&&W>=U*15)L.push(()=>{const c=amt(.3);const p=clamp(.55+P.st.wit/400);
@@ -468,8 +468,8 @@ function homeScene(){
       {t:'아껴 둔다',p:null,safe:true,tags:[],fn:()=>{say('집은 그대로 두고 재물을 아껴 두었다.');}}]};});
   if(kid&&W>=U*3)L.push(()=>{const c=amt(.1);const kn=kid.name;
     return {kind:'major',title:'집안 · 자식 교육',text:`${kid.female?'딸':'아들'} ${iga(kn)} 제법 컸다. 글을 가르칠지, 집안일을 거들게 할지 정할 때가 되었다.`,opts:[
-      {t:'스승을 모셔 가르친다',p:null,tags:['재산 ↓','자식의 앞날 ↑'],fn:()=>{kid.edu=1;fx({wealth:-c,fame:2});say(`${kn}에게 스승을 붙여 글을 가르쳤다. 총기가 남다르다는 말을 들었다.`);}},
-      {t:'집안일을 거들게 한다',p:null,safe:true,tags:['재산 조금 ↑'],fn:()=>{kid.edu=-1;fx({wealth:U});say(`${iga(kn)} 집안일을 야무지게 거들었다.`);}}]};});
+      {t:'스승을 모셔 가르친다',p:null,tags:['재산 ↓','자식의 앞날 ↑'],fn:()=>{kid.edu='seodang';fx({wealth:-c,fame:2});say(`${kn}에게 스승을 붙여 글을 가르쳤다. 총기가 남다르다는 말을 들었다.`);}},
+      {t:'집안일을 거들게 한다',p:null,safe:true,tags:['재산 조금 ↑'],fn:()=>{kid.edu='work';fx({wealth:U});say(`${iga(kn)} 집안일을 야무지게 거들었다.`);}}]};});
   if(!L.length)return null;
   return R(L)();
 }

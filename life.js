@@ -270,10 +270,12 @@ function yFamily(){
     if(!k.alive)continue;const a=P.year-k.born;
     if(a>0&&a<10&&chance(.006)){k.alive=false;k.dy=P.year;say(`어린 ${eulreul(k.name)} 잃었다. 가슴이 무너졌다.`,'big');ev('kidloss',k.name);fx({worry:22,health:-5},true);continue;}
     if(a>=30&&chance(.006)){k.alive=false;k.dy=P.year;say(`${k.female?'딸':'아들'} ${iga(k.name)} 먼저 세상을 떠났다.`,'big');ev('kidloss',k.name);fx({worry:20},true);continue;}
-    if(a===7&&!k.female&&P.cls==='yangban')say(`${k.name}에게 천자문을 가르치기 시작하였다.`);
+    kidGrow(k,a);
+    if(a===7&&!k.female&&P.cls==='yangban'&&k.edu==='seodang')say(`${k.name}에게 천자문을 가르치기 시작하였다.`);
     if(k.married&&a>=20&&chance(.25)&&k.grand<5){k.grand=(k.grand||0)+1;P.grand++;say(`${k.name}에게서 손주가 태어났다.`);}
   }
   // 회임과 출산
+  if(P.cpreg)for(const id of Object.keys(P.cpreg)){const pr=P.cpreg[id];if(pr.due<=P.year){delete P.cpreg[id];birth(pr);}}
   if(P.preg&&P.preg.due===P.year){return birth();}
   const up=unwedConceive();if(up)return up;
   conceive();
@@ -324,8 +326,8 @@ function conceive(){
     note('taemong');
   }
 }
-function birth(){
-  const pr=P.preg;P.preg=null;
+function birth(given){
+  const pr=given||P.preg;if(!given)P.preg=null;
   if(pr.unwed&&!P.female&&!(P.married&&P.spouse===pr.father)&&!pr.keep){const x=P.people[pr.father];if(x)say(`${iga(callOf(x))} 아이를 낳았다는 소식을 들었다.`);return;}
   const female=pr.sex==='딸';
   const cm=pr.cheop&&P.people[pr.cheop];
@@ -341,11 +343,15 @@ function birth(){
     else{const sp=spouseP();spouseDies(sp,'해산 끝에');}
   }
   const nm=royalKid?(R(['영','화','덕','은','숙','정','명','경','의','순'])+R(['창','원','안','성','양','천','평','춘'])+(female?' 옹주':'군')):personName(P.cls==='cheonmin'?'cheonmin':P.cls,female);
-  const kid={id:uid(),name:nm,female,born:P.year,alive:true,adopted:false,married:false,grand:0,seo:!!cm||P.sub==='cheop'||(spouseP()&&(spouseP().kind==='cheop'||spouseP().mode==='cheop'))||(pr.unwed&&!(P.married&&P.spouse===pr.father)),father:pr.father||P.spouse,mother:cm?cm.id:undefined};
+  const seo=!!cm||P.sub==='cheop'||(spouseP()&&(spouseP().kind==='cheop'||spouseP().mode==='cheop'))||(pr.unwed&&!(P.married&&P.spouse===pr.father));
   if(P.alive===false)return;
-  P.kids.push(kid);
-  say(`${female?'딸':'아들'} ${iga(kid.name)} 태어났다.${pr.guess===pr.sex?' 태몽이 맞았다.':''}`,'big');
-  ev('child',kid.name,{female});
+  const twins=chance(.03);
+  const mk=(fem,name)=>{const kid={id:uid(),name,female:fem,born:P.year,alive:true,adopted:false,married:false,grand:0,seo,father:pr.father||P.spouse,mother:cm?cm.id:undefined,st:kidStats(cm)};P.kids.push(kid);ev('child',kid.name,{female:fem});return kid;};
+  const k1=mk(female,nm);
+  if(twins){const f2=chance(.5)?female:!female;const k2=mk(f2,personName(P.cls==='cheonmin'?'cheonmin':P.cls,f2));
+    say(`${cm?callOf(cm)+'에게서 ':''}쌍둥이가 태어났다! ${f2===female?(female?'딸':'아들')+' 둘':'아들딸'}, ${gwawa(k1.name)} ${k2.name}${bat(k2.name)?'이었다':'였다'}.`,'big');ev('twins',k1.name+'·'+k2.name);}
+  else say(`${cm?callOf(cm)+'에게서 ':''}${female?'딸':'아들'} ${iga(k1.name)} 태어났다.${pr.guess===pr.sex?' 태몽이 맞았다.':''}`,'big');
+  const kid=k1;
   fx({worry:-5},true);
   if(royalKid&&P.job&&P.job.k==='concubine'&&!female){promoteCon(2);}
   if(P.kids.filter(k=>!k.adopted).length===3)P.flags.askMore=1;
@@ -954,3 +960,40 @@ function marriageable(){
   return chance(.3+(P.age>22?.2:0)+(P.rejects?.1:0));
 }
 function rare(k,text){const cx=Store.codex();cx.rare[k]=1;Store.saveCodex();P.flags['rare_'+k]=1;say(text,'big');ev('rare',text);}
+
+/* ===== 자식의 능력치와 배움 ===== */
+const KID_ST=[['look','매력'],['know','학식'],['art','재주'],['wit','통찰'],['brave','담력']];
+const EDU={seodang:['서당에서 글공부','know'],martial:['무예 수련','brave'],art:['소리·그림·바느질 솜씨','art'],manner:['예법과 몸단장','look'],work:['집안일 거들기','wit'],play:['마음껏 뛰놀게 둔다',null]};
+function kidStats(cm){
+  const st={};const base=[30,25,20,15,10].map(v=>v+ri(-3,3));
+  const ks=KID_ST.map(x=>x[0]);for(let i=ks.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[ks[i],ks[j]]=[ks[j],ks[i]];}
+  ks.forEach((k,i)=>{const par=Math.max(P.st[k]||0,cm&&cm.st?cm.st[k]||0:0);st[k]=Math.max(5,Math.min(60,base[i]+Math.round((P.st[k]||0)*.15)));});
+  return st;
+}
+function kidSt(k){if(!k.st)k.st=kidStats();if(k.edu===1)k.edu='seodang';if(k.edu===-1)k.edu='work';return k.st;}
+function eduCost(k){const u={royal:10,yangban:3,jungin:2,sangmin:.6,cheonmin:.1}[P.cls]||.5;return k.edu==='work'?-u*.5:k.edu==='play'||!k.edu?0:u;}
+function kidGrow(k,a){
+  const st=kidSt(k);
+  if(a===6&&!k.edu){k.edu=P.cls==='yangban'||P.cls==='royal'?(k.female?'manner':'seodang'):P.cls==='jungin'?(k.female?'art':'seodang'):'work';}
+  if(a>=6&&a<18){
+    const e=EDU[k.edu||'play'];
+    if(e&&e[1])st[e[1]]=Math.min(100,st[e[1]]+ri(4,8));
+    const o=R(KID_ST)[0];st[o]=Math.min(100,st[o]+ri(0,3));
+    P.wealth=Math.max(0,P.wealth-eduCost(k));
+    if(!e[1]&&chance(.3)){}
+  }
+  if(a>=18&&a<=35&&!k.feat&&k.alive&&chance(.12))kidFeat(k);
+}
+function kidFeat(k){
+  const st=kidSt(k);const top=KID_ST.map(x=>x[0]).sort((x,y)=>st[y]-st[x])[0];const v=st[top];if(v<55)return;
+  const w=k.female?'딸':'아들';const cls=P.cls;let t=null,fame=4;
+  if(top==='know'&&!k.female&&!k.seo&&['yangban','royal'].includes(cls)){t='문과에 급제하였다';fame=10;}
+  else if(top==='know'&&!k.female&&['jungin','yangban'].includes(cls)){t='잡과에 붙어 역관이 되었다';}
+  else if(top==='know'){t='글을 잘하여 그 이름이 고을에 알려졌다';}
+  else if(top==='brave'&&!k.female&&cls!=='cheonmin'){t='무과에 급제하였다';fame=8;}
+  else if(top==='brave'){t='담대하기로 이름이 났다';}
+  else if(top==='art'){t=k.female?'솜씨가 빼어나 궁에서까지 찾았다':'솜씨가 빼어나 이름을 떨쳤다';}
+  else if(top==='look'){t=k.female?'곱기로 소문나 좋은 혼처가 줄을 이었다':'풍채가 좋아 어디서나 눈길을 끌었다';}
+  else if(top==='wit'){t='셈이 밝아 장사로 재산을 크게 불렸다';P.wealth+= ({royal:300,yangban:60,jungin:40,sangmin:12,cheonmin:2}[cls]||5);}
+  if(!t)return;k.feat=t;say(`${w} ${iga(k.name)} ${t}.`,'big');fx({fame,worry:-4});ev('kidfeat',`${w} ${k.name}`,{feat:t});
+}

@@ -328,10 +328,11 @@ function fertileWith(x){
   const fa=P.female?P.age:ageOf(x);if(fa<18||fa>44)return 0;
   return fa<30?.42:fa<36?.3:.16;
 }
+function pregOf(x){return x.kind==='cheop'?(P.cpreg&&P.cpreg[x.id]):P.preg&&!P.preg.unwed?P.preg:null;}
 function kidBtns(x){
   if(!fertileWith(x))return '';
-  if(P.preg)return (P.preg.cheop||null)===(x.kind==='cheop'?x.id:null)?`<div class="fnote" style="margin-top:6px">뱃속에 아이가 있습니다.</div>`:'';
-  const tried=P.kidTry===P.year;
+  if(pregOf(x))return `<div class="fnote" style="margin-top:6px">뱃속에 아이가 있습니다.</div>`;
+  const tried=(P.kidTryY||{})[x.id]===P.year;
   return `<div style="margin-top:6px"><button class="btn sm" data-a="trykid" data-id="${x.id}" ${tried?'disabled':''}>${tried?'올해는 이미 애썼습니다':'아이 갖기'}</button>${P.wantKids&&x.kind==='spouse'?' <button class="btn sm ghost" data-a="stopkid">그만 낳기</button>':''}</div>`;
 }
 function sideLove(){
@@ -405,11 +406,17 @@ function sideFam(){
   h+=grp(P.female?'배우자':'배우자와 첩',sp.map(x=>row(x.title&&x.kind!=='rival'?x.title:callOf(x),ded(x)+spRel(x),spMeta(x),dead(x))).join(''));
   /* 자식 */
   if(P.kids.length){
-    const kd=P.kids.map(k=>row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?' (양자)':'')+(k.seo?' (서출)':''),[k.alive?(P.year-k.born)+'세':'',k.edu===1?'글공부':'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k))).join('');
+    const kd=P.kids.map(k=>{const a=P.year-k.born;const st=kidSt(k);
+      const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?' (양자)':'')+(k.seo?' (서출)':''),[k.alive?a+'세':'',k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
+      if(!k.alive)return base;
+      const stl=`<div class="kst">${KID_ST.map(([s,n])=>`<span>${n} <b>${st[s]}</b></span>`).join('')}</div>`;
+      const sel=a>=6&&a<18?`<div class="kedu"><span>배움</span><select data-kedu="${k.id}">${Object.entries(EDU).map(([key,[n]])=>`<option value="${key}" ${(k.edu||'play')===key?'selected':''}>${n}</option>`).join('')}</select></div>`:a<6?'<div class="kedu muted">여섯 살이 되면 배울 것을 정할 수 있습니다.</div>':'';
+      return base.replace(/<\/div>$/,stl+sel+'</div>');}).join('');
     const alive=P.kids.filter(k=>k.alive).length;
     h+=grp('자식',kd,`${P.kids.length}명${alive<P.kids.length?` · 살아 있는 이 ${alive}명`:''}`);
   }
-  if(P.preg)h+=grp('뱃속의 아이',row('태몽',P.preg.dream,P.preg.guess?P.preg.guess+'일 것이라 한다':''));
+  const pgs=[...(P.preg?[[P.preg,P.female?'나':'아내']]:[]),...Object.entries(P.cpreg||{}).map(([id,pr])=>[pr,P.people[id]?callOf(P.people[id]):'첩'])];
+  if(pgs.length)h+=grp('뱃속의 아이',pgs.map(([pr,who])=>row(who,'태몽 · '+pr.dream,pr.guess?pr.guess+'일 것이라 한다':'')).join(''));
   if(P.grand)h+=grp('손주',row(P.grand+'명','손주',''));
   return h+'</div>';
 }
@@ -657,10 +664,11 @@ document.addEventListener('click',async e=>{
     case 'gunghap':{const x=P.people[a.dataset.id];if(x){const g=gunghap(x);const el=document.getElementById('gh-'+x.id);if(el)el.textContent=g;}break;}
     case 'tab':V.tab=v;renderSide();break;
     case 'filter':V.filter=v;V.openCard=null;renderSide();break;
-    case 'trykid':{const x=P&&P.people[a.dataset.id];if(!P||!x||G.scene||P.kidTry===P.year||P.preg||!fertileWith(x))return;P.kidTry=P.year;
+    case 'trykid':{const x=P&&P.people[a.dataset.id];if(!P||!x||G.scene||!fertileWith(x)||pregOf(x))return;P.kidTryY=P.kidTryY||{};if(P.kidTryY[x.id]===P.year)return;P.kidTryY[x.id]=P.year;
       const isC=x.kind==='cheop';if(!isC)P.wantKids=true;
       const f=Math.min(.85,fertileWith(x)*1.6);
-      if(chance(f)){const d=R(TAEMONG);P.preg={due:P.year+1,sex:chance(.5)?'아들':'딸',dream:d[0],guess:d[1],cheop:isC?x.id:undefined};say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였다. ${P.female?'곧 태기가 있었다':`곧 ${callOf(x)}에게 태기가 있었다`}. 그날 밤 ${d[0]}을 꾸었다.`,'big');note('taemong');toast('태기가 있습니다!');}
+      if(chance(f)){const d=R(TAEMONG);const pr={due:P.year+1,sex:chance(.5)?'아들':'딸',dream:d[0],guess:d[1],cheop:isC?x.id:undefined};if(isC){P.cpreg=P.cpreg||{};P.cpreg[x.id]=pr;}else P.preg=pr;
+        say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였다. ${P.female?'곧 태기가 있었다':`곧 ${callOf(x)}에게 태기가 있었다`}. 그날 밤 ${d[0]}을 꾸었다.`,'big');note('taemong');toast('태기가 있습니다!');}
       else{say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였으나, 올해는 태기가 없었다.`);toast('올해는 태기가 없었습니다.');}
       Store.saveCur();V.dirty.feed=1;renderSide();break;}
     case 'stopkid':{if(!P)return;P.wantKids=false;say('이제 자식은 이만하면 되었다고 여겼다.');Store.saveCur();V.dirty.feed=1;renderSide();toast('더는 아이를 기다리지 않습니다.');break;}
@@ -709,3 +717,5 @@ document.addEventListener('keydown',e=>{
   e.preventDefault();
   G.paused=!G.paused;renderTop();
 });
+
+document.addEventListener('change',e=>{const s=e.target.closest&&e.target.closest('select[data-kedu]');if(!s||!P)return;const k=P.kids.find(x=>x.id===s.dataset.kedu);if(!k)return;k.edu=s.value;Store.saveCur();say(`${k.female?'딸':'아들'} ${k.name}의 배움을 ‘${EDU[k.edu][0]}’ 쪽으로 정하였다.`);V.dirty.feed=1;toast(`${k.name}: ${EDU[k.edu][0]}`);});

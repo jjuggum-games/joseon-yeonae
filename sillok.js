@@ -70,6 +70,8 @@ function buildSillok(){
     if(ad.length)s+=` ${eulreul(ad.map(k=>k.name).join(', '))} ${ad.some(k=>!k.female&&['yangban','royal','jungin'].includes(P.cls))?'양자로':'수양자식으로'} 들였다.`;
     const lost=kids.filter(k=>!k.alive&&k.dy&&k.dy-k.born<15);if(lost.length)s+=` 그 가운데 ${eunneun(lost.map(k=>k.name).join(', '))} 일찍 잃었다.`;
     const wed=kids.filter(k=>k.inlaw).slice(0,3);wed.forEach(k=>{s+=` ${k.female?'딸':'아들'} ${eunneun(k.name)} ${gwawa(k.inlaw)} 혼인하였다.`;});
+    if(P.ev.some(e=>e.type==='twins'))s+=' 쌍둥이를 얻는 경사도 있었다.';
+    kids.filter(k=>k.feat).slice(0,3).forEach(k=>{s+=` ${k.female?'딸':'아들'} ${eunneun(k.name)} ${k.feat}.`;});
     if(P.grand)s+=` 손주를 ${P.grand}명 보았다.`;
     S.push({h:'자식',b:s.trim()});
   } else S.push({h:'자식',b:'슬하에 자식이 없었다.'});
@@ -180,7 +182,7 @@ function verdict(ep,dn){
   if(lost>=2)add(4,'자식을 여럿 먼저 보내는 아픔을 겪었다. 그 슬픔은 말로 다할 수 없었다.');
   if(liveKids>=4)add(3,'자손이 번성하여 집안에 웃음소리가 끊이지 않았다.');
   if(P.kids.length===0&&P.age>=40)add(2,'슬하에 자식은 없었으나, 그 마음은 다른 이들에게 고루 나누어졌다.');
-  if(P.kids.some(k=>k.edu===1))add(2,'자식에게 글을 가르쳐 집안의 앞날을 열었다.');
+  if(P.kids.some(k=>k.feat))add(4,'자식들을 잘 길러 저마다 제 몫을 하게 하였다.');
   if(P.st.fame>=75)add(3,'세상의 평판이 높아 그를 아는 이마다 칭송하였다.');
   else if(P.st.fame<=15&&P.age>=30)add(3,'세상의 손가락질을 받기도 하였으나, 사람의 일은 겉으로만 알 수 없는 법이다.');
   if(P.st.know>=85)add(2,'학식이 깊어 그와 이야기를 나눈 이들은 모두 탄복하였다.');
