@@ -173,6 +173,7 @@ function marryOpts(x,afterFail){
 function refuse(x,afterFail){say('집안 어른들이 펄쩍 뛰며 반대하였다. 혼인은 이루어지지 않았다.','big');fx({worry:12,fame:-3});x.blocked=P.year;return null;}
 function marryScene(x){
   const nm=callOf(x);
+  if(P.married&&!P.female)return takeCheopScene(x);
   return {kind:'major',title:'청혼',pid:x.id,text:`${P.court?'궁녀의 몸이다. 혼인이 이루어지면 궁을 떠나야 하고, 평판이 크게 깎인다. ':''}${P.preg&&P.preg.father===x.id?'뱃속의 아이를 생각하며, ':''}${nm}에게 혼인을 청한다. ${nm}${bat(nm)?'은':'는'} ${personInfo(x)}이다. 신분에 따라 맺어지는 길이 다르다.`,opts:[...marryOpts(x),{t:'아직은 미룬다',p:null,safe:true,tags:[],fn:()=>{say('혼인을 미루었다.');}}]};
 }
 function confessScene(x){
@@ -471,4 +472,19 @@ function homeScene(){
       {t:'집안일을 거들게 한다',p:null,safe:true,tags:['재산 조금 ↑'],fn:()=>{kid.edu=-1;fx({wealth:U});say(`${iga(kn)} 집안일을 야무지게 거들었다.`);}}]};});
   if(!L.length)return null;
   return R(L)();
+}
+
+/* 혼인한 사내가 마음에 둔 여인을 첩으로 들이는 일 */
+function takeCheopScene(x){
+  const nm=callOf(x);const sp=spouseP();
+  const high=clsRank(x.cls,x.sub)>=clsRank(P.cls,P.sub)&&['yangban','royal'].includes(x.cls);
+  const p=clamp((high?.15:.7)+(x.t-50)/200+P.st.look/500,.05,.92);
+  return {kind:'major',title:'첩으로 들이기',pid:x.id,text:`이미 정실이 있는 몸이다. 나라의 법도에 아내는 하나뿐이니, ${eulreul(nm)} 맞으려면 첩으로 들일 수밖에 없다. ${nm}${bat(nm)?'은':'는'} ${personInfo(x)}이다.${high?' 양반가의 딸이 첩이 되기는 몹시 어려운 일이다.':''}`,opts:[
+    {t:'첩으로 들인다',sub:'정실은 그대로 두고 그를 곁에 둔다',p,tags:['아내의 정 ↓','자식은 서얼',...(high?['상대 집안이 크게 반대']:[])],fn:()=>{
+      if(!chance(p)){fx({worry:8,fame:-2});x.blocked=P.year;x.t=clamp(x.t-10);say(high?`${nm}의 집안에서 딸을 첩으로는 보낼 수 없다며 거절하였다.`:`${iga(nm)} 첩이 될 수는 없다며 거절하였다.`,'big');return null;}
+      P.cheopN=(P.cheopN||0)+1;x.kind='cheop';x.status='married';if(!x.title)x.title=`첩 ${nm}`;
+      if(P.target===x.id)P.target=null;
+      if(sp)sp.t=clamp(sp.t-20);fx({worry:-3});note('cheop');ev('cheop',nm);
+      say(`${eulreul(nm)} 첩으로 들였다. ${sp?callOf(sp)+'의 낯빛이 어두워졌다.':''}`,'big');}},
+    {t:'아직은 미룬다',p:null,safe:true,tags:[],fn:()=>{say('마음을 품은 채 때를 기다리기로 하였다.');}}]};
 }

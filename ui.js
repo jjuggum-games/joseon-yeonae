@@ -321,11 +321,18 @@ function renderSide(){
   if(V.tab==='love')body=sideLove();else if(V.tab==='fam')body=sideFam();else if(V.tab==='tl')body=sideTl();else body=sideLet();
   el.innerHTML=`<div class="tabs">${tabs.map(([k,n])=>`<button class="btn ${V.tab===k?'on':''}" data-a="tab" data-v="${k}">${n}</button>`).join('')}</div>${body}`;
 }
-function kidBtns(){
-  if(!fertile())return '';
-  if(P.preg)return `<div class="fnote" style="margin-top:6px">뱃속에 아이가 있습니다.</div>`;
+function fertileWith(x){
+  if(!x||!x.alive)return 0;
+  if(x.kind==='spouse')return x.id===P.spouse?fertile():0;
+  if(x.kind!=='cheop'||x.female===P.female)return 0;
+  const fa=P.female?P.age:ageOf(x);if(fa<18||fa>44)return 0;
+  return fa<30?.42:fa<36?.3:.16;
+}
+function kidBtns(x){
+  if(!fertileWith(x))return '';
+  if(P.preg)return (P.preg.cheop||null)===(x.kind==='cheop'?x.id:null)?`<div class="fnote" style="margin-top:6px">뱃속에 아이가 있습니다.</div>`:'';
   const tried=P.kidTry===P.year;
-  return `<div style="margin-top:6px"><button class="btn sm" data-a="trykid" ${tried?'disabled':''}>${tried?'올해는 이미 애썼습니다':'아이 갖기'}</button>${P.wantKids?' <button class="btn sm ghost" data-a="stopkid">그만 낳기</button>':''}</div>`;
+  return `<div style="margin-top:6px"><button class="btn sm" data-a="trykid" data-id="${x.id}" ${tried?'disabled':''}>${tried?'올해는 이미 애썼습니다':'아이 갖기'}</button>${P.wantKids&&x.kind==='spouse'?' <button class="btn sm ghost" data-a="stopkid">그만 낳기</button>':''}</div>`;
 }
 function sideLove(){
   const F=[['love','인연'],['rival','악연'],['helper','조력자'],['elder','집안 어른']];
@@ -351,9 +358,9 @@ function sideLove(){
     if(open){const lt=P.letters.filter(l=>l.pid===x.id);
       more=`<div class="more">${x.alive?`${ageOf(x)}세`:'세상을 떠남'} · ${esc(CLS[x.cls]?CLS[x.cls].n:'')} · ${esc(x.fam||'')}<br>${x.metA!=null?`${x.metA}세에 ${esc(x.place||'')}에서 만남<br>`:''}${x.known?`성격: ${esc(persona(x.persona).n)} · 좋아하는 것: ${esc(taste(x.taste).n)}`:'성격과 취향은 아직 알 수 없다.'}${x.gh?`<br>궁합: ${esc(x.gh)}`:''}${lt.length?`<br>주고받은 서찰 ${lt.length}통`:''}</div>`;}
     const isT=P.target===x.id;
-    const canT=x.alive&&P.age>=18&&x.kind==='love'&&x.status!=='parted';
+    const canT=x.alive&&P.age>=18&&(x.kind==='love'&&x.status!=='parted'||x.kind==='cheop');
     const age=x.alive?` · ${ageOf(x)}세`:'';
-    return `<div class="pc ${off?'off':''} ${isT?'tgt':''}" data-a="card" data-id="${x.id}"><div class="h"><b>${esc(nm)}${isT?' <span class="chip j">마음에 둔 사람</span>':''}</b><span class="chip ${x.status==='mutual'||x.status==='lover'||x.kind==='spouse'?'j':''}">${esc(badge)}</span></div><div class="m">${esc(fullOf(x))}${age}</div>${x.kind!=='elder'?`<div class="info">${esc(personInfo(x))}</div>`:''}${bars}${canT?`<div style="margin-top:6px"><button class="btn sm ${isT?'on':''}" data-a="target" data-id="${x.id}">${isT?'마음 거두기':'마음에 두기'}</button>${x.kind==='love'&&!P.married&&!(P.job&&['concubine','queen'].includes(P.job.k))&&canWed(x)&&x.blocked!==P.year?` <button class="btn sm" data-a="propose" data-id="${x.id}">청혼하기</button>`:''}</div>`:''}${x.kind==='spouse'&&x.alive&&x.id===P.spouse?kidBtns():''}${more}</div>`;
+    return `<div class="pc ${off?'off':''} ${isT?'tgt':''}" data-a="card" data-id="${x.id}"><div class="h"><b>${esc(nm)}${isT?' <span class="chip j">마음에 둔 사람</span>':''}</b><span class="chip ${x.status==='mutual'||x.status==='lover'||x.kind==='spouse'?'j':''}">${esc(badge)}</span></div><div class="m">${esc(fullOf(x))}${age}</div>${x.kind!=='elder'?`<div class="info">${esc(personInfo(x))}</div>`:''}${bars}${canT?`<div style="margin-top:6px"><button class="btn sm ${isT?'on':''}" data-a="target" data-id="${x.id}">${isT?'마음 거두기':'마음에 두기'}</button>${x.kind==='love'&&(!P.married||!P.female)&&!(P.job&&['concubine','queen'].includes(P.job.k))&&canWed(x)&&x.blocked!==P.year?` <button class="btn sm" data-a="propose" data-id="${x.id}">${P.married?'첩으로 들이기':'청혼하기'}</button>`:''}</div>`:''}${(x.kind==='spouse'&&x.id===P.spouse||x.kind==='cheop')&&x.alive?kidBtns(x):''}${more}</div>`;
   };
   const canSeek=P.age>=18;
   const seekWarn=P.job&&['concubine','queen'].includes(P.job.k)?'임금의 여인이 다른 이를 만나는 것은 큰 죄입니다. 들키면 목숨이 위태로울 수 있습니다.':P.court?'궁녀의 연정은 큰 죄입니다. 들키면 궁에서 쫓겨날 수 있습니다.':P.married?'혼인한 몸입니다. 들키면 평판이 무너지거나 소박을 맞을 수 있습니다.':'';
@@ -649,10 +656,11 @@ document.addEventListener('click',async e=>{
     case 'gunghap':{const x=P.people[a.dataset.id];if(x){const g=gunghap(x);const el=document.getElementById('gh-'+x.id);if(el)el.textContent=g;}break;}
     case 'tab':V.tab=v;renderSide();break;
     case 'filter':V.filter=v;V.openCard=null;renderSide();break;
-    case 'trykid':{if(!P||G.scene||P.kidTry===P.year||P.preg||!fertile())return;P.kidTry=P.year;P.wantKids=true;
-      const sp=spouseP();const f=Math.min(.85,fertile()*1.6);
-      if(chance(f)){const d=R(TAEMONG);P.preg={due:P.year+1,sex:chance(.5)?'아들':'딸',dream:d[0],guess:d[1]};say(`${gwawa(callOf(sp))} 아이를 바라며 정성을 들였다. ${P.female?'곧 태기가 있었다':'곧 아내에게 태기가 있었다'}. 그날 밤 ${d[0]}을 꾸었다.`,'big');note('taemong');toast('태기가 있습니다!');}
-      else{say(`${gwawa(callOf(sp))} 아이를 바라며 정성을 들였으나, 올해는 태기가 없었다.`);toast('올해는 태기가 없었습니다.');}
+    case 'trykid':{const x=P&&P.people[a.dataset.id];if(!P||!x||G.scene||P.kidTry===P.year||P.preg||!fertileWith(x))return;P.kidTry=P.year;
+      const isC=x.kind==='cheop';if(!isC)P.wantKids=true;
+      const f=Math.min(.85,fertileWith(x)*1.6);
+      if(chance(f)){const d=R(TAEMONG);P.preg={due:P.year+1,sex:chance(.5)?'아들':'딸',dream:d[0],guess:d[1],cheop:isC?x.id:undefined};say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였다. ${P.female?'곧 태기가 있었다':`곧 ${callOf(x)}에게 태기가 있었다`}. 그날 밤 ${d[0]}을 꾸었다.`,'big');note('taemong');toast('태기가 있습니다!');}
+      else{say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였으나, 올해는 태기가 없었다.`);toast('올해는 태기가 없었습니다.');}
       Store.saveCur();V.dirty.feed=1;renderSide();break;}
     case 'stopkid':{if(!P)return;P.wantKids=false;say('이제 자식은 이만하면 되었다고 여겼다.');Store.saveCur();V.dirty.feed=1;renderSide();toast('더는 아이를 기다리지 않습니다.');break;}
     case 'propose':{if(!P||G.scene)return;const x=P.people[a.dataset.id];if(!x)return;showScene(marryScene(x));V.mob='feed';mobShow();break;}

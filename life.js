@@ -285,7 +285,7 @@ function spouseDies(sp,why){
   fx({worry:25,health:-4},true);
   if(sp.kingRole&&P.job&&P.job.k==='concubine'){say('후궁은 다시 혼인할 수 없었다. 궁을 나와 조용히 지내게 되었다.');P.home='사가(私家)';P.court=false;P.flags.noRemarry=1;}
 }
-function spouseWord(sp){return P.female?(sp.kingRole?'임금':'남편'):'아내';}
+function spouseWord(sp){if(sp.kind==='cheop')return '첩';return P.female?(sp.kingRole?'임금':'남편'):'아내';}
 function sibWord(s){return s.older?(s.female?(P.female?'언니':'누이'):(P.female?'오라비':'형')):(s.female?'여동생':'아우');}
 function inherit(){
   const n=P.sibs.filter(s=>s.alive).length+1;
@@ -328,18 +328,20 @@ function birth(){
   const pr=P.preg;P.preg=null;
   if(pr.unwed&&!P.female&&!(P.married&&P.spouse===pr.father)&&!pr.keep){const x=P.people[pr.father];if(x)say(`${iga(callOf(x))} 아이를 낳았다는 소식을 들었다.`);return;}
   const female=pr.sex==='딸';
-  const royalKid=spouseP()&&spouseP().kingRole;
+  const cm=pr.cheop&&P.people[pr.cheop];
+  const royalKid=!cm&&spouseP()&&spouseP().kingRole;
   let risk=P.female?.012:.006;
   let doc=false;
   if(P.wealth>=30&&P.cls!=='cheonmin'){P.wealth-=8;risk*=.5;doc=true;}
-  if(doc)say(P.female?'해산 날, 의녀를 불러 곁을 지키게 하였다.':'아내의 해산 날, 의원을 불러 두었다.');
+  if(doc)say(P.female?'해산 날, 의녀를 불러 곁을 지키게 하였다.':cm?'첩의 해산 날, 의원을 불러 두었다.':'아내의 해산 날, 의원을 불러 두었다.');
   if(P.female&&!P.seen.uinyeo&&doc){P.seen.uinyeo=1;note('uinyeo');}
   if(chance(risk)){
     if(P.female){P.cause='아이를 낳다가';P.flags.birthDeath=1;fx({health:-100},true);say('해산이 몹시 어려웠다…','big');}
+    else if(cm){cm.alive=false;say(`${iga(callOf(cm))} 해산 끝에 세상을 떠났다.`,'big');}
     else{const sp=spouseP();spouseDies(sp,'해산 끝에');}
   }
   const nm=royalKid?(R(['영','화','덕','은','숙','정','명','경','의','순'])+R(['창','원','안','성','양','천','평','춘'])+(female?' 옹주':'군')):personName(P.cls==='cheonmin'?'cheonmin':P.cls,female);
-  const kid={id:uid(),name:nm,female,born:P.year,alive:true,adopted:false,married:false,grand:0,seo:P.sub==='cheop'||(spouseP()&&(spouseP().kind==='cheop'||spouseP().mode==='cheop'))||(pr.unwed&&!(P.married&&P.spouse===pr.father)),father:pr.father||P.spouse};
+  const kid={id:uid(),name:nm,female,born:P.year,alive:true,adopted:false,married:false,grand:0,seo:!!cm||P.sub==='cheop'||(spouseP()&&(spouseP().kind==='cheop'||spouseP().mode==='cheop'))||(pr.unwed&&!(P.married&&P.spouse===pr.father)),father:pr.father||P.spouse,mother:cm?cm.id:undefined};
   if(P.alive===false)return;
   P.kids.push(kid);
   say(`${female?'딸':'아들'} ${iga(kid.name)} 태어났다.${pr.guess===pr.sex?' 태몽이 맞았다.':''}`,'big');
@@ -372,22 +374,23 @@ function yJob(){
   if(P.exile&&P.year>=P.exile){P.exile=0;P.home=P.flags.homeBefore||HOMES[P.cls];say('유배에서 풀려 집으로 돌아왔다.','big');}
   if(k==='slave'&&J.lv===0&&a>=16)setJob('slave',1);
   if(k==='gisaeng'){if(J.lv===0&&a>=18){setJob('gisaeng',1);say(`기적에 ${eulreul(P.name)} 기명으로 올리고 기녀가 되었다.`,'big');note('gisaeng');}
-    else if(J.lv===1&&a>=26&&P.st.art>=50&&chance(.2)){setJob('gisaeng',2);say('기방의 기생들을 거느리는 행수기생이 되었다.','big');}
-    else if(J.lv>=1&&J.lv<3&&P.st.art>=72&&P.st.fame>=50&&chance(.25)){setJob('gisaeng',3);say(`${P.name}의 이름이 팔도에 퍼졌다. 사람들은 그대를 명기라 불렀다.`,'big');ev('fame','명기로 이름을 떨쳤다');}}
+    else if(J.lv===1&&a>=24&&P.st.art>=45&&chance(.25)){setJob('gisaeng',2);say('기방의 기생들을 거느리는 행수기생이 되었다.','big');}
+    else if(J.lv>=1&&J.lv<3&&a>=20&&P.st.art>=60&&chance(.1+Math.max(0,P.st.fame-20)/300+(P.st.art-60)/400)){setJob('gisaeng',3);say(`${P.name}의 이름이 팔도에 퍼졌다. 사람들은 그대를 명기라 불렀다.`,'big');ev('fame','명기로 이름을 떨쳤다');}}
   if(k==='court'){if(J.lv===0&&a>=18){setJob('court',1);say('관례를 치르고 정식 나인이 되었다.','big');}
-    else if(J.lv===1&&a>=33&&chance(.12+P.st.wit/400)){setJob('court',2);say('오랜 세월 끝에 상궁의 자리에 올랐다.','big');note('naemyeong');}
-    else if(J.lv===2&&a>=45&&chance(.08+P.st.wit/500)){setJob('court',3);say('궁녀들의 으뜸인 제조상궁이 되었다.','big');}}
-  if(k==='scholar'&&isGwageoYear(P.year)&&a>=16&&a<=55&&(P.sub!=='seo'||P.year>=1777)){
-    note('gwageo');
-    if(J.lv===0){if(chance(.08+P.st.know/260)){const lv=chance(.5)?1:2;setJob('scholar',lv);say(`식년시 소과에 붙어 ${iga(JOBS.scholar.ladder[lv])} 되었다.`,'big');fx({fame:8});ev('job',`${iga(JOBS.scholar.ladder[lv])} 되었다`);}else say('과거를 보았으나 이름이 방에 오르지 않았다.');}
-    else{if(chance(.02+Math.max(0,P.st.know-35)/240)){const lv=P.st.know>80?4:P.st.know>65?2:0;setJob('official',lv);say(`문과에 급제하였다! ${RANKS[lv]} 벼슬을 받았다.`,'big');fx({fame:15});ev('job','문과에 급제하였다');P.home=P.cls==='yangban'?'사랑채 딸린 기와집':P.home;}else say('대과에 나아갔으나 낙방하였다.');}
-  } else if(k==='scholar'&&P.sub==='seo'&&isGwageoYear(P.year)&&a>=18&&!P.seen.seoNo){P.seen.seoNo=1;say('서얼이라 문과에 나아갈 수 없었다. 붓을 쥔 손이 떨렸다.');fx({worry:10},true);}
+    else if(J.lv===1&&a>=28&&chance(.2+P.st.wit/250)){setJob('court',2);say('오랜 세월 끝에 상궁의 자리에 올랐다.','big');note('naemyeong');}
+    else if(J.lv===2&&a>=40&&chance(.1+P.st.wit/400)){setJob('court',3);say('궁녀들의 으뜸인 제조상궁이 되었다.','big');}}
+  const examY=isGwageoYear(P.year)||(P.flags.byeolsi=chance(.35));
+  if(k==='scholar'&&examY&&a>=16&&a<=60&&(P.sub!=='seo'||P.year>=1777)){
+    note('gwageo');const exn=isGwageoYear(P.year)?'식년시':'별시';
+    if(J.lv===0){if(chance(.12+P.st.know/220)){const lv=chance(.5)?1:2;setJob('scholar',lv);say(`${exn} 소과에 붙어 ${iga(JOBS.scholar.ladder[lv])} 되었다.`,'big');fx({fame:8});ev('job',`${iga(JOBS.scholar.ladder[lv])} 되었다`);}else say('과거를 보았으나 이름이 방에 오르지 않았다.');}
+    else{if(chance(.06+Math.max(0,P.st.know-30)/180)){const lv=P.st.know>80?4:P.st.know>65?2:0;setJob('official',lv);say(`문과에 급제하였다! ${RANKS[lv]} 벼슬을 받았다.`,'big');fx({fame:15});ev('job','문과에 급제하였다');P.home=P.cls==='yangban'?'사랑채 딸린 기와집':P.home;}else say('대과에 나아갔으나 낙방하였다.');}
+  } else if(k==='scholar'&&P.sub==='seo'&&examY&&a>=18&&!P.seen.seoNo){P.seen.seoNo=1;say('서얼이라 문과에 나아갈 수 없었다. 붓을 쥔 손이 떨렸다.');fx({worry:10},true);}
   if(k==='official'&&J.lv<16&&chance(.1+(P.st.know+P.st.wit-80)/420+P.st.fame/900)){const up=chance(.25)?2:1;setJob('official',Math.min(16,J.lv+up));say(`${euro(RANKS[P.job.lv])} 승진하였다.`,P.job.lv>=12?'big':'n');if(P.job.lv>=12)ev('job',`${RANKS[P.job.lv]}에 올랐다`);}
   if(['doctor','interp','painter','uinyeo','gwangdae','weaver','soldier','hunjang','sword','yein'].includes(k)&&J.lv<d.ladder.length-1&&a>=15){
     const st=P.st[d.stat]||P.st.art;
-    if(chance(.07+(st-40)/300+(J.lv===0&&a>=20?.15:0))){setJob(k,J.lv+1);say(`${iga(d.ladder[P.job.lv])} 되었다.`+(P.job.lv===d.ladder.length-1?' 솜씨가 널리 알려졌다.':''),'big');if(P.job.lv===d.ladder.length-1)ev('job',`${iga(d.ladder[P.job.lv])} 되었다`);}}
-  if(k==='merchant'){if(J.lv===0&&P.wealth>=220){setJob(k,1);say('밑천이 모여 객주를 차렸다.','big');}else if(J.lv===1&&P.wealth>=1500){setJob(k,2);say('사람들이 그대를 거상이라 불렀다.','big');ev('job','거상이 되었다');}}
-  if(k==='farmer'){if(J.lv===0&&P.wealth>=70){setJob(k,1);say('논 몇 마지기를 사 자작농이 되었다.','big');}else if(J.lv===1&&P.wealth>=450){setJob(k,2);say('땅이 늘어 부농 소리를 들었다.','big');}}
+    if(chance(.1+(st-35)/250+(J.lv===0&&a>=20?.15:0))){setJob(k,J.lv+1);say(`${iga(d.ladder[P.job.lv])} 되었다.`+(P.job.lv===d.ladder.length-1?' 솜씨가 널리 알려졌다.':''),'big');if(P.job.lv===d.ladder.length-1)ev('job',`${iga(d.ladder[P.job.lv])} 되었다`);}}
+  if(k==='merchant'){if(J.lv===0&&a>=18&&(P.wealth>=60||chance(.04+P.st.wit/900))){setJob(k,1);say('밑천이 모여 객주를 차렸다.','big');}else if(J.lv===1&&(P.wealth>=400||P.wealth>=150&&chance(.03+P.st.wit/1000))){setJob(k,2);say('사람들이 그대를 거상이라 불렀다.','big');ev('job','거상이 되었다');}}
+  if(k==='farmer'){if(J.lv===0&&a>=18&&(P.wealth>=35||chance(.04+P.st.health/1200))){setJob(k,1);say('논 몇 마지기를 사 자작농이 되었다.','big');}else if(J.lv===1&&(P.wealth>=180||P.wealth>=80&&chance(.04))){setJob(k,2);say('땅이 늘어 부농 소리를 들었다.','big');}}
   if(k==='slave'&&J.lv===1&&a>=25&&P.st.wit>=45&&chance(.15)){setJob(k,2);say(P.female?'안채의 몸종들을 거느리게 되었다.':'주인집 살림을 맡는 청지기가 되었다.','big');}
   if(k==='lady'&&J.lv===1&&P.married&&P.year-(P.flags.wedY||P.year)>=6){setJob('lady',2);say('어느덧 집안의 안주인이 되었다.');}
   if(k==='concubine'){
@@ -552,7 +555,7 @@ function yFocus(){
   if(P.st.worry>70)o.health=(o.health||0)-2;
   if(P.age>=12){const js=P.job?JOBS[P.job.k].stat:null;if(js&&js!=='health'&&chance(.6))o[js]=(o[js]||0)+1;if(chance(.35))o.wit=(o.wit||0)+1;if(P.age<30&&chance(.25))o.look=(o.look||0)+1;}
   if(f.power){P.power=Math.min(100,P.power+ri(6,11));}
-  if(f.love){const tg=targetP();Object.values(P.people).forEach(x=>{if((x.kind==='love'||x.kind==='spouse')&&x.alive){if(tg&&x.id===tg.id){x.t=clamp(x.t+7);x.h=clamp(x.h+4);}else{x.t=clamp(x.t+(tg?1:3));x.h=clamp(x.h+(tg?1:2));}}});if(tg&&chance(.35))say(`${callOf(tg)}에게 마음을 쓰며 한 해를 보냈다.`);}
+  if(f.love){const tg=targetP();Object.values(P.people).forEach(x=>{if((x.kind==='love'||x.kind==='spouse'||x.kind==='cheop')&&x.alive){if(tg&&x.id===tg.id){x.t=clamp(x.t+7);x.h=clamp(x.h+4);}else{x.t=clamp(x.t+(tg?1:3));x.h=clamp(x.h+(tg?1:2));}}});if(tg&&chance(.35))say(`${callOf(tg)}에게 마음을 쓰며 한 해를 보냈다.`);}
   if(P.helper&&P.people[P.helper])P.people[P.helper].h=clamp(P.people[P.helper].h+2);
   fx(o);
   if(f.k==='art'&&P.age>=10&&chance(.25))say(`${P.artK} 솜씨가 늘었다.`);
@@ -710,10 +713,15 @@ function seekLove(kind){
 }
 
 /* ---- 인연 사건 (한 해에 한 번) ---- */
-function targetP(){const x=P.target&&P.people[P.target];if(!x||!x.alive||x.status==='parted'||!['love','spouse'].includes(x.kind)){P.target=null;return null;}return x;}
+function targetP(){const x=P.target&&P.people[P.target];if(!x||!x.alive||x.status==='parted'||!['love','spouse','cheop'].includes(x.kind)){P.target=null;return null;}return x;}
 function yLoveEvent(){
   if(!loveAllowed())return;
   const tg=targetP();
+  if(tg&&tg.kind==='cheop'){
+    if(P.lastLove&&P.year-P.lastLove<2)return;
+    if(!chance(.5))return;
+    P.lastLove=P.year;return spouseScene(tg);
+  }
   if(tg&&tg.kind!=='spouse'){
     if(P.lastLove&&P.year-P.lastLove<2)return;
     if(!chance(G.fest?.7:.5))return;
@@ -746,7 +754,7 @@ const SP_LIKE={warm:['talk','gift'],blunt:['care'],playful:['outing','gift'],ste
 const SP_HATE={blunt:['talk'],stern:['outing'],cool:['gift'],shy:['outing']};
 function spouseScene(x){
   const king=x.kingRole;const w=spouseWord(x);
-  const el=P.elder&&P.people[P.elder]&&P.people[P.elder].alive?P.people[P.elder]:null;
+  const el=x.kind!=='cheop'&&P.elder&&P.people[P.elder]&&P.people[P.elder].alive?P.people[P.elder]:null;
   const where=G.fest?G.fest.n+'을 맞아':R(['어느 봄날','어느 여름날','비 내리던 날','달 밝은 밤','어느 가을날','눈 내리던 날']);
   const acts=king?[
     ['talk','임금께 시를 지어 올린다','글솜씨와 마음이 함께 전해진다'],
@@ -756,7 +764,7 @@ function spouseScene(x){
   ]:[
     ['talk','속마음을 터놓는다','밤늦도록 이야기를 나눈다'],
     ['outing','함께 나들이를 간다',G.fest?`${G.fest.n} 구경을 함께 간다`:'꽃구경이나 달구경을 함께 간다'],
-    ['care',P.female?'살림과 뒷바라지에 정성을 쏟는다':'아내의 고단함을 덜어 준다',P.female?'남편의 의복과 끼니를 손수 챙긴다':'집안일을 거들고 살뜰히 챙긴다'],
+    ['care',P.female?'살림과 뒷바라지에 정성을 쏟는다':(x.kind==='cheop'?'그의':'아내의')+' 고단함을 덜어 준다',P.female?'남편의 의복과 끼니를 손수 챙긴다':'집안일을 거들고 살뜰히 챙긴다'],
     ['gift','마음을 담은 선물을 한다',x.known?eulreul(taste(x.taste).gift)+' 고른다':'취향을 알면 더 잘 통한다'],
     ...(el?[['elder',P.female?'시어머니를 정성껏 모신다':'장모께 예를 다한다','집안 어른의 마음을 얻으면 부부 사이도 좋아진다']]:[])
   ];
@@ -764,7 +772,7 @@ function spouseScene(x){
   const opts=acts.map(([k,t,sub])=>{const p=odds(k);const tags=['정 ↑'];if(k==='gift')tags.push('재산 조금 ↓');if(k==='elder')tags.push('집안 어른과의 사이 ↑');if(king)tags.push('총애 ↑');
     return {t,sub,p,tags,fn:()=>doSpouse(x,k,p,el)};});
   opts.push({t:'무심히 지나간다',sub:'올해는 그냥 넘긴다',p:null,safe:true,tags:['정 조금 ↓'],fn:()=>{x.h=clamp(x.h-2);x.t=clamp(x.t-3);say('그해에는 서로 데면데면하게 지냈다.');}});
-  return {kind:'love',title:`부부의 정 · ${king?x.title:w}`,pid:x.id,text:`${where}, ${king?'임금':w}${king?'과':P.female?'과':'와'} 마주한 날이었다. 지금 ${king?'그대를 향한 총애':'부부의 정'}은 ${king?(P.favor>60?'두터운':'아직 옅은')+' 편이다':HEART[hLv(x.t)]+' 정도였다'}.${x.known?` ${eulreul(persona(x.persona).n)} 지닌 사람이다.`:''}`,opts};
+  return {kind:'love',title:x.kind==='cheop'?`첩과의 정 · ${callOf(x)}`:`부부의 정 · ${king?x.title:w}`,pid:x.id,text:`${where}, ${king?'임금':w}${king?'과':P.female?'과':'와'} 마주한 날이었다. 지금 ${king?'그대를 향한 총애':'부부의 정'}은 ${king?(P.favor>60?'두터운':'아직 옅은')+' 편이다':HEART[hLv(x.t)]+' 정도였다'}.${x.known?` ${eulreul(persona(x.persona).n)} 지닌 사람이다.`:''}`,opts};
 }
 function doSpouse(x,k,p,el){
   const king=x.kingRole;const w=king?'임금':spouseWord(x);
@@ -776,7 +784,7 @@ function doSpouse(x,k,p,el){
     if(k==='elder'&&el)el.rel=clamp(el.rel+12);
     const ok={talk:king?'임금이 그대의 시를 오래 들여다보았다.':`${w}와(과) 밤늦도록 이야기를 나누었다. 몰랐던 속마음을 알게 되었다.`,
       outing:king?'후원을 거닐며 임금이 오랜만에 웃었다.':`${w}와(과) 나들이를 다녀왔다. 오랜만에 둘이 웃었다.`,
-      care:king?'임금이 그대의 정성을 칭찬하였다.':P.female?'남편이 그대의 정성을 알아주었다.':'아내가 그대의 마음 씀씀이에 고마워하였다.',
+      care:king?'임금이 그대의 정성을 칭찬하였다.':P.female?'남편이 그대의 정성을 알아주었다.':`${iga(x.kind==='cheop'?callOf(x):'아내')} 그대의 마음 씀씀이에 고마워하였다.`,
       gift:`${w}이(가) 선물을 받고 환하게 웃었다.`,
       elder:P.female?'시어머니의 낯빛이 한결 부드러워졌다. 남편도 그 모습을 보고 흐뭇해하였다.':'장모가 그대를 크게 반겼다. 아내도 기뻐하였다.'}[k];
     say(ok.replace(`${w}와(과)`,gwawa(w)).replace(`${w}이(가)`,iga(w))+(liked?' 정이 부쩍 깊어졌다.':''),'big');
