@@ -449,7 +449,7 @@ function renderSillok(h,fresh){
   window.scrollTo(0,0);
 }
 async function saveImage(sl){
-  try{await document.fonts.ready;}catch(e){}
+  try{await document.fonts.load("100px 'Yeon Sung'",'조선연애실록'+(P&&P.name||''));await document.fonts.ready;}catch(e){}
   const W=1080,pad=96,cw=W-pad*2;
   const c=document.createElement('canvas');const x=c.getContext('2d');
   const body="34px 'Noto Serif KR', serif",head="bold 28px 'Noto Sans KR', sans-serif";
@@ -461,7 +461,7 @@ async function saveImage(sl){
   c.width=W;c.height=H;
   x.fillStyle='#f6efdc';x.fillRect(0,0,W,H);
   x.strokeStyle='rgba(45,74,124,.55)';x.lineWidth=2;x.strokeRect(34,34,W-68,H-68);x.lineWidth=1;x.strokeRect(46,46,W-92,H-92);
-  x.fillStyle='#2b241b';x.textAlign='center';x.font="120px 'Nanum Brush Script', cursive";x.fillText(sl.title,W/2,pad+100);
+  x.fillStyle='#2b241b';x.textAlign='center';x.font="100px 'Yeon Sung', cursive";x.fillText(sl.title,W/2,pad+100);
   x.font="bold 34px 'Noto Serif KR', serif";x.fillStyle='#2d4a7c';x.fillText(sl.epithet,W/2,pad+170);
   x.font="26px 'Noto Sans KR', sans-serif";x.fillStyle='#7b7163';x.fillText(`${sl.origin} · ${sl.born}–${sl.death} · 향년 ${sl.age}세`,W/2,pad+215);
   let y=pad+290;x.textAlign='left';
@@ -469,7 +469,7 @@ async function saveImage(sl){
     x.font=body;x.fillStyle='#2b241b';
     if(b.letter){x.fillStyle='rgba(45,74,124,.08)';x.fillRect(pad,y-38,cw,b.lines.length*58+20);x.fillStyle='#2d4a7c';x.fillRect(pad,y-38,5,b.lines.length*58+20);x.fillStyle='#2b241b';}
     for(const l of b.lines){x.fillText(l,pad+(b.letter?26:0),y);y+=58;}y+=30;}
-  x.textAlign='center';x.font="44px 'Nanum Brush Script', cursive";x.fillStyle='#7b7163';x.fillText('조선 연애실록',W/2,H-70);
+  x.textAlign='center';x.font="44px 'Yeon Sung', cursive";x.fillStyle='#7b7163';x.fillText('조선 연애실록',W/2,H-70);
   const blob=await new Promise(r=>c.toBlob(r,'image/png'));
   let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(e){}
   const showImg=()=>{const url=c.toDataURL('image/png');modal(`<h3>연애실록 이미지</h3><p class="serif muted" style="font-size:.9em">아래 그림을 <b>길게 눌러</b> ‘이미지 다운로드’나 ‘이미지 공유’를 고르십시오. 그래도 안 되면 화면을 캡처해 주십시오.</p><img src="${url}" alt="${esc(sl.title)}" style="width:100%;border:1px solid var(--line2);border-radius:6px"><div class="rowbtns"><button class="btn" data-a="close">닫기</button></div>`);};
