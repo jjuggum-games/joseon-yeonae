@@ -364,22 +364,48 @@ function sideLove(){
     ${V.filter==='love'?'<div class="fnote">마음이 가는 사람에게 <b>마음에 두기</b>를 눌러 두면, 두어 해에 한 번 그 사람과의 일이 찾아오고 ‘인연 돌보기’ 중점도 그 사람에게 몰아서 오릅니다. 정하지 않으면 드물게 무작위로 찾아옵니다. 통찰이 높으면 상대의 마음이 또렷이 보입니다.</div>':''}`;
 }
 function sideFam(){
-  const nd=(name,sub,cls='')=>`<div class="nd ${cls}">${esc(name)}<small>${esc(sub)}</small></div>`;
-  const pa=P.parents;
-  let h='<div class="tree">';
+  const row=(name,rel,meta,cls='')=>`<div class="fm ${cls}"><div class="fn">${esc(name)}</div><div class="fr">${esc(rel)}</div>${meta?`<div class="fx">${esc(meta)}</div>`:''}</div>`;
+  const grp=(t,inner,sub)=>inner?`<div class="fg"><div class="fgh">${t}${sub?`<span>${sub}</span>`:''}</div>${inner}</div>`:'';
+  const dead=x=>x.alive?'':'dead';const ded=x=>x.alive?'':'故 ';
+  const pa=P.parents;let h='<div class="fam">';
   if(P.ancestor)h+=`<div class="anc" style="margin-bottom:8px">${P.ancestor.gens}대조: 지난 삶의 ${esc(P.ancestor.name)}</div>`;
-  h+=`<div class="lv">부모${pa.f.alive||pa.m.alive?` · 사이 ${relWord(P.parentRel==null?60:P.parentRel)}`:''}</div><div class="row">${nd(pa.f.name,(pa.f.alive?'':'故 ')+'아버지 · '+pa.f.job,pa.f.alive?'':'dead')}${nd(pa.m.name,(pa.m.alive?'':'故 ')+'어머니 · '+pa.m.job,pa.m.alive?'':'dead')}</div><div class="vline"></div>`;
-  const sibs=P.sibs.filter(s=>P.age+s.off>=0);
-  const older=sibs.filter(s=>s.older),younger=sibs.filter(s=>!s.older);
-  h+=`<div class="lv">형제자매</div><div class="row">${older.map(s=>nd(s.name,(s.alive?'':'故 ')+sibWord(s)+(s.married?' · 혼인':''),s.alive?'':'dead')).join('')}${nd(displayName(),'나','me')}${younger.map(s=>nd(s.name,(s.alive?'':'故 ')+sibWord(s)+(s.married?' · 혼인':''),s.alive?'':'dead')).join('')}</div>`;
-  const sps=Object.values(P.people).filter(x=>['spouse','ex','cheop'].includes(x.kind));
-  if(sps.length){h+=`<div class="vline"></div><div class="lv">배우자</div><div class="row">${sps.map(x=>nd(x.title||callOf(x),(x.alive?'':'故 ')+(x.kind==='ex'?'헤어짐':x.kind==='cheop'?'첩':(P.female?'남편':'아내'))+(x.fam&&!x.real?' · '+x.fam:''),x.alive?'':'dead')).join('')}</div>`;
-    const el=P.elder&&P.people[P.elder];if(el)h+=`<div class="row">${nd(el.title,el.alive?'집안 어른':'故 집안 어른',el.alive?'':'dead')}</div>`;}
-  if(P.kids.length){h+=`<div class="vline"></div><div class="lv">자식</div><div class="row">${P.kids.map(k=>nd(k.name,(k.alive?'':'故 ')+(k.female?'딸':'아들')+(k.adopted?' · 양자':'')+(k.seo?' · 서출':'')+` · ${P.year-k.born}세`+(k.inlaw?` · 사돈 ${k.inlaw}`:''),k.alive?'':'dead')).join('')}</div>`;}
-  if(P.grand)h+=`<div class="vline"></div><div class="lv">손주</div><div class="row">${nd(P.grand+'명','손주')}</div>`;
-  if(P.preg)h+=`<div class="fnote" style="text-align:center">뱃속의 아이 · 태몽: ${esc(P.preg.dream)}</div>`;
+  /* 웃어른 */
+  let up=row(pa.f.name,ded(pa.f)+'아버지',[pa.f.job,pa.f.alive?(pa.f.age+P.age)+'세':''].filter(Boolean).join(' · '),dead(pa.f))
+        +row(pa.m.name,ded(pa.m)+'어머니',[pa.m.job,pa.m.alive?(pa.m.age+P.age)+'세':''].filter(Boolean).join(' · '),dead(pa.m));
+  const el=P.elder&&P.people[P.elder];if(el)up+=row(el.title||callOf(el),ded(el)+(P.female?'시댁 어른':'처가 어른'),el.alive&&el.rel!=null?'사이 '+relWord(el.rel):'',dead(el));
+  h+=grp('웃어른',up,pa.f.alive||pa.m.alive?'부모와 사이 '+relWord(P.parentRel==null?60:P.parentRel):'');
+  /* 형제자매 */
+  const sibs=P.sibs.filter(s=>P.age+s.off>=0).sort((x,y)=>y.off-x.off);
+  let sb='';let meDone=false;
+  for(const s of sibs){if(!s.older&&!meDone){sb+=row(displayName(),'나',P.age+'세','me');meDone=true;}
+    sb+=row(s.name,ded(s)+sibWord(s),[s.alive?(P.age+s.off)+'세':'',s.married?'혼인':''].filter(Boolean).join(' · '),dead(s));}
+  if(!meDone)sb+=row(displayName(),'나',P.age+'세','me');
+  h+=grp('형제자매',sb,sibs.length?'':'외동');
+  /* 배우자와 첩 */
+  const sp=Object.values(P.people).filter(x=>['spouse','ex','cheop'].includes(x.kind)||x.kind==='rival'&&/첩/.test(x.title||''));
+  const ord=x=>x.kind==='spouse'?0:x.kind==='cheop'?1:x.kind==='rival'?2:3;
+  sp.sort((x,y)=>ord(x)-ord(y));
+  const spRel=x=>{
+    if(x.kind==='ex')return '헤어진 배우자';
+    if(x.kind==='cheop')return '첩';
+    if(x.kind==='rival')return '남편의 첩';
+    if(x.kingRole)return '임금';
+    if(P.sub==='cheop'&&P.female)return '남편 (나는 부실)';
+    if(x.mode==='cheop')return '첩';
+    return P.female?'남편':'아내';};
+  const spMeta=x=>[x.alive?ageOf(x)+'세':'',x.kind==='spouse'&&x.alive&&x.h!=null?'정 '+hLvWord(x):'',x.kind==='rival'?'악연':'',x.fam&&!x.real?x.fam:''].filter(Boolean).join(' · ');
+  h+=grp(P.female?'배우자':'배우자와 첩',sp.map(x=>row(x.title&&x.kind!=='rival'?x.title:callOf(x),ded(x)+spRel(x),spMeta(x),dead(x))).join(''));
+  /* 자식 */
+  if(P.kids.length){
+    const kd=P.kids.map(k=>row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?' (양자)':'')+(k.seo?' (서출)':''),[k.alive?(P.year-k.born)+'세':'',k.edu===1?'글공부':'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k))).join('');
+    const alive=P.kids.filter(k=>k.alive).length;
+    h+=grp('자식',kd,`${P.kids.length}명${alive<P.kids.length?` · 살아 있는 이 ${alive}명`:''}`);
+  }
+  if(P.preg)h+=grp('뱃속의 아이',row('태몽',P.preg.dream,P.preg.guess?P.preg.guess+'일 것이라 한다':''));
+  if(P.grand)h+=grp('손주',row(P.grand+'명','손주',''));
   return h+'</div>';
 }
+function hLvWord(x){const v=(x.h+x.t)/2;return v>=80?'깊음':v>=55?'도타움':v>=35?'그럭저럭':'소원함';}
 function sideTl(){
   let h='<div class="tl">';let lastK='';
   const evText=e=>{const x=P.people[e.t];switch(e.type){case 'birth':return '태어남';case 'meet':return x?`${eulreul(callOf(x))} 만남`:'인연';case 'mutual':return x?`${gwawa(callOf(x))} 서로 연모`:'';case 'marry':return x?`${gwawa(x.title||callOf(x))} 혼인`:'혼인';case 'child':return `${e.female?'딸':'아들'} ${e.t} 출생`;case 'kidloss':return `${eulreul(e.t)} 잃음`;case 'widow':return '배우자를 여읨';case 'job':return e.t;case 'freed':return e.t;case 'exile':return '유배';case 'war':return e.t;case 'branch':return '역사를 바꿈';case 'rare':return '드문 일';case 'adopt':return `${e.t} 입양`;case 'kidwed':return `${e.t} 혼인`;case 'loss':return e.t;case 'court':return e.t;case 'parted':return '인연이 끊김';case 'lover':return '정인이 됨';case 'elope':return '함께 달아남';case 'sobak':return '소박';case 'cheop':return '첩을 들임';default:return '';}};
