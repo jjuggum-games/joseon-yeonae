@@ -228,7 +228,7 @@ function renderMe(){
     <div class="sec">올해의 중점</div>
     ${fl.length?`<div class="foci">${FOCI.filter(f=>fl.includes(f.k)).map(f=>`<button class="btn ${P.focus===f.k?'on':''}" data-a="focus" data-v="${f.k}" title="${esc(FOCUS_DESC[f.k][0])}">${f.n}</button>`).join('')}</div>
       <div class="focusdesc">${focusNote(P.focus)}</div>
-      <div class="fnote">${'언제든 바꿀 수 있고, 바꿔도 세월은 멈추지 않습니다. 이와 별도로 나이와 직책에 따라 통찰·매력 같은 능력치가 조금씩 저절로 오릅니다.'}</div>`:`<div class="fnote">${esc(av.why||'')}</div>`}
+      <div class="fnote">${'언제든 바꿀 수 있고, 바꿔도 세월은 멈추지 않습니다. 이와 별도로 해마다 크고 작은 일을 겪으며 여러 능력치가 무작위로 2~5씩 오르고, 생업에 따라서도 조금씩 오릅니다.'}</div>`:`<div class="fnote">${esc(av.why||'')}</div>`}
     ${P.titles.length?`<div class="sec">지나온 직책</div><div>${P.titles.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>`:''}`;
 }
 const FOCUS_DESC={
