@@ -110,12 +110,16 @@ function rollBirth(hist){
   if(p.cls==='yangban'&&chance(.12))p.sub='seo';
   // 능력치
   const st=p.st;
-  for(const k of ['grace','know','art','wit','brave'])st[k]=ri(3,18);
-  st.look=ri(8,62);st.health=ri(62,86);st.worry=ri(0,10);
+  /* 타고난 바탕: 모두 10 이상, 계단식으로 높낮이를 나누어 무작위로 붙인다 */
+  const TIERS=[[50,40,40,25,15],[45,40,30,20,15],[55,35,30,20,10],[40,40,35,30,20],[60,35,25,15,10],[50,35,30,30,15],[45,45,25,20,10]];
+  const tier=R(TIERS).map(v=>Math.max(10,v+ri(-3,3)));
+  const keys=['look','know','art','wit','brave'];for(let i=keys.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[keys[i],keys[j]]=[keys[j],keys[i]];}
+  delete st.grace;keys.forEach((k,i)=>st[k]=tier[i]);p.stMerged=1;
+  st.health=ri(62,86);st.worry=ri(0,10);
   st.fame={royal:40,yangban:22,jungin:14,sangmin:8,cheonmin:3}[p.cls]+ri(0,6);
-  if(p.cls==='royal'||p.cls==='yangban'){st.grace+=ri(4,10);st.know+=ri(2,8);}
-  if(p.sub==='gisaeng'){st.art+=ri(6,14);st.look+=ri(4,12);}
-  if(p.cls==='cheonmin'){st.brave+=ri(2,8);st.health-=ri(0,6);}
+  if(p.cls==='royal'||p.cls==='yangban'){st.know+=ri(2,6);}
+  if(p.sub==='gisaeng'){st.art+=ri(4,10);st.look+=ri(3,8);}
+  if(p.cls==='cheonmin'){st.brave+=ri(2,6);st.health-=ri(0,6);}
   p.artK=p.sub==='gisaeng'?R(['가무','음률','시문']):R(ARTS);
   p.wealth={royal:ri(2000,4000),yangban:ri(250,1500),jungin:ri(150,500),sangmin:ri(15,90),cheonmin:ri(0,6)}[p.cls];
   if(p.sub==='seo')p.wealth=Math.round(p.wealth*.4);
