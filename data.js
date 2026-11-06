@@ -138,10 +138,10 @@ const PURGES = {1498:'무오사화',1504:'갑자사화',1519:'기묘사화',1545
 
 /* ===== 신분 ===== */
 const CLS = {
-  royal:{n:'왕족',w:2},
+  royal:{n:'왕족',w:5},
   yangban:{n:'양반',w:20},
   jungin:{n:'중인',w:8},
-  sangmin:{n:'상민',w:46},
+  sangmin:{n:'상민',w:43},
   cheonmin:{n:'천민',w:24}
 };
 const REGIONS = [

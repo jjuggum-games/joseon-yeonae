@@ -555,3 +555,33 @@ function throneScene(){
     {t:'때를 기다린다',sub:'세력을 더 모은 뒤 다시 노린다',p:null,safe:true,tags:['다음 기회에 성공 가능성 ↑'],fn:()=>{P.flags.throneWait=(P.flags.throneWait||0)+1;say('은밀히 사람을 모으며 때를 기다렸다.');}},
     {t:'욕심을 버린다',p:null,safe:true,tags:['근심 ↓'],fn:()=>{P.flags.noThrone=1;fx({worry:-6});say(self?'보위에 대한 마음을 접고 조용히 살기로 하였다.':`${eulreul(nm)} 말려, 보위에 대한 마음을 접게 하였다.`);}}]};
 }
+
+/* 후궁에서 중전으로 */
+function royalSons(){const sp=spouseP();return P.kids.filter(k=>k.alive&&!k.female&&sp&&k.father===sp.id).length;}
+function queenRiseScene(){
+  P.flags.qriseY=P.year;const k=realKing(P.year);const sons=royalSons();
+  const p=clamp(.15+P.favor/300+sons*.1+P.st.wit/500+P.st.fame/600,.08,.8);
+  return {kind:'major',title:'중궁의 자리',text:`중궁전이 흔들린다는 말이 궐 안에 돈다. ${sons?`왕자를 ${sons}명이나 낳은 그대를 두고, 다음 중전은 그대라는 수군거림이 들린다.`:'임금의 총애를 받는 그대를 두고 사람들이 수군거린다.'} 중전의 자리에 오를 수 있다면…`,opts:[
+    {t:'중전의 자리를 노린다',sub:'총애와 왕자, 통찰이 힘이 된다',p,tags:['신분 변화: 중전','실패하면 큰 화를 입음'],fn:()=>{
+      if(chance(p)){setJob('queen',1);P.home='중궁전';fx({fame:25,worry:-5});P.favor=clamp(P.favor+10);say(`[[${k.n}]]이 그대를 왕비로 책봉하였다. 후궁에서 중전의 자리에 올랐다.${sons?' 그대가 낳은 왕자가 세자로 책봉될 것이라는 말이 돌았다.':''}`,'big');ev('job','후궁에서 중전으로 책봉되었다');note('naemyeong');}
+      else{P.favor=clamp(P.favor-25);fx({fame:-15,worry:20});if(chance(.15)){say('중전을 모해하려 했다는 죄를 뒤집어썼다.','big');punish({});}else say('일이 틀어져 오히려 임금의 눈 밖에 났다.','big');}}},
+    {t:'분수를 지킨다',p:null,safe:true,tags:['총애 조금 ↑'],fn:()=>{P.favor=clamp(P.favor+5);say('욕심을 드러내지 않고 조용히 처소를 지켰다.');}}]};
+}
+/* 첩에서 정실로 (그대가 첩일 때) */
+function wifeRiseScene(){
+  P.flags.wriseY=P.year;const sp=spouseP();const nm=callOf(sp);const sons=P.kids.filter(k=>k.alive&&!k.female).length;
+  const yb=['yangban','royal'].includes(sp.cls);
+  const p=clamp(.15+sons*.12+(sp.h||50)/400+(sp.wifeDead?.25:0),.08,.85);
+  return {kind:'major',title:'정실의 자리',pid:sp.id,text:`${sp.wifeDead?`${nm}의 정실이 세상을 떠났다.`:`${nm}의 정실은 끝내 아들을 얻지 못하였다.`} ${sons?`아들 ${sons}명을 낳은 그대를 정실로 올리자는 말이 집안에서 나온다.`:'그대를 정실로 올리자는 말이 조심스레 나온다.'}${yb?' 다만 양반가에서 첩을 정실로 올리는 것은 법도에 어긋나는 일이다.':''}`,opts:[
+    {t:'정실의 자리에 오른다',sub:'아들이 많을수록, 남편의 정이 깊을수록 쉽다',p,tags:['신분 변화: 정실',...(yb?['평판 ↓ (법도에 어긋남)']:[])],fn:()=>{
+      if(chance(p)){P.sub='';sp.mode='wife';fx({fame:yb?-6:4,worry:-10});if(!yb)P.kids.forEach(k=>{if(k.father===sp.id)k.seo=false;});if(P.job&&P.job.k==='housewife')setJob('housewife',2);P.home=P.home.replace('의 별채','의 안채');say(`첩의 몸에서 벗어나 ${nm}의 정실이 되었다.${yb?' 다만 자식들의 서얼 신분은 그대로 남았다.':''}`,'big');ev('rise','첩에서 정실이 되었다');}
+      else{fx({worry:10});say('집안 어른들의 반대로 뜻을 이루지 못하였다.');}}},
+    {t:'지금 자리에 만족한다',p:null,safe:true,tags:[],fn:()=>{say('첩의 자리에서 조용히 살기로 하였다.');}}]};
+}
+/* 아내를 잃은 사내가 첩을 정실로 올리는 일 */
+function promoteCheopScene(c){
+  const nm=callOf(c);P.flags.pcheopY=P.year;const yb=['yangban','royal'].includes(P.cls);
+  return {kind:'major',title:'첩을 정실로',pid:c.id,text:`아내를 잃고 집안의 안주인 자리가 비었다. 곁을 지켜 온 첩 ${eulreul(nm)} 정실로 올리자는 말이 나온다.${yb?' 다만 양반가에서 첩을 정실로 올리는 것은 법도에 어긋나는 일이다.':''}`,opts:[
+    {t:`${eulreul(nm)} 정실로 올린다`,p:null,tags:['배우자가 생김',...(yb?['평판 ↓ (법도에 어긋남)']:[])],fn:()=>{c.kind='spouse';c.status='married';c.mode='wife';P.spouse=c.id;P.married=true;P.widowed=false;P.cheopN=Math.max(0,(P.cheopN||1)-1);fx({fame:yb?-6:2});say(`첩 ${eulreul(nm)} 정실로 올렸다. ${iga(nm)} 눈물을 글썽였다.`,'big');ev('marry',c.id,{love:true,mode:'wife'});}},
+    {t:'새 아내를 들이기로 한다',p:null,safe:true,tags:[],fn:()=>{say('첩은 첩의 자리에 두고, 새 혼처를 알아보기로 하였다.');}}]};
+}
