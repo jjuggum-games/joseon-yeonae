@@ -191,6 +191,8 @@ function yNews(){
   if(y===1392)P.cls==='royal'||say('나라의 주인이 바뀌었다. 이제 이 땅은 조선이었다.');
   const altOn=P.alt&&y>P.alt.year;
   if(!altOn&&NEWS[y])say(NEWS[y],'news');
+  if(!altOn&&P.age>=3){const EV={1897:'대한제국이 세워지는 것을 보았다',1910:'나라를 잃는 경술국치를 겪었다',1919:'3·1 운동의 만세 소리를 들었다',1945:'광복을 맞았다',1950:'6·25 전쟁을 겪었다'}[y];if(EV)ev('era',EV);}
+  if(!altOn){const N={1910:'gukchi',1919:'samil',1940:'changssi',1945:'gwangbok',1950:'yugio'}[y];if(N)note(N);}
   if(altOn&&chance(.18))say(R(altNews()),'alt');
   if(y===1413&&!P.female&&P.age>=16)note('hopae');
   if(y===1678)note('sangpyeong');
@@ -416,7 +418,7 @@ function yJob(){
     else if(J.lv>=1&&J.lv<6&&(J.lv<3||chance(.45))&&(J.lv<5||P.flags.warYear||chance(.15))&&chance(postMul()*(.03+Math.max(0,P.st.brave+P.st.wit-120)/900+P.st.fame/2500+(P.flags.warYear?.12:0)+(P.post==='border'&&P.flags.warYear?.1:0)))){setJob('military',J.lv+1);say(`${euro(jobTitle(P.job))} 올랐다.`,J.lv+1>=4?'big':'n');if(P.job.lv>=4)ev('job',`${jobTitle(P.job)}에 올랐다`);}
   }
   if(k==='soldier'&&J.lv>=1&&examY&&a<=45&&P.st.brave>=55&&chance(.15)){setJob('military',1);say(`군공을 인정받아 무과에 나아가 급제하였다. ${jobTitle(P.job)} 자리를 받았다.`,'big');ev('job','무과에 급제하였다');}
-  if(['teacher','photo','reporter','westdoc','preach','newarmy','telegraph','worker','donghak','naesi','namchong','doctor','interp','painter','uinyeo','gwangdae','weaver','soldier','hunjang','sword','yein','jumo','fisher','smith','potter','carpenter','mudang','ajeon','sanwon','monk','herb','nurse','baekjeong','chaekkwae','jeongisu','hunter','sanpa','jeomjaeng','bangmul','dyer','gatjang','mabu','salt','haenyeo','gwansang','yulgwan','sajagwan','akgong','poet','cheosa','bandit'].includes(k)&&J.lv<d.ladder.length-1&&a>=15){
+  if(['clerk','indep','teacher','photo','reporter','westdoc','preach','newarmy','telegraph','worker','donghak','naesi','namchong','doctor','interp','painter','uinyeo','gwangdae','weaver','soldier','hunjang','sword','yein','jumo','fisher','smith','potter','carpenter','mudang','ajeon','sanwon','monk','herb','nurse','baekjeong','chaekkwae','jeongisu','hunter','sanpa','jeomjaeng','bangmul','dyer','gatjang','mabu','salt','haenyeo','gwansang','yulgwan','sajagwan','akgong','poet','cheosa','bandit'].includes(k)&&J.lv<d.ladder.length-1&&a>=15){
     const st=P.st[d.stat]||P.st.art;
     if((J.lv===0||a>=28)&&chance(postMul()*(.04+(st-45)/380+(J.lv===0&&a>=20?.1:0)))){setJob(k,J.lv+1);say(`${iga(d.ladder[P.job.lv])} 되었다.`+(P.job.lv===d.ladder.length-1?' 솜씨가 널리 알려졌다.':''),'big');if(P.job.lv===d.ladder.length-1)ev('job',`${iga(d.ladder[P.job.lv])} 되었다`);}}
   if(k==='housewife'){if(J.lv===0&&P.married&&chance(.35))setJob(k,1);else if(J.lv===1&&a>=38&&chance(.25)){setJob(k,2);say('집안 살림을 도맡는 안주인이 되었다.');}}
@@ -445,7 +447,7 @@ function yJob(){
 }
 function promoteCon(n){const lv=Math.min(8,P.job.lv+n);setJob('concubine',lv);say(`[[${JOBS.concubine.ladder[lv]}]]의 품계를 받았다.`,'big');ev('job',`${JOBS.concubine.ladder[lv]}에 올랐다`);note('naemyeong');}
 function isGwageoYear(y){return y<1894&&[0,3,6,9].includes((y-4+6000)%12);}
-function jobPay(J){const L=J.lv;return ({official:6+L*7,merchant:[6,28,90][L],gisaeng:[0,6,16,40][L],concubine:25+L*12,queen:[150,300][L],king:[600][0],royalwife:[60,90][L],housewife:[0,1,3][L],court:2+L*4,farmer:[2,6,14][L],weaver:[2,4,9][L],doctor:[6,15,32][L],interp:[8,20,45][L],painter:[5,12,28][L],uinyeo:[2,5,10][L],slave:[0,.3,1][L],gwangdae:[1,4,14][L],soldier:[2,6,14][L],hunjang:[0,2,8][L],sword:[0,4,12][L],yein:[1,5,16][L],scholar:[0,3,4][L],prince:[60,90,140][L],princess:[60,90][L],buma:[80][0],lady:[0,0,0,10][L],military:[0,10,18,28,38,55,80][L],jumo:[2,6,14][L],fisher:[2,5,14][L],smith:[1,5,10][L],potter:[1,5,12][L],carpenter:[1,5,14][L],mudang:[1,5,14][L],ajeon:[2,6,14][L],sanwon:[4,10,20][L],monk:[0,1,4][L],herb:[1,4,16][L],nurse:[1,3,6][L],sosil:[20,35][L],naesi:[3,8,16,26,40][L],chongsin:[20,45,90][L],namchong:[4,10,18][L],baekjeong:[2, 6, 14][L],chaekkwae:[1, 5, 14][L],jeongisu:[1, 4, 12][L],hunter:[1, 5, 12][L],sanpa:[1, 4, 10][L],jeomjaeng:[1, 5, 16][L],bangmul:[2, 6, 14][L],dyer:[1, 5, 12][L],gatjang:[1, 5, 12][L],mabu:[1, 3, 8][L],salt:[1, 4, 16][L],haenyeo:[1, 5, 12][L],gwansang:[5, 12, 26][L],yulgwan:[5, 12, 26][L],sajagwan:[3, 10, 22][L],akgong:[2, 6, 16][L],poet:[0, 1, 4][L],cheosa:[0, 2, 8][L],bandit:[2, 8, 18][L],teacher:[4,10,24][L],photo:[3,10,26][L],reporter:[3,9,22][L],westdoc:[2,18,40][L],preach:[0,2,6][L],newarmy:[3,8,20][L],telegraph:[4,10,22][L],worker:[2,4,9][L],donghak:[0,2,6][L]}[J.k]||0);}
+function jobPay(J){const L=J.lv;return ({official:6+L*7,merchant:[6,28,90][L],gisaeng:[0,6,16,40][L],concubine:25+L*12,queen:[150,300][L],king:[600][0],royalwife:[60,90][L],housewife:[0,1,3][L],court:2+L*4,farmer:[2,6,14][L],weaver:[2,4,9][L],doctor:[6,15,32][L],interp:[8,20,45][L],painter:[5,12,28][L],uinyeo:[2,5,10][L],slave:[0,.3,1][L],gwangdae:[1,4,14][L],soldier:[2,6,14][L],hunjang:[0,2,8][L],sword:[0,4,12][L],yein:[1,5,16][L],scholar:[0,3,4][L],prince:[60,90,140][L],princess:[60,90][L],buma:[80][0],lady:[0,0,0,10][L],military:[0,10,18,28,38,55,80][L],jumo:[2,6,14][L],fisher:[2,5,14][L],smith:[1,5,10][L],potter:[1,5,12][L],carpenter:[1,5,14][L],mudang:[1,5,14][L],ajeon:[2,6,14][L],sanwon:[4,10,20][L],monk:[0,1,4][L],herb:[1,4,16][L],nurse:[1,3,6][L],sosil:[20,35][L],naesi:[3,8,16,26,40][L],chongsin:[20,45,90][L],namchong:[4,10,18][L],baekjeong:[2, 6, 14][L],chaekkwae:[1, 5, 14][L],jeongisu:[1, 4, 12][L],hunter:[1, 5, 12][L],sanpa:[1, 4, 10][L],jeomjaeng:[1, 5, 16][L],bangmul:[2, 6, 14][L],dyer:[1, 5, 12][L],gatjang:[1, 5, 12][L],mabu:[1, 3, 8][L],salt:[1, 4, 16][L],haenyeo:[1, 5, 12][L],gwansang:[5, 12, 26][L],yulgwan:[5, 12, 26][L],sajagwan:[3, 10, 22][L],akgong:[2, 6, 16][L],poet:[0, 1, 4][L],cheosa:[0, 2, 8][L],bandit:[2, 8, 18][L],teacher:[4,10,24][L],photo:[3,10,26][L],reporter:[3,9,22][L],westdoc:[2,18,40][L],preach:[0,2,6][L],newarmy:[3,8,20][L],telegraph:[4,10,22][L],worker:[2,4,9][L],donghak:[0,2,6][L],clerk:[6,16,40][L],indep:[0,1,3][L]}[J.k]||0);}
 function incomeOf(){
   const J=P.job;let v={royal:150,yangban:22,jungin:12,sangmin:3,cheonmin:.4}[P.cls]||2;
   if(J)v+=jobPay(J)*postPay();
@@ -498,6 +500,8 @@ const JOB_DESC={
   newarmy:['신식 군대','서양식 총과 군복으로 훈련받는 신식 군대에 들어간다. 무예가 중요하다.'],
   telegraph:['우체·전보','새로 생긴 우정국과 전보사에서 일한다. 학식이 중요하다.'],
   worker:['공장 일','정미소와 연초 공장 같은 새 공장에서 품을 판다. 건강이 중요하다.'],
+  clerk:['총독부 관리','총독부의 관청에서 일한다. 벌이는 좋으나 친일이라는 손가락질을 받는다.'],
+  indep:['독립운동','나라를 되찾으려 만주와 상하이를 오가며 싸운다. 목숨이 위태롭다.'],
   donghak:['동학','사람이 곧 하늘이라는 동학에 들어간다. 탐관오리에 맞서는 길이기도 하다.'],
   scholar:['과거 공부','서당과 향교에서 글을 읽어 소과·문과에 나아간다. 학식이 중요하다.'],
   official:['벼슬살이','조정에서 품계를 쌓는다.'],
@@ -569,6 +573,7 @@ function jobChoices(){
   else L=F?['slave','nurse','sanpa','haenyeo','gisaeng','court','mudang']:['slave','naesi','baekjeong','smith','potter','fisher','salt','mabu','hunter','akgong','jeongisu','bandit'];
   if(P.year>=1876){const nw=[];if(P.year>=1881&&!F)nw.push('newarmy');if(P.year>=1885)nw.push('preach');if(P.year>=1886&&P.cls!=='cheonmin'&&(!F||P.year>=1890))nw.push('teacher');if(P.year>=1884&&!F&&P.cls!=='yangban')nw.push('photo');if(P.year>=1896&&!F&&P.cls!=='cheonmin')nw.push('reporter');if(P.year>=1885&&!F&&['yangban','jungin'].includes(P.cls))nw.push('westdoc');if(P.year>=1885&&!F&&P.cls!=='cheonmin')nw.push('telegraph');if(P.year>=1899&&P.cls!=='yangban')nw.push('worker');L=[...nw,...L];}
   if(P.year>=1860&&P.year<=1898&&['sangmin','cheonmin'].includes(P.cls))L.push('donghak');
+  if(P.year>=1910&&P.year<1945){if(!F&&P.cls!=='cheonmin')L.push('clerk');L.push('indep');}
   L=L.filter(k=>jobInEra(k));
   if(a>17)L=L.filter(k=>k!=='court');
   if(a>20||P.married)L=L.filter(k=>k!=='naesi');
@@ -802,7 +807,7 @@ function seekLove(kind){
     const gh=R(['영','화','덕','은','숙','정','명','경','의','순','익','양'])+R(['창','원','안','성','양','천','평','춘','릉','산']);
     const r=rnd();
     if(fem){o.title=r<.45?gh+'공주':gh+'옹주';o.pos=o.title.endsWith('공주')?'공주':'옹주';o.born=P.year-ri(16,24);}
-    else if(r<.12&&P.age<=35&&!Object.values(P.people).some(y=>y.isKing&&y.alive)){const k=realKing(P.year);o.title=k.n;o.isKing=true;o.pos='임금';o.born=k.s-ri(12,22);}
+    else if(r<.12&&hasKing(P.year)&&P.age<=35&&!Object.values(P.people).some(y=>y.isKing&&y.alive)){const k=realKing(P.year);o.title=k.n;o.isKing=true;o.pos='임금';o.born=k.s-ri(12,22);}
     else if(r<.35&&!Object.values(P.people).some(y=>y.seja&&y.alive)){o.title='세자 저하';o.seja=true;o.pos='세자';o.born=P.year-ri(15,26);}
     else if(r<.65){o.title=gh+'대군';o.pos='대군';}
     else {o.title=gh+'군';o.pos='왕자군';}
@@ -1005,17 +1010,18 @@ function yMajor(){
   if(w)P.flags.warYear=1;else P.flags.warYear=0;
   // 사화
   {const sp=spouseP();const can=!P.alt&&!P.flags.noThrone&&P.age>=20&&P.age<=55&&P.year-(P.flags.throneY||0)>=4&&((P.female&&P.married&&sp&&sp.cls==='royal'&&!sp.kingRole&&!sp.real)||(!P.female&&P.cls==='royal'&&P.job&&P.job.k==='prince'));
-   if(can&&chance(.12))add(70,()=>throneScene());}
+   if(can&&hasKing(y)&&chance(.12))add(70,()=>throneScene());}
   {const sp=spouseP();if(sp&&sp.seja&&sp.alive&&realKing(y).s===y&&!P.alt){sp.seja=false;sp.kingRole=true;const kn=(sp.name||'새')+'왕';sp.title=kn;P.alt={year:y,king:kn,from:y,title:'세자빈의 남편이 보위에',line:`세자였던 그대의 남편이 보위에 올라 ${iga(kn)} 되었다.`};setJob('queen',1);P.home='중궁전';say(`선왕이 승하하고 세자였던 남편이 보위에 올랐다. 그대는 중전이 되었다. 이 판의 역사에서 임금은 ${kn}이다.`,'big');ev('branch',`세자였던 남편이 ${iga(kn)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});fx({fame:25});}}
   {const sp=spouseP();if(P.female&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.wifeDead&&chance(.025)){sp.wifeDead=true;say(`${callOf(sp)}의 정실이 병으로 세상을 떠났다.`);}}
-  if(P.job&&P.job.k==='concubine'&&P.job.lv>=6&&P.favor>=60&&P.year-(P.flags.qriseY||0)>=5&&chance(.06+royalSons()*.04))add(72,()=>queenRiseScene());
+  if(hasKing(y)&&P.job&&P.job.k==='concubine'&&P.job.lv>=6&&P.favor>=60&&P.year-(P.flags.qriseY||0)>=5&&chance(.06+royalSons()*.04))add(72,()=>queenRiseScene());
   {const sp=spouseP();if(P.female&&P.married&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.kingRole&&P.year-(P.flags.wriseY||0)>=5){const sons=P.kids.filter(k=>k.alive&&!k.female).length;if(sp.wifeDead||sons>=2&&chance(.08+sons*.04))add(60,()=>wifeRiseScene());}}
   if(!P.female&&!P.married&&P.year-(P.flags.pcheopY||0)>=3){const c=peopleOf('cheop').find(x=>x.alive);if(c&&chance(.5))add(57,()=>promoteCheopScene(c));}
   if(P.female&&P.widowed&&!P.married&&!P.flags.widowAsked&&P.age>=18)add(62,()=>widowScene());
-  if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10)add(90,()=>jeongnyeoScene());
+  if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10&&P.year<1910)add(90,()=>jeongnyeoScene());
   if(P.age>=12&&P.year-(P.flags.fameY||0)>=3&&chance(.55))add(25,()=>fameScene());
   if(P.age>=14&&P.year-(P.flags.famY||0)>=2&&chance(.5))add(28,()=>famScene());
   if(P.year-(P.flags.ideaY||0)>=3&&chance(.4))add(32,()=>ideaScene());
+  if(!P.alt){if(y===1910&&P.age>=15)add(96,()=>gukchiScene());if(y===1919&&P.age>=10)add(94,()=>samilScene());if(y===1940&&P.age>=10)add(90,()=>changssiScene());if(y===1945)add(96,()=>gwangbokScene());if(y===1950)add(96,()=>yugioScene());}
   if(P.flags.catholic&&[1801,1839,1846,1866].includes(y)&&P.flags.persY!==y)add(92,()=>persecutionScene());
   if(y===1894&&!P.flags.dhWar&&P.age>=15&&(P.flags.donghak||(['sangmin','cheonmin'].includes(P.cls)&&chance(.4))))add(93,()=>donghakWarScene());
   if(P.age>=18&&!peopleOf('friend').some(x=>x.alive)&&P.year-(P.flags.nfY||0)>=8&&chance(.15))add(20,()=>newFriendScene());
@@ -1024,7 +1030,7 @@ function yMajor(){
   if(!P.married&&P.age>=(P.widowed||P.divorced?18:22)&&!P.court&&!P.exile&&!(P.job&&['monk','king','concubine','naesi'].includes(P.job.k))&&P.year-(P.flags.soloY||0)>=1&&chance(P.flags.sujeol?.7:.5))add(34,()=>soloScene());
   if(P.kids.some(k=>k.alive)&&P.year-(P.flags.kidStoryY||0)>=3&&chance(.4))add(27,()=>kidStoryScene());
   if(y===1777&&P.kids.some(k=>k.alive&&k.seo))say('나라에서 서얼허통절목을 내려 서얼에게도 벼슬길을 열어 주었다. 서얼 자식들의 앞날에 빛이 비쳤다.','big');
-  {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=13&&P.year-k.born<=17&&!k.seo&&k.cls!=='cheonmin');if(d&&P.cls==='yangban'&&chance(.25))add(80,()=>kidRoyalScene(d));}
+  {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=18&&P.year-k.born<=22&&!k.seo&&(k.cls||P.cls)==='yangban'&&!k.away&&!k.estranged);if(d&&isJoseon(y))add(P.year-d.born>=20?97:80,()=>kidRoyalScene(d));}
   {const q=P.kids.find(k=>k.alive&&k.royalBride==='세자빈');if(q&&realKing(y).s===y&&y-(q.wedY||P.year-1)>=0){q.royalBride='중전';q.feat='중전이 되었다';say(`세자가 보위에 오르니, 딸 ${iga(q.name)} 중전이 되었다!`,'big');ev('kidfeat',`딸 ${q.name}`,{feat:q.feat});queenParentBoost(true);}}
   {const top=Math.max(P.st.look,P.st.know,P.st.art);if(P.age>=18&&P.age<=35&&top>=70&&!P.married&&!P.flags.sujeol&&!(P.widowed&&!P.flags.widowAsked)&&!P.court&&!(P.job&&['concubine','queen','king','buma'].includes(P.job.k))&&P.cls!=='royal'&&P.year-(P.flags.gazeY||0)>=6&&chance(.12+(top-70)/300))add(68,()=>gazeScene());}
   {const sp=spouseP();if(P.married&&sp&&sp.alive&&!sp.kingRole&&!sp.seja&&P.year-(P.flags.dthemY||0)>=6&&P.year-(P.flags.wedY||P.year)>=2){const bad=(sp.h<30?1:0)+(P.female&&!P.kids.some(k=>k.alive&&!k.female)&&P.year-(P.flags.wedY||P.year)>=7?1:0);if(bad&&chance(.08*bad))add(64,()=>divorceThemScene());}}
@@ -1045,8 +1051,8 @@ function yMajor(){
       if(isJoseon(y)&&chance(.035))add(65,()=>haremScene());
       if(isJoseon(y)&&!P.flags.samgan&&P.age<=22&&!P.court&&!P.flags.noMatch)add(P.age>=20?99:76,()=>samganScene(0));
     }
-    if(!P.female&&P.cls==='yangban'&&!P.married&&P.age<=22&&P.sub!=='seo'&&chance(.025))add(60,()=>bumaScene());
-    if(P.court&&P.job&&P.job.k==='court'&&P.job.lv>=1&&P.age<=32&&P.st.look>=50&&!P.married&&chance(P.courtDept==='jimil'?.12:.04))add(66,()=>seungeunScene());
+    if(hasKing(y)&&!P.female&&P.cls==='yangban'&&!P.married&&P.age<=22&&P.sub!=='seo'&&chance(.025))add(60,()=>bumaScene());
+    if(hasKing(y)&&P.court&&P.job&&P.job.k==='court'&&P.job.lv>=1&&P.age<=32&&P.st.look>=50&&!P.married&&chance(P.courtDept==='jimil'?.12:.04))add(66,()=>seungeunScene());
     if(P.sub==='gisaeng'&&P.job&&P.job.lv>=1&&y>=1494&&y<=1505&&P.age<=28&&P.st.art>=45&&!P.married&&chance(.12))add(66,()=>seungeunScene(true));
     // 고백·혼담
     const mut=Object.values(P.people).find(x=>x.kind==='love'&&x.alive&&x.status==='mutual'&&!x.asked);
@@ -1056,7 +1062,7 @@ function yMajor(){
     if(P.married&&P.wantKids===null&&P.year>(P.flags.wedY||0)&&fertile())add(48,()=>kidsScene());
     if(P.flags.askMore&&P.married&&fertile()){P.flags.askMore=0;add(44,()=>kidsScene(true));}
     if(P.wantKids!==false&&P.year-(P.flags.kwishY||0)>=3&&!(P.married&&P.wantKids===null&&P.year<=(P.flags.wedY||0)+1)){const cand=[spouseP(),...peopleOf('cheop')].filter(x=>x&&x.alive&&fertileWith(x)&&!pregOf(x)&&!(P.autoKid&&P.autoKid[x.id]));if(cand.length&&chance(.3))add(43,()=>kidWishScene(R(cand)));}
-    const kw=P.kids.find(k=>k.alive&&!k.married&&P.year-k.born>=18&&P.year-k.born<=25&&!k.wedAsked);
+    const kw=P.kids.find(k=>k.alive&&!k.married&&P.year-k.born>=18&&P.year-k.born<=25&&!k.wedAsked&&!(k.female&&!k.ganTaek&&!k.seo&&(k.cls||P.cls)==='yangban'&&isJoseon(y)));
     if(kw)add(42,()=>kidWedScene(kw));
     if(P.married&&P.age>=(P.eunuch?26:33)&&!P.kids.some(k=>k.alive)&&!P.flags.adoptAsked)add(38,()=>adoptScene());
     else if(P.age>=25&&!P.flags.adoptAsked&&chance(.015))add(30,()=>adoptScene(true));
@@ -1101,7 +1107,7 @@ function rare(k,text){const cx=Store.codex();cx.rare[k]=1;Store.saveCodex();P.fl
 
 /* ===== 자식의 능력치와 배움 ===== */
 const KID_ST=[['look','매력'],['know','학식'],['art','재주'],['brave','무예']];
-const EDU={school:['신식 학교','know'],seodang:['서당에서 글공부','know'],martial:['무예 수련','brave'],art:['소리·그림·바느질 솜씨','art'],manner:['예법과 몸단장','look'],work:['집안일 거들기','know'],play:['마음껏 뛰놀게 둔다',null]};
+const EDU={balance:['두루 고르게',null],school:['신식 학교','know'],seodang:['서당에서 글공부','know'],martial:['무예 수련','brave'],art:['소리·그림·바느질 솜씨','art'],manner:['예법과 몸단장','look'],work:['집안일 거들기','know'],play:['마음껏 뛰놀게 둔다',null]};
 function kidStats(cm){
   const st={};const base=[30,25,20,15,10].map(v=>v+ri(-3,3));
   const ks=KID_ST.map(x=>x[0]);for(let i=ks.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[ks[i],ks[j]]=[ks[j],ks[i]];}
@@ -1109,15 +1115,16 @@ function kidStats(cm){
   return st;
 }
 function eduList(){const y=P.year;return Object.entries(EDU).filter(([k])=>k!=='school'||y>=1886).map(([k,v])=>[k,[eduName(k),v[1]]]);}
-function eduName(k){const y=P.year;if(k==='seodang')return y<1392?'절과 향교에서 글공부':y<1543?'서당·향교에서 글공부':'서당에서 글공부';if(k==='school')return y>=1895?'신식 소학교':'신식 학당';return EDU[k][0];}
+function eduName(k){const y=P.year;if(k==='balance')return '두루 고르게';if(k==='seodang')return y<1392?'절과 향교에서 글공부':y<1543?'서당·향교에서 글공부':'서당에서 글공부';if(k==='school')return y>=1895?'신식 소학교':'신식 학당';return EDU[k][0];}
 function kidSt(k){if(!k.st)k.st=kidStats();if(k.edu===1)k.edu='seodang';if(k.edu===-1)k.edu='work';return k.st;}
-function eduCost(k){const u={royal:10,yangban:3,jungin:2,sangmin:.6,cheonmin:.1}[P.cls]||.5;return k.edu==='work'?-u*.5:k.edu==='play'||!k.edu?0:u;}
+function eduCost(k){const u={royal:10,yangban:3,jungin:2,sangmin:.6,cheonmin:.1}[P.cls]||.5;return k.edu==='work'?-u*.5:k.edu==='play'||!k.edu?0:k.edu==='balance'?u*1.2:u;}
 function kidGrow(k,a){
   const st=kidSt(k);
   if(a===6&&!k.edu){k.edu=P.cls==='yangban'||P.cls==='royal'?(k.female?'manner':'seodang'):P.cls==='jungin'?(k.female?'art':'seodang'):'work';}
   if(a>=6&&a<18){
     const e=EDU[k.edu||'play'];
-    if(e&&e[1])st[e[1]]=Math.min(100,st[e[1]]+ri(4,8));if(k.edu==='school'){st.art=Math.min(100,(st.art||0)+ri(1,3));if(a===6||!P.seen.sinsik){P.seen.sinsik=1;note('sinsik');}}
+    if(k.edu==='balance')KID_ST.forEach(([s])=>{st[s]=Math.min(100,st[s]+ri(1,3));});
+    else if(e&&e[1]){st[e[1]]=Math.min(100,st[e[1]]+ri(4,7));KID_ST.forEach(([s])=>{if(s!==e[1]&&chance(.5))st[s]=Math.min(100,st[s]+1);});}if(k.edu==='school'){st.art=Math.min(100,(st.art||0)+ri(1,3));if(a===6||!P.seen.sinsik){P.seen.sinsik=1;note('sinsik');}}
     const o=R(KID_ST)[0];st[o]=Math.min(100,st[o]+ri(0,3));
     P.wealth=Math.max(0,P.wealth-eduCost(k));
     if(!e[1]&&chance(.3)){}
@@ -1127,7 +1134,13 @@ function kidGrow(k,a){
 function kidFeat(k){
   const st=kidSt(k);const top=KID_ST.map(x=>x[0]).sort((x,y)=>st[y]-st[x])[0];const v=st[top];if(v<55)return;
   const w=k.female?'딸':'아들';const cls=P.cls;let t=null,fame=4;
-  if(top==='know'&&!k.female&&(!k.seo||P.year>=1777)&&k.cls!=='cheonmin'&&['yangban','royal'].includes(cls)){t=k.seo?'서얼허통으로 열린 길을 따라 문과에 급제하였다':'문과에 급제하였다';fame=10;}
+  const Y=P.year;
+  if(Y>=1894){
+    if(top==='know')t=Y>=1910?(k.female?R(['여학교를 마치고 교원이 되었다','신문에 글을 실어 이름을 알렸다']):R(['전문학교를 마치고 의사가 되었다','신문사 기자가 되었다','교원이 되어 아이들을 가르쳤다','일본 유학을 다녀와 신학문을 펼쳤다'])):(k.female?'신식 여학당에서 글을 깨쳐 이름이 났다':R(['관리 임용 시험에 붙어 주사가 되었다','신식 학교를 마치고 교원이 되었다']));
+    else if(top==='brave')t=Y>=1910?(Y<1945?'독립운동에 몸을 던져 이름을 떨쳤다':'씩씩하기로 이름이 났다'):(k.female?'담대하기로 이름이 났다':'신식 군대에 들어가 장교가 되었다');
+    if(t)fame=8;
+  }
+  if(t){}else if(top==='know'&&!k.female&&(!k.seo||P.year>=1777)&&k.cls!=='cheonmin'&&['yangban','royal'].includes(cls)){t=k.seo?'서얼허통으로 열린 길을 따라 문과에 급제하였다':'문과에 급제하였다';fame=10;}
   else if(top==='know'&&!k.female&&['jungin','yangban'].includes(cls)){t='잡과에 붙어 역관이 되었다';}
   else if(top==='know'){t='글을 잘하여 그 이름이 고을에 알려졌다';}
   else if(top==='brave'&&!k.female&&k.cls!=='cheonmin'){t='무과에 급제하였다';fame=8;}

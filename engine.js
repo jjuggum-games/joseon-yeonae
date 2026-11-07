@@ -22,14 +22,16 @@ function money(v){v=Math.max(0,Math.round(v*100));const n=Math.floor(v/100),j=Ma
 function realKing(y){let k=KINGS[0];for(const x of KINGS){if(y>=x.s)k=x;}return k;}
 function kingAt(y,P){if(P&&P.alt&&P.alt.king&&y>=P.alt.from)return {n:P.alt.king,s:P.alt.from,alt:true,d:'이 판의 역사에서 보위에 오른 임금.'};return realKing(y);}
 function reignLabel(y,P){
+  if(y>1910&&!(P&&P.alt&&P.alt.king)){if(y<1945)return `일제강점기 ${y-1910}년`;if(y===1945)return '광복';if(y<1948)return `미군정 ${y-1945}년`;return `대한민국 ${y-1947}년`;}
   const k=kingAt(y,P);
   if(!k.alt&&k.n==='고종'&&y>=1897)return `광무 ${y-1896}년`;
   if(!k.alt&&k.n==='순종')return y===1907?'융희 원년':`융희 ${y-1906}년`;
   if(k.n==='태조'&&!k.alt)return `태조 ${y===1392?'원':y-1391}년`;
   const n=y-k.s;return `${k.n} ${n===0?'즉위':n}년`;
 }
-function eraWord(y){return y<1392?'고려 말':y<1500?'조선 전기':y<1650?'조선 중기':y<1863?'조선 후기':'조선 말기';}
-const isJoseon=y=>y>=1392;
+function eraWord(y){return y<1392?'고려 말':y<1500?'조선 전기':y<1650?'조선 중기':y<1863?'조선 후기':y<1897?'조선 말기':y<1910?'대한제국':y<1945?'일제강점기':'광복 이후';}
+const isJoseon=y=>y>=1392&&y<1910;
+const hasKing=y=>y<1910;
 
 /* ===== 사람 이름 ===== */
 function hanName(female){const a=female?F_HAN1:M_HAN1,b=female?F_HAN2:M_HAN2;let x,y;do{x=R(a);y=R(b);}while(x===y);return {n:x+y,mean:`${SYL[x]?SYL[x][1]+' '+x+'('+SYL[x][0]+')':x}, ${SYL[y]?SYL[y][1]+' '+y+'('+SYL[y][0]+')':y}`};}

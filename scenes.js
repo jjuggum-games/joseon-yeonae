@@ -399,7 +399,7 @@ function yEnd(){
   // 암행어사 정인
   if(!P.flags.rare_amhaeng&&(P.exile||P.st.fame<15)){const x=Object.values(P.people).find(p=>p.kind==='love'&&p.alive&&!p.female&&p.cls==='yangban'&&p.h>=55&&p.t>=55);if(x&&chance(.15)){note('amhaeng');rare('amhaeng',`어느 날 마패를 찬 사내가 나타났다. 지난날의 정인 ${x.sur} 도령이 암행어사가 되어 돌아온 것이었다. 그가 그대의 억울함을 풀어 주었다.`);fx({fame:20,worry:-15});if(P.exile){P.exile=P.year;}}}
   Store.saveCur();
-  if(P.year>=1910&&!P.alt){return closeScene();}
+  if(P.year>=1990){return closeScene();}
   if(P.year>=1910&&P.alt&&!P.flags.altEnd){P.flags.altEnd=1;}
   const h=P.st.health;let d;
   const a=P.age;
@@ -453,7 +453,7 @@ function willScene(){
   return {kind:'death',title:'유언',text:`남길 재산은 ${money(P.wealth)}. 어떻게 나눌 것인가.`,opts};
 }
 function closeScene(){
-  return {kind:'death',title:'경술년',text:'1910년, 나라가 저물었다. 이 사람의 실록도 여기서 닫힌다.',opts:[{t:'실록을 닫는다',p:null,fn:()=>{P.closed=true;P.cause='';return finishLife(true);}}]};
+  return {kind:'death',title:'실록을 닫으며',text:'긴 세월이 흘렀다. 이 사람의 실록도 여기서 닫힌다.',opts:[{t:'실록을 닫는다',p:null,fn:()=>{P.closed=true;P.cause='';return finishLife(true);}}]};
 }
 function finishLife(closed){
   if(!closed){P.dead=true;P.deathYear=P.year;P.cause=causeText();say(`${P.age}세에 ${P.cause} 세상을 떠났다.`,'big');ev('death',P.cause);}
@@ -853,6 +853,7 @@ function gazeScene(){
 
 /* ===== 사내로서 높은 이의 총애를 받다 ===== */
 function favorScene(){
+  if(!hasKing(P.year))return null;
   P.flags.gazeY=P.year;const st=P.st;const U=UNIT[P.cls]||.5;
   const k=realKing(P.year);const nearCourt=P.court||(P.job&&['official','naesi','military','akgong','sajagwan'].includes(P.job.k))||['yangban','royal'].includes(P.cls);
   const jaje=k.n==='공민왕'&&P.year>=1365;
@@ -1131,6 +1132,8 @@ const POSTS2={
   poet:[PO('si','시회','여류 시회를 연다.',1.2,.9,['평판 ↑'],'규방 시회에서 시를 짓는다.|그대의 시가 돌았다.|시가 밋밋하다는 평을 들었다.'),Object.assign(PO('eon','언문 소설','언문 소설을 쓴다.',1,1.2,['백성의 인기'],'세책방에서 그대의 소설을 찾는다.|장안의 화제가 되었다.|외설이라는 뒷말이 돌았다.'),{from:1700}),PO('jip','시집 엮기','시집을 엮는다.',1.1,1,['이름이 남음'],'시를 엮어 책으로 낸다.|시집이 청나라까지 갔다.|흩어져 버렸다.')],
   cheosa:[PO('sallim','산림','산림에 은거하며 제자를 기른다.',1.2,.8,['평판 ↑'],'조정에서 벼슬을 내리며 부른다.|사양하여 더 높은 이름을 얻었다.|부름을 받아들였다가 비웃음을 샀다.'),PO('hyang','향약','고을 향약을 이끈다.',1,1,['고을의 신망'],'고을에 다툼이 났다.|잘 중재해 칭송받았다.|한쪽의 원망을 들었다.'),PO('jeo','저술','책을 쓴다.',1.1,.9,['이름이 남음'],'평생의 저술을 마무리한다.|책이 널리 읽혔다.|불에 탔다.')],
   bandit:[PO('ui','의적','탐관오리만 턴다.',1.2,1,['백성의 사랑','추포 위험'],'탐관오리의 곳간이 비어 있다는 소식이 왔다.|곳간을 털어 백성에게 나눴다.|포졸에게 쫓겼다.'),PO('hwa','화적','닥치는 대로 턴다.',1.1,1.6,['재산 ↑','평판 ↓'],'세곡선이 지나간다.|크게 털었다.|관군과 맞닥뜨렸다.'),PO('gwi','귀순 준비','관아에 귀순할 길을 찾는다.',.6,.8,['죄를 씻을 수 있음'],'관아에서 귀순하면 죄를 묻지 않겠다 한다.|무사히 귀순했다.|속임수였다.')],
+  clerk:[PO('myeon','면사무소','면사무소에서 호적과 세금을 맡는다.',1,1.1,['안정','동네의 눈총'],'공출 할당량을 채우라는 명이 떨어졌다.|동네 사람들 사정을 봐주며 겨우 채웠다.|모질게 걷어 원망을 샀다.'),PO('gun','군청','군청에서 일한다.',1.2,1.3,['수입 ↑','평판 ↓'],'독립운동가를 밀고하라는 압박을 받았다.|모른 척 넘겼다.|밀고하라는 압박에 시달렸다.'),PO('school','학교 서기','보통학교 서기로 일한다.',.9,1,['평판 덜 깎임'],'아이들에게 일본어만 쓰게 하라는 명이 내려왔다.|몰래 조선말을 눈감아 주었다.|들켜서 꾸중을 들었다.')],
+  indep:[PO('manju','만주 독립군','만주 무장 독립군에 든다.',1.3,.8,['평판 ↑','목숨이 위태로움'],'일본군 수비대를 습격한다.|습격에 성공하였다.|크게 다쳤다.'),PO('shanghai','상하이 임시 정부','임시 정부에서 일한다.',1.1,.8,['평판 ↑'],'임시 정부의 자금이 바닥났다.|동포들의 성금을 모아 버텼다.|굶주렸다.'),PO('gungnae','국내 비밀 조직','국내에서 몰래 군자금을 모은다.',1,1,['붙잡힐 수 있음'],'형사가 뒤를 밟는다.|따돌렸다.|붙잡혀 고문을 당했다.')],
   teacher:[PO('gwanrip','관립 소학교','나라에서 세운 소학교에서 가르친다.',1.2,1.1,['안정','평판 ↑'],'학부에서 시찰을 나왔다.|아이들의 실력에 시찰관이 감탄하였다.|꾸중을 들었다.'),PO('mission','선교사 학당','배재·이화 같은 선교사 학당에서 가르친다.',1.1,1.2,['새 학문','유생들의 손가락질'],'유생들이 서양 귀신 학교라며 돌을 던졌다.|흔들림 없이 수업을 이어 갔다.|학생들이 겁을 먹고 흩어졌다.'),PO('sarip','사립 학교 설립','민족의 힘을 기르자며 사립 학교를 세운다.',1.3,.8,['평판 크게 ↑','재산 ↓'],'학교를 세울 돈이 모자라다.|뜻있는 이들이 성금을 보탰다.|문을 닫을 뻔했다.')],
   photo:[PO('studio','사진관','한양에 사진관을 차린다.',1.1,1.4,['수입 ↑'],'혼례 사진을 박으러 손님이 몰렸다.|사진이 잘 나와 소문이 났다.|혼이 빠져나간다며 손님이 달아났다.'),PO('court','궁궐 사진','임금과 왕실의 모습을 박는다.',1.3,1.1,['평판 ↑'],'임금의 어진 사진을 박게 되었다.|훌륭한 사진이 나왔다.|빛이 모자라 사진이 흐렸다.'),PO('tour','팔도 출사','팔도를 돌며 풍경과 사람을 박는다.',1,1,['견문'],'금강산 꼭대기에서 사진을 박는다.|길이 남을 사진이 나왔다.|사진기가 깨졌다.')],
   reporter:[PO('dokrip','민간 신문','백성을 깨우치는 민간 신문에서 일한다.',1.2,1,['평판 ↑','관아의 눈총'],'탐관오리의 비리를 캐냈다.|기사가 나가 탐관오리가 파직되었다.|기사를 막으려는 협박을 받았다.'),PO('gwanbo','관보','나라의 소식을 싣는 관보를 맡는다.',1,1.2,['안정'],'급한 칙령을 실어야 한다.|제때 실어 칭찬받았다.|오자가 나 꾸중을 들었다.'),PO('nonseol','논설','나라의 앞날을 논하는 글을 쓴다.',1.3,.9,['이름을 날림','붙잡힐 수 있음'],'을사늑약을 비판하는 논설을 쓸 것인가.|논설이 온 나라를 울렸다.|일본 헌병에게 끌려갔다.')],
@@ -1560,7 +1563,7 @@ const SOLO_T={inlawcare:'시어머니의 병',rearkids:'홀로 키우는 자식'
 function bookList(cat){
   if(cat==='post'){const out=[];for(const k in POSTS){if(!POSTS[k]||!JOBS[k])continue;POSTS[k].opts.forEach(o=>out.push([k+':'+o.k,`${JOBS[k].n} · ${o.n}`]));}return out;}
   if(cat==='rise')return RISE.map(r=>[r.k+r.to,`${JOBS[r.k].n} → ${CLS[r.to].n}`]).filter((x,i,a)=>a.findIndex(y=>y[0]===x[0])===i);
-  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군']];
+  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
   return [];
 }
 
@@ -1638,3 +1641,62 @@ function ideaScene(){
   const pool=IDEA.filter(s=>!seen.includes(s.id)&&s.c());if(!pool.length)return null;
   const s=R(pool);seen.push(s.id);bookSeen('scene',s.id);const sc=s.f();sc.kind='major';sc.title=`시대 · ${sc.title}`;return sc;
 }
+
+/* ===== 나라를 잃고, 되찾기까지 ===== */
+const STATE_JOBS=['official','military','naesi','court','ajeon','yulgwan','gwansang','sanwon','sajagwan','newarmy','telegraph'];
+function gukchiScene(){
+  bookSeen('scene','gukchi');const st=P.job&&STATE_JOBS.includes(P.job.k);
+  return {kind:'major',title:'경술국치',text:st?`나라가 일본에 병합되었다. ${jobTitle(P.job)}${bat(jobTitle(P.job))?'으로':'로'} 섬기던 나라가 사라졌다. 총독부는 그대에게 자리를 그대로 지키라 한다.`:'나라가 일본에 병합되었다는 소식에 장터가 숨죽였다. 곳곳에서 통곡 소리가 들린다.',opts:[
+    ...(st?[{t:'벼슬을 버리고 고향으로 내려간다',p:null,tags:['평판 ↑','재산 ↓'],fn:()=>{P.job=null;P.post=null;fx({fame:8});P.wealth*=.8;say('관복을 벗고 낙향하였다.','big');ev('job','나라가 망하자 벼슬을 버리고 낙향하였다');}},
+      {t:'총독부 관리로 남는다',p:null,tags:['재산 ↑','평판 크게 ↓'],fn:()=>{P.post=null;setJob('clerk',P.job&&P.job.lv>=8?2:1);fx({fame:-12});say('총독부의 관리가 되었다. 뒤에서 손가락질하는 소리가 들렸다.','big');ev('job','총독부 관리가 되었다');}}]:
+      [{t:'눈물을 삼키며 살아간다',p:null,safe:true,tags:['마음고생 ↑'],fn:()=>{fx({worry:12});say('하늘이 무너지는 듯했지만 살아가야 했다.');}}]),
+    {t:'만주로 건너가 독립운동에 나선다',p:null,tags:['평판 크게 ↑','재산 ↓','목숨이 위태로움'],fn:()=>{P.post=null;setJob('indep',0);P.home='만주 서간도';P.wealth*=.5;fx({fame:12});say('가산을 정리하고 압록강을 건넜다.','big');ev('job','만주로 건너가 독립운동에 나섰다');}}]};
+}
+function samilScene(){
+  bookSeen('scene','samil');
+  return {kind:'major',title:'3·1 운동',text:'장터 한복판에서 누군가 태극기를 꺼내 들고 "대한 독립 만세!"를 외쳤다. 사람들이 하나둘 따라 외치기 시작한다.',opts:[
+    {t:'앞장서 만세를 부른다',sub:'무예(담력)가 중요하다',p:clamp(.4+P.st.brave/200),tags:['평판 크게 ↑','붙잡힐 수 있음'],fn:()=>{if(chance(.4+P.st.brave/200)){fx({fame:12});say('목이 터져라 만세를 불렀다. 그날의 함성은 평생 잊히지 않았다.','big');}else{fx({fame:10,health:-15,worry:10});say('헌병에게 붙잡혀 서대문 형무소에서 모진 고초를 겪었다.','big');ev('note','3·1 운동으로 옥고를 치렀다');}}},
+    {t:'몰래 독립 선언서를 돌린다',p:.7,tags:['평판 ↑'],fn:()=>{if(chance(.7)){fx({fame:7});say('밤새 독립 선언서를 집집마다 돌렸다.');}else{fx({health:-10,fame:5});say('선언서를 돌리다 붙잡혀 매를 맞았다.');}}},
+    {t:'숨죽이고 지켜본다',p:null,safe:true,tags:[],fn:()=>{fx({worry:5});say('문틈으로 만세 행렬을 지켜보았다.');}}]};
+}
+function changssiScene(){
+  bookSeen('scene','changssi');
+  return {kind:'major',title:'창씨개명',text:'면사무소에서 일본식 성과 이름을 지어 신고하라고 한다. 따르지 않으면 배급도 학교 입학도 막힌다.',opts:[
+    {t:'따른다',p:null,safe:true,tags:['마음고생 ↑'],fn:()=>{fx({worry:10,fame:-2});say('조상의 성을 버리는 날, 몰래 족보를 꺼내 놓고 울었다.');}},
+    {t:'끝까지 거부한다',p:null,tags:['평판 ↑','재산 ↓','감시를 받음'],fn:()=>{fx({fame:8,worry:5});P.wealth*=.85;say('성을 바꾸지 않았다. 배급이 끊기고 순사가 문 앞을 서성였다.','big');}},
+    {t:'우스꽝스러운 이름으로 비꼰다',sub:'무예(담력)가 중요하다',p:clamp(.35+P.st.brave/200),tags:['평판 ↑','붙잡힐 수 있음'],fn:()=>{if(chance(.35+P.st.brave/200)){fx({fame:6});say('조롱 섞인 이름을 써 내니 동네 사람들이 몰래 웃었다.');}else{fx({health:-8,fame:4});say('불온하다며 끌려가 매를 맞았다.');}}}]};
+}
+function gwangbokScene(){
+  bookSeen('scene','gwangbok');const J=P.job&&P.job.k;
+  if(J==='clerk'){fx({fame:-10});say('친일 관리였다는 손가락질이 쏟아졌다.');P.job=null;}
+  if(J==='indep'){fx({fame:20});say('긴 세월 나라를 위해 싸운 공이 널리 알려졌다.','big');}
+  return {kind:'major',title:'광복',text:'라디오에서 일본 왕의 항복 방송이 흘러나왔다. 거리마다 태극기를 든 사람들이 쏟아져 나왔다.',opts:[
+    {t:'거리로 나가 만세를 부른다',p:null,tags:['마음고생 크게 ↓'],fn:()=>{fx({worry:-20,health:3});say('얼싸안고 울고 웃으며 만세를 불렀다.','big');}},
+    {t:'조상의 산소에 고한다',p:null,tags:['마음고생 ↓'],fn:()=>{fx({worry:-15});say('산소에 엎드려 나라를 되찾았다고 고하였다.','big');}}]};
+}
+function yugioScene(){
+  bookSeen('scene','yugio');
+  return {kind:'major',title:'6·25 전쟁',text:'포성이 가까워진다. 피란 보따리를 이고 진 사람들이 남쪽으로 줄을 잇는다.',opts:[
+    {t:'식구들을 데리고 피란길에 오른다',sub:'건강이 중요하다',p:clamp(.5+P.st.health/200),tags:['재산 ↓'],fn:()=>{P.wealth*=.5;if(chance(.5+P.st.health/200)){say('부산까지 내려가 판잣집에서 전쟁을 견뎠다.','big');P.home='부산 피란민 판잣집';}else{fx({health:-20});say('피란길에 병을 얻어 크게 앓았다.','big');}}},
+    {t:'고향 집을 지킨다',p:.75,tags:['목숨이 위태로움'],fn:()=>{if(chance(.75)){fx({worry:15});say('몇 번이나 주인이 바뀌는 마을에서 숨죽이며 살아남았다.','big');}else{fx({health:-30});say('폭격에 집이 무너지고 크게 다쳤다.','big');}}}]};
+}
+/* 강점기의 일상 */
+IDEA.push(
+  SE('jagum',()=>P.year>=1911&&P.year<1945&&P.age>=20&&P.wealth>soloU()*15,'독립 군자금','밤늦게 낯선 사내가 찾아와 만주 독립군에 보낼 군자금을 청한다.',[
+    ['몰래 군자금을 내놓는다','재산 ↓·평판 ↑·붙잡힐 수 있음',{w:-8,p:.8,ok:[{fame:8},'군자금이 무사히 만주로 건너갔다.'],no:[{fame:6,health:-12},'형사에게 꼬리가 잡혀 끌려가 고문을 당했다.']}],
+    ['형편이 안 된다며 돌려보낸다','',{worry:4},'사내를 돌려보냈다. 마음 한구석이 무거웠다.']]),
+  SE('modern',()=>P.year>=1920&&P.year<1945&&P.age>=15&&P.age<=40,'신식 바람',()=>P.female?'단발머리에 양장을 한 신여성들이 종로를 활보한다.':'양복에 중절모를 쓴 모던 보이들이 다방에 모여 앉는다.',()=>[
+    [P.female?'머리를 자르고 양장을 입는다':'양복을 맞춰 입는다','매력 ↑·어른들의 눈총',{look:4,fame:-2},'거울 속 모습이 낯설고도 마음에 들었다.'],
+    ['다방에서 커피를 마셔 본다','재산 조금 ↓',{w:-.5,worry:-3},'쓴맛에 놀랐지만 축음기 노래가 좋았다.'],
+    ['옛 차림을 지킨다','',{},'옛 차림을 지켰다.']]),
+  SE('yahak',()=>P.year>=1925&&P.year<1938&&P.age>=15&&P.st.know>=40,'야학','농촌에서 글을 깨치게 하자는 운동이 한창이다. 마을 야학에서 한글을 가르칠 사람을 찾는다.',[
+    ['밤마다 한글을 가르친다','평판 ↑·학식 ↑',{fame:6,know:2},'호롱불 아래에서 할머니들이 처음으로 제 이름을 썼다.'],
+    ['배우러 다닌다','학식 ↑',{know:4},'밤마다 야학에 다니며 글을 깨쳤다.'],
+    ['피곤해 엄두가 안 난다','',{},'고개를 저었다.']]),
+  SE('gongchul',()=>P.year>=1941&&P.year<=1945&&P.age>=15,'공출','순사가 집집마다 돌며 놋그릇과 숟가락, 쌀까지 거두어 간다.',[
+    ['순순히 내놓는다','재산 ↓',{w:-4},'제기까지 빼앗겼다.'],
+    ['땅에 묻어 숨긴다','',{p:.6,ok:[{},'몰래 묻어 둔 놋그릇을 지켜 냈다.'],no:[{w:-6,health:-6},'들켜서 매를 맞고 더 많이 빼앗겼다.']}]]),
+  SE('jingyong',()=>P.year>=1939&&P.year<=1945&&P.kids.some(k=>k.alive&&!k.female&&P.year-k.born>=17&&P.year-k.born<=30&&!k.away),'징용 영장',()=>{const k=P.kids.find(k=>k.alive&&!k.female&&P.year-k.born>=17&&P.year-k.born<=30&&!k.away);return `아들 ${k.name}에게 징용 영장이 나왔다. 먼 탄광으로 끌려간다고 한다.`;},[
+    ['산속으로 숨긴다','',{p:.6,ok:[{worry:8},'아들을 깊은 산속 친척 집에 숨겼다.'],no:[{health:-8,worry:15},'숨긴 것이 들통나 아들은 끌려가고 그대는 매를 맞았다.']}],
+    ['눈물로 떠나보낸다','마음고생 크게 ↑',{worry:20},'정거장에서 아들의 손을 놓지 못했다.']])
+);

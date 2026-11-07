@@ -130,6 +130,8 @@ function buildSillok(){
   P.ev.filter(e=>e.type==='note'&&e.t).forEach(e=>put(e.a,`${kAge(e.a)} 살에 ${e.t}.`));
   P.ev.filter(e=>e.type==='live').forEach(e=>put(e.a,`${kAge(e.a)} 살부터 ${e.t}.`));
   P.ev.filter(e=>e.type==='rare').forEach(e=>put(e.a,e.t));
+  P.ev.filter(e=>e.type==='era').forEach(e=>put(e.a,`${kAge(e.a)} 살에 ${e.t}.`));
+  {const lived=[P.born<1392?'고려':null,P.year>=1392&&P.born<1897?'조선':null,P.born<1910&&(P.deathYear||P.year)>=1897?'대한제국':null,(P.deathYear||P.year)>=1911?'일제강점기':null,(P.deathYear||P.year)>=1945?'광복 이후':null].filter(Boolean);if(lived.length>=3)put(999,`${lived.join(', ')}의 세월을 두루 겪었다.`);}
   if(P.titles.includes('임금의 어머니'))put(99,'훗날 아들이 보위에 올라 임금의 어머니가 되었다.');
   LT.sort((x,y)=>x[0]-y[0]||x[1]-y[1]).forEach(r=>W.push(r[2]));
   if(W.length)S.push({h:'일생',b:W.join(' ')});
