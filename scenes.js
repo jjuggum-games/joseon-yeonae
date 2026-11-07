@@ -764,7 +764,12 @@ function kidRoyalScene(k){
   const p=clamp(.2+(k.st?k.st.look:30)/250+P.st.fame/350,.1,.75);
   return {kind:'major',title:'자식 · 딸의 간택',text:`나라에 금혼령이 내려지고 세자빈을 고른다는 명이 떨어졌다. 딸 ${k.name}의 처녀단자를 올리라는 기별이 왔다.${sisQ(k)?` ${sisQ(k).royalBride}인 언니 ${sisQ(k).name}의 뜻이 닿았다는 소문도 돈다.`:''}`,opts:[
     {t:'간택에 내보낸다',sub:'딸의 매력과 집안의 평판이 중요하다',p,tags:['성공하면 딸이 세자빈, 그대는 왕실의 외척','신분·재력 크게 ↑'],fn:()=>{
-      if(!chance(p)){say(`삼간택까지 갔으나 ${iga(k.name)} 끝내 뽑히지 못하였다.`);return null;}
+      if(!chance(p)){say(`삼간택까지 갔으나 ${iga(k.name)} 끝내 뽑히지 못하였다.`);bookSeen('scene','kidsamgan');
+        const kn=realKing(P.year).n;
+        return {kind:'major',title:'자식 · 딸의 삼간택 낙선',text:`삼간택까지 올랐던 처녀는 왕실의 여인으로 여겨져 다른 집에 시집가기 어렵다. 궐에서 딸 ${eulreul(k.name)} 후궁으로 들이겠다는 말이 전해졌다.`,opts:[
+          {t:'후궁으로 들여보낸다',p:null,tags:['딸이 후궁(숙의)이 됨','평판·재력 ↑','딸을 궐에 보냄'],fn:()=>{k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='숙의';k.wedY=P.year;k.kingOf=kn;k.feat='후궁이 되었다';
+            fx({fame:6,wealth:Math.max(60,P.wealth*.1),worry:4});P.flags.kidSupport=(P.flags.kidSupport||0)+6;say(`딸 ${iga(k.name)} 숙의의 첩지를 받고 ${kn}의 후궁으로 입궐하였다. 다시는 사가에서 함께 살 수 없게 되었다.`,'big');ev('kidfeat',`딸 ${k.name}`,{feat:'후궁이 되었다'});}},
+          {t:'사가에서 혼인하지 않고 지내게 한다',p:null,safe:true,tags:['딸의 혼인이 한동안 막힘','평판 ↑'],fn:()=>{k.noMatch=P.year+8;fx({fame:4});say(`궐의 부름을 사양하였다. ${k.name}의 혼담은 한동안 끊길 것이다.`);}}]};}
       k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='세자빈';k.wedY=P.year;k.sejaOf=realKing(P.year).n;k.feat='세자빈으로 간택되었다';
       say(`딸 ${iga(k.name)} 세자빈으로 간택되었다! 가문에 큰 경사가 났다.`,'big');
       {const sq=sisQ(k);if(sq){k.sisterQ=sq.id;if(sq.royalBride==='중전')say(`세자는 후궁의 소생이나, 중전인 ${iga(sq.name)} 적모로서 친자식처럼 길러 온 아들이었다. 이로써 언니는 시어머니가, ${k.name}${bat(k.name)?'은':'는'} 그 며느리가 되었다.`,'big');else say(`대비인 언니 ${iga(sq.name)} 궁 안의 큰 어른으로서 이 혼사를 이끌었다. 자매가 나란히 궁에 들게 되었다.`,'big');}}ev('kidfeat',`딸 ${k.name}`,{feat:k.feat});
@@ -1578,7 +1583,7 @@ const SOLO_T={inlawcare:'시어머니의 병',rearkids:'홀로 키우는 자식'
 function bookList(cat){
   if(cat==='post'){const out=[];for(const k in POSTS){if(!POSTS[k]||!JOBS[k])continue;POSTS[k].opts.forEach(o=>out.push([k+':'+o.k,`${JOBS[k].n} · ${o.n}`]));}return out;}
   if(cat==='rise')return RISE.map(r=>[r.k+r.to,`${JOBS[r.k].n} → ${CLS[r.to].n}`]).filter((x,i,a)=>a.findIndex(y=>y[0]===x[0])===i);
-  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
+  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['kidsamgan','자식 · 딸의 삼간택 낙선'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
   return [];
 }
 
@@ -1726,7 +1731,7 @@ function updateHonor(){
   const parts=[];
   if(q){const t=`${P.bon||''}${P.female?'부부인':'부원군'}`;parts.push(t);if(!P.titles.includes(P.female?'부부인':'부원군'))P.titles.push(P.female?'부부인':'부원군');}
   const dae=ks.find(k=>k.royalBride==='대비');const jung=ks.find(k=>k.royalBride==='중전');
-  if(dae)parts.push(P.female?'대비의 어머니':'대비의 아버지');if(jung)parts.push(P.female?'중전의 어머니':'중전의 아버지');
+  if(dae)parts.push(P.female?'대비의 어머니':'대비의 아버지');if(jung)parts.push(P.female?'중전의 어머니':'중전의 아버지');{const hg=ks.find(k=>['숙의','빈'].includes(k.royalBride));if(hg)parts.push(`${hg.royalBride}의 ${P.female?'어머니':'아버지'}`);}
   if(sj)parts.push(P.female?'세자빈의 어머니':'세자빈의 아버지');
   if(!q&&sj&&!P.female)parts[parts.length-1]+=' (국구 집안)';
   P.honor=parts.join(' · ');

@@ -1090,7 +1090,7 @@ function yMajor(){
     if(P.married&&P.wantKids===null&&P.year>(P.flags.wedY||0)&&fertile())add(48,()=>kidsScene());
     if(P.flags.askMore&&P.married&&fertile()){P.flags.askMore=0;add(44,()=>kidsScene(true));}
     if(P.wantKids!==false&&P.year-(P.flags.kwishY||0)>=3&&!(P.married&&P.wantKids===null&&P.year<=(P.flags.wedY||0)+1)){const cand=[spouseP(),...peopleOf('cheop')].filter(x=>x&&x.alive&&fertileWith(x)&&!pregOf(x)&&!(P.autoKid&&P.autoKid[x.id]));if(cand.length&&chance(.3))add(43,()=>kidWishScene(R(cand)));}
-    const kw=P.kids.find(k=>k.alive&&!k.married&&P.year-k.born>=18&&P.year-k.born<=25&&!k.wedAsked&&!(k.female&&!k.ganTaek&&!k.seo&&(k.cls||P.cls)==='yangban'&&isJoseon(y)));
+    const kw=P.kids.find(k=>k.alive&&!k.married&&P.year-k.born>=18&&P.year-k.born<=25&&!k.wedAsked&&!(k.noMatch>P.year)&&!(k.female&&!k.ganTaek&&!k.seo&&(k.cls||P.cls)==='yangban'&&isJoseon(y)));
     if(kw)add(42,()=>kidWedScene(kw));
     if(P.married&&P.age>=(P.eunuch?26:33)&&!P.kids.some(k=>k.alive)&&!P.flags.adoptAsked)add(38,()=>adoptScene());
     else if(P.age>=25&&!P.flags.adoptAsked&&chance(.015))add(30,()=>adoptScene(true));
@@ -1207,7 +1207,7 @@ function kidDisplayName(k){
   if(k.female)return `${k.bongho}${rt} (이${k.name})`;
   return `${k.bongho}${rt} 이${k.name}`;
 }
-function kidJobTitle(k){{const rt=royalKidTitle(k);if(rt&&P.year-k.born<16)return rt;if(rt&&!k.job)return rt;}if(k.royalBride){const rb=k.royalBride;if(rb==='세자빈')return `세자빈 (${k.sejaOf?k.sejaOf+'의 며느리, ':''}${P.year-(k.wedY||P.year)+1}년째)`;if(rb==='중전')return `중전 (${k.kingOf?k.kingOf+'의 왕비, ':''}${P.year-(k.queenY||k.wedY||P.year)+1}년째)`;if(rb==='대비')return `대비${k.kingOf?' ('+k.kingOf+'의 왕비였음)':''}`;return rb;}if(!k.job&&k.alive&&P.year-k.born>=16)kidJob(k);if(!k.job||!JOBS[k.job.k])return '';if(k.female&&k.married&&['lady','farmer','slave'].includes(k.job.k))return '출가하여 살림';return JOBS[k.job.k].ladder[Math.min(k.job.lv,JOBS[k.job.k].ladder.length-1)];}
+function kidJobTitle(k){{const rt=royalKidTitle(k);if(rt&&P.year-k.born<16)return rt;if(rt&&!k.job)return rt;}if(k.royalBride){const rb=k.royalBride;if(rb==='세자빈')return `세자빈 (${k.sejaOf?k.sejaOf+'의 며느리, ':''}${P.year-(k.wedY||P.year)+1}년째)`;if(rb==='중전')return `중전 (${k.kingOf?k.kingOf+'의 왕비, ':''}${P.year-(k.queenY||k.wedY||P.year)+1}년째)`;if(rb==='대비')return `대비${k.kingOf?' ('+k.kingOf+'의 왕비였음)':''}`;if(rb==='숙의'||rb==='빈')return `${rb} (${k.kingOf?k.kingOf+'의 ':''}후궁)`;return rb;}if(!k.job&&k.alive&&P.year-k.born>=16)kidJob(k);if(!k.job||!JOBS[k.job.k])return '';if(k.female&&k.married&&['lady','farmer','slave'].includes(k.job.k))return '출가하여 살림';return JOBS[k.job.k].ladder[Math.min(k.job.lv,JOBS[k.job.k].ladder.length-1)];}
 function kidFeat(k){
   const st=kidSt(k);const top=KID_ST.map(x=>x[0]).sort((x,y)=>st[y]-st[x])[0];const v=st[top];if(v<55)return;
   const w=k.female?'딸':'아들';const cls=P.cls;let t=null,fame=4;
@@ -1301,6 +1301,8 @@ function royalDaughterYear(k,a){
     if(rb==='세자빈'&&!k.wonson&&a>=28&&chance(.06)){say(`딸 ${iga(nm)} 아직 원손을 낳지 못해 궁 안에서 말이 많다고 한다.`);fx({worry:6});return;}
     if(chance(.005)){k.royalBride='폐빈';say(`궁중의 모함에 휘말려 딸 ${iga(nm)} 폐서인이 되어 사가로 쫓겨났다.`,'big');fx({fame:-15,worry:20});updateHonor();ev('note',`딸 ${iga(nm)} 폐서인이 되는 일을 겪었다`);k.home='with';return;}
   }
+  if((rb==='숙의'||rb==='빈')&&!k.wonson&&a>=19&&chance(.15)){k.wonson=1;k.grand=(k.grand||0)+1;P.grand=(P.grand||0)+1;say(`후궁인 딸 ${iga(nm)} 왕자를 낳았다!`,'big');fx({fame:5});if(rb==='숙의'&&chance(.5)){k.royalBride='빈';say(`왕자를 낳은 공으로 딸 ${iga(nm)} 빈의 품계에 올랐다.`,'big');}return;}
+  if(rb==='숙의'&&chance(.03)){k.royalBride='빈';say(`임금의 총애가 깊어 딸 ${iga(nm)} 빈의 품계에 올랐다.`,'big');return;}
   if(rb==='대비'&&chance(.05))say(`대비가 된 딸 ${iga(nm)} 궁 안의 큰 어른으로 존경받는다.`);
 }
 
