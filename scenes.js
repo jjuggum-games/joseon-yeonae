@@ -639,9 +639,10 @@ function queenRiseScene(){
 function wifeRiseScene(){
   P.flags.wriseY=P.year;const sp=spouseP();const nm=callOf(sp);const sons=P.kids.filter(k=>k.alive&&!k.female).length;
   const yb=['yangban','royal'].includes(sp.cls);
-  const p=clamp(.15+sons*.12+(sp.h||50)/400+(sp.wifeDead?.25:0),.08,.85);
-  return {kind:'major',title:'정실의 자리',pid:sp.id,text:`${sp.wifeDead?`${nm}의 정실이 세상을 떠났다.`:`${nm}의 정실은 끝내 아들을 얻지 못하였다.`} ${sons?`아들 ${sons}명을 낳은 그대를 정실로 올리자는 말이 집안에서 나온다.`:'그대를 정실로 올리자는 말이 조심스레 나온다.'}${yb?' 다만 양반가에서 첩을 정실로 올리는 것은 법도에 어긋나는 일이다.':''}`,opts:[
-    {t:'정실의 자리에 오른다',sub:'아들이 많을수록, 남편의 정이 깊을수록 쉽다',p,tags:['신분 변화: 정실',...(yb?['평판 ↓ (법도에 어긋남)']:[])],fn:()=>{
+  const kids=P.kids.filter(k=>k.alive).length;const H=typeof ensureHousehold==='function'?ensureHousehold(sp):null;const noWife=sp.wifeDead||(H&&(!H.wife||H.wife.status!=='alive'));
+  const p=clamp(.12+sons*.1+kids*.03+(sp.h||50)/400+(noWife?.25:0),.08,.85);
+  return {kind:'major',title:'정실의 자리',pid:sp.id,text:`${noWife?(H&&!H.wife?`${nm}에게는 정실이 없다.`:`${nm}의 정실이 세상을 떠났다.`):`${nm}의 정실과의 사이가 멀어진 지 오래다.`} ${kids?`자식 ${kids}명을 낳아 기른 그대를 정실로 올리자는 말이 집안에서 나온다.`:'그대를 정실로 올리자는 말이 조심스레 나온다.'}${yb?' 다만 양반가에서 첩을 정실로 올리는 것은 법도에 어긋나는 일이다.':''}`,opts:[
+    {t:'정실의 자리에 오른다',sub:'자식이 많을수록(특히 아들), 남편의 정이 깊을수록, 정실 자리가 비어 있을수록 쉽다',p,tags:['신분 변화: 정실',...(yb?['평판 ↓ (법도에 어긋남)']:[])],fn:()=>{
       if(chance(p)){P.sub='';sp.mode='wife';if(CRANK.indexOf(sp.cls)>CRANK.indexOf(P.cls)){P.birthCls=P.birthCls||P.cls;P.cls=sp.cls;P.flags.clsReason='marriage';}if(sp.cls==='royal')setJob('royalwife',/대군/.test(sp.title||'')?1:0);else if(P.job&&P.job.k==='sosil')setJob(['yangban','jungin'].includes(sp.cls)?'lady':'housewife',['yangban','jungin'].includes(sp.cls)?2:1);fx({fame:yb?-6:4,worry:-10});if(!yb)P.kids.forEach(k=>{if(k.father===sp.id)k.seo=false;});if(P.job&&P.job.k==='housewife')setJob('housewife',2);P.home=P.home.replace('의 별채','의 안채');say(`첩의 몸에서 벗어나 ${nm}의 정실이 되었다.${yb?' 다만 자식들의 서얼 신분은 그대로 남았다.':''}`,'big');ev('rise','첩에서 정실이 되었다');}
       else{fx({worry:10});say('집안 어른들의 반대로 뜻을 이루지 못하였다.');}}},
     {t:'지금 자리에 만족한다',p:null,safe:true,tags:[],fn:()=>{say('첩의 자리에서 조용히 살기로 하였다.');}}]};
