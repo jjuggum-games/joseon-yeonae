@@ -298,6 +298,7 @@ function inherit(){
   if(n>2&&chance(.3)){say('형제들 사이에 재산을 두고 다툼이 일었다.');fx({worry:8},true);}
 }
 function fertile(){
+  if(P.eunuch)return 0;
   const sp=spouseP();if(!sp||!sp.alive||!P.married)return 0;
   if(P.female===sp.female)return 0;
   const fa=P.female?P.age:ageOf(sp);
@@ -402,7 +403,7 @@ function yJob(){
     else if(J.lv>=1&&J.lv<6&&(J.lv<3||chance(.45))&&(J.lv<5||P.flags.warYear||chance(.15))&&chance(.03+Math.max(0,P.st.brave+P.st.wit-120)/900+P.st.fame/2500+(P.flags.warYear?.12:0))){setJob('military',J.lv+1);say(`${euro(jobTitle(P.job))} 올랐다.`,J.lv+1>=4?'big':'n');if(P.job.lv>=4)ev('job',`${jobTitle(P.job)}에 올랐다`);}
   }
   if(k==='soldier'&&J.lv>=1&&examY&&a<=45&&P.st.brave>=55&&chance(.15)){setJob('military',1);say(`군공을 인정받아 무과에 나아가 급제하였다. ${jobTitle(P.job)} 자리를 받았다.`,'big');ev('job','무과에 급제하였다');}
-  if(['doctor','interp','painter','uinyeo','gwangdae','weaver','soldier','hunjang','sword','yein','jumo','fisher','smith','potter','carpenter','mudang','ajeon','sanwon','monk','herb','nurse','baekjeong','chaekkwae','jeongisu','hunter','sanpa','jeomjaeng','bangmul','dyer','gatjang','mabu','salt','haenyeo','gwansang','yulgwan','sajagwan','akgong','poet','cheosa','bandit'].includes(k)&&J.lv<d.ladder.length-1&&a>=15){
+  if(['naesi','namchong','doctor','interp','painter','uinyeo','gwangdae','weaver','soldier','hunjang','sword','yein','jumo','fisher','smith','potter','carpenter','mudang','ajeon','sanwon','monk','herb','nurse','baekjeong','chaekkwae','jeongisu','hunter','sanpa','jeomjaeng','bangmul','dyer','gatjang','mabu','salt','haenyeo','gwansang','yulgwan','sajagwan','akgong','poet','cheosa','bandit'].includes(k)&&J.lv<d.ladder.length-1&&a>=15){
     const st=P.st[d.stat]||P.st.art;
     if((J.lv===0||a>=28)&&chance(.04+(st-45)/380+(J.lv===0&&a>=20?.1:0))){setJob(k,J.lv+1);say(`${iga(d.ladder[P.job.lv])} 되었다.`+(P.job.lv===d.ladder.length-1?' 솜씨가 널리 알려졌다.':''),'big');if(P.job.lv===d.ladder.length-1)ev('job',`${iga(d.ladder[P.job.lv])} 되었다`);}}
   if(k==='housewife'){if(J.lv===0&&P.married&&chance(.35))setJob(k,1);else if(J.lv===1&&a>=38&&chance(.25)){setJob(k,2);say('집안 살림을 도맡는 안주인이 되었다.');}}
@@ -417,6 +418,13 @@ function yJob(){
       if(J.lv<8&&chance(.06+P.favor/350))promoteCon(1);
       if(P.favor<25&&chance(.25)){say('임금의 발길이 뜸해졌다. 처소가 쓸쓸하였다.');fx({worry:8},true);}}
   }
+  if(k==='chongsin'){
+    const fk=P.flags.favorKing;
+    if(fk&&realKing(P.year).n!==fk&&!P.alt){P.flags.favorKing=null;if(chance(.55)){say(`${fk}이 승하하자 그대를 미워하던 이들이 들고일어났다.`,'big');punish({});P.job=null;P.court=false;return;}else{say(`${fk}이 승하하였다. 총애도 끝나 궐을 떠나 조용히 지내게 되었다.`,'big');P.job=null;P.court=false;}}
+    else{P.favor=clamp((P.favor||50)+ri(-8,6)+(P.st.look-60)/15);if(J.lv<2&&chance(.05+P.favor/400))setJob('chongsin',J.lv+1),say(`${euro(jobTitle(P.job))} 권세가 커졌다.`,'big');
+      if(P.favor<25&&chance(.3)){say('임금의 총애가 식었다. 궐에서 물러나야 했다.','big');P.job=null;P.court=false;}
+      if(J.lv>=2&&chance(.06)){say('그대의 권세를 시기한 이들이 탄핵 상소를 올렸다.','big');if(chance(.5)){punish({});P.job=null;P.court=false;return;}else say('임금이 그대를 감싸 주었다.');}}
+  }
   if(k==='bandit'&&chance(.06+J.lv*.03-P.st.wit/1500)){say('관아에 붙잡혀 곤장을 맞고 옥에 갇혔다.','big');fx({fame:-20,health:-15,worry:20});ev('fall','도적질로 붙잡혔다');P.job=null;return;}
   if(k==='bandit'&&J.lv>=2&&chance(.3)){say('턴 재물을 굶주린 이들에게 나누어 주었다. 사람들이 몰래 그대를 칭송하였다.');fx({fame:6},true);}
   if(['hunter','haenyeo'].includes(k)&&chance(.04)){say(k==='hunter'?'사냥 중에 짐승에게 크게 다쳤다.':'물질 중에 숨이 막혀 크게 다쳤다.','big');fx({health:-20});}
@@ -424,7 +432,7 @@ function yJob(){
 }
 function promoteCon(n){const lv=Math.min(8,P.job.lv+n);setJob('concubine',lv);say(`[[${JOBS.concubine.ladder[lv]}]]의 품계를 받았다.`,'big');ev('job',`${JOBS.concubine.ladder[lv]}에 올랐다`);note('naemyeong');}
 function isGwageoYear(y){return [0,3,6,9].includes((y-4+6000)%12);}
-function jobPay(J){const L=J.lv;return ({official:6+L*7,merchant:[6,28,90][L],gisaeng:[0,6,16,40][L],concubine:25+L*12,queen:[150,300][L],king:[600][0],royalwife:[60,90][L],housewife:[0,1,3][L],court:2+L*4,farmer:[2,6,14][L],weaver:[2,4,9][L],doctor:[6,15,32][L],interp:[8,20,45][L],painter:[5,12,28][L],uinyeo:[2,5,10][L],slave:[0,.3,1][L],gwangdae:[1,4,14][L],soldier:[2,6,14][L],hunjang:[0,2,8][L],sword:[0,4,12][L],yein:[1,5,16][L],scholar:[0,3,4][L],prince:[60,90,140][L],princess:[60,90][L],buma:[80][0],lady:[0,0,0,10][L],military:[0,10,18,28,38,55,80][L],jumo:[2,6,14][L],fisher:[2,5,14][L],smith:[1,5,10][L],potter:[1,5,12][L],carpenter:[1,5,14][L],mudang:[1,5,14][L],ajeon:[2,6,14][L],sanwon:[4,10,20][L],monk:[0,1,4][L],herb:[1,4,16][L],nurse:[1,3,6][L],baekjeong:[2, 6, 14][L],chaekkwae:[1, 5, 14][L],jeongisu:[1, 4, 12][L],hunter:[1, 5, 12][L],sanpa:[1, 4, 10][L],jeomjaeng:[1, 5, 16][L],bangmul:[2, 6, 14][L],dyer:[1, 5, 12][L],gatjang:[1, 5, 12][L],mabu:[1, 3, 8][L],salt:[1, 4, 16][L],haenyeo:[1, 5, 12][L],gwansang:[5, 12, 26][L],yulgwan:[5, 12, 26][L],sajagwan:[3, 10, 22][L],akgong:[2, 6, 16][L],poet:[0, 1, 4][L],cheosa:[0, 2, 8][L],bandit:[2, 8, 18][L]}[J.k]||0);}
+function jobPay(J){const L=J.lv;return ({official:6+L*7,merchant:[6,28,90][L],gisaeng:[0,6,16,40][L],concubine:25+L*12,queen:[150,300][L],king:[600][0],royalwife:[60,90][L],housewife:[0,1,3][L],court:2+L*4,farmer:[2,6,14][L],weaver:[2,4,9][L],doctor:[6,15,32][L],interp:[8,20,45][L],painter:[5,12,28][L],uinyeo:[2,5,10][L],slave:[0,.3,1][L],gwangdae:[1,4,14][L],soldier:[2,6,14][L],hunjang:[0,2,8][L],sword:[0,4,12][L],yein:[1,5,16][L],scholar:[0,3,4][L],prince:[60,90,140][L],princess:[60,90][L],buma:[80][0],lady:[0,0,0,10][L],military:[0,10,18,28,38,55,80][L],jumo:[2,6,14][L],fisher:[2,5,14][L],smith:[1,5,10][L],potter:[1,5,12][L],carpenter:[1,5,14][L],mudang:[1,5,14][L],ajeon:[2,6,14][L],sanwon:[4,10,20][L],monk:[0,1,4][L],herb:[1,4,16][L],nurse:[1,3,6][L],naesi:[3,8,16,26,40][L],chongsin:[20,45,90][L],namchong:[4,10,18][L],baekjeong:[2, 6, 14][L],chaekkwae:[1, 5, 14][L],jeongisu:[1, 4, 12][L],hunter:[1, 5, 12][L],sanpa:[1, 4, 10][L],jeomjaeng:[1, 5, 16][L],bangmul:[2, 6, 14][L],dyer:[1, 5, 12][L],gatjang:[1, 5, 12][L],mabu:[1, 3, 8][L],salt:[1, 4, 16][L],haenyeo:[1, 5, 12][L],gwansang:[5, 12, 26][L],yulgwan:[5, 12, 26][L],sajagwan:[3, 10, 22][L],akgong:[2, 6, 16][L],poet:[0, 1, 4][L],cheosa:[0, 2, 8][L],bandit:[2, 8, 18][L]}[J.k]||0);}
 function incomeOf(){
   const J=P.job;let v={royal:150,yangban:22,jungin:12,sangmin:3,cheonmin:.4}[P.cls]||2;
   if(J)v+=jobPay(J);
@@ -514,11 +522,12 @@ const JOB_DESC={
   poet:['시문','안채에서 시를 짓고 글을 쓴다. 이름이 바깥까지 알려지기도 한다. 학식이 중요하다.'],
   cheosa:['처사의 길','벼슬에 나서지 않고 학문에 힘쓴다. 이름이 높아지면 조정에서도 귀를 기울인다. 학식이 중요하다.'],
   bandit:['도적의 길','관아의 눈을 피해 재물을 턴다. 의적이 되어 가난한 이를 돕기도 한다. 무예가 중요하다.'],
+  naesi:['내시','거세하고 내시부에 들어가 임금의 시중을 든다. 상선(종2품)까지 오를 수 있고 벌이가 좋지만, 자식은 양자로만 얻는다. 학식이 중요하다.'],
   nurse:['유모','대갓집 아이에게 젖을 물리고 길러 준다. 건강이 중요하다.'],
   lady:['규방 살림','집안 살림을 익혀 안주인·종부가 된다. 매력이 중요하다.'],
   slave:['주인집 일','시키는 일을 하며 산다.']
 };
-const JOB_TAGS={baekjeong:['평판 ↓'],hunter:['다칠 수 있음'],haenyeo:['위험한 일'],bandit:['잡히면 큰일', '평판 ↓'],monk:['혼담이 들어오지 않음'],mudang:['평판 조금 ↓'],nurse:['대갓집에 매임'],gisaeng:['신분 변화: 천민(기적)','평판 ↓','다시 벗어나려면 속량해야 함'],court:['궁에 매임','혼인이 어려움'],yein:['떠돌이 삶','평판 조금 ↓'],sword:[],hunjang:[]};
+const JOB_TAGS={naesi:['거세(돌이킬 수 없음)','친자식을 볼 수 없음','궁에 매임'],baekjeong:['평판 ↓'],hunter:['다칠 수 있음'],haenyeo:['위험한 일'],bandit:['잡히면 큰일', '평판 ↓'],monk:['혼담이 들어오지 않음'],mudang:['평판 조금 ↓'],nurse:['대갓집에 매임'],gisaeng:['신분 변화: 천민(기적)','평판 ↓','다시 벗어나려면 속량해야 함'],court:['궁에 매임','혼인이 어려움'],yein:['떠돌이 삶','평판 조금 ↓'],sword:[],hunjang:[]};
 function jobChoices(){
   const a=P.age;
   if(a<8)return {list:[],why:'아직 생업을 정할 나이가 아니다.'};
@@ -531,11 +540,12 @@ function jobChoices(){
   if(P.cls==='yangban'){
     if(P.sub==='seo')L=F?['lady','poet','weaver','hunjang','sword']:['scholar','military','cheosa','sajagwan','sword','interp','doctor','painter','merchant'];
     else L=F?['lady','poet','weaver','hunjang','sword']:['scholar','military','cheosa','sajagwan','sword','farmer','merchant','painter'];
-  } else if(P.cls==='jungin')L=F?['uinyeo','poet','weaver','merchant','bangmul','sanpa','hunjang','yein','jumo','monk']:['doctor','interp','painter','sanwon','gwansang','yulgwan','sajagwan','akgong','chaekkwae','jeomjaeng','ajeon','military','merchant','hunjang','sword','monk'];
-  else if(P.cls==='sangmin')L=F?['weaver','merchant','farmer','jumo','bangmul','sanpa','haenyeo','dyer','mudang','nurse','herb','hunjang','yein','uinyeo','monk','gisaeng','court']:['farmer','merchant','fisher','salt','smith','potter','carpenter','gatjang','dyer','mabu','hunter','herb','ajeon','chaekkwae','jeongisu','jeomjaeng','akgong','soldier','military','sword','hunjang','yein','painter','monk','bandit'];
+  } else if(P.cls==='jungin')L=F?['uinyeo','poet','weaver','merchant','bangmul','sanpa','hunjang','yein','jumo','monk']:['naesi','doctor','interp','painter','sanwon','gwansang','yulgwan','sajagwan','akgong','chaekkwae','jeomjaeng','ajeon','military','merchant','hunjang','sword','monk'];
+  else if(P.cls==='sangmin')L=F?['weaver','merchant','farmer','jumo','bangmul','sanpa','haenyeo','dyer','mudang','nurse','herb','hunjang','yein','uinyeo','monk','gisaeng','court']:['farmer','naesi','merchant','fisher','salt','smith','potter','carpenter','gatjang','dyer','mabu','hunter','herb','ajeon','chaekkwae','jeongisu','jeomjaeng','akgong','soldier','military','sword','hunjang','yein','painter','monk','bandit'];
   else if(P.sub==='gwangdae')L=['gwangdae','yein','mudang'];
-  else L=F?['slave','nurse','sanpa','haenyeo','gisaeng','court','mudang']:['slave','baekjeong','smith','potter','fisher','salt','mabu','hunter','akgong','jeongisu','bandit'];
+  else L=F?['slave','nurse','sanpa','haenyeo','gisaeng','court','mudang']:['slave','naesi','baekjeong','smith','potter','fisher','salt','mabu','hunter','akgong','jeongisu','bandit'];
   if(a>17)L=L.filter(k=>k!=='court');
+  if(a>20||P.married)L=L.filter(k=>k!=='naesi');
   if(P.year<1600)L=L.filter(k=>k!=='chaekkwae');if(P.year<1700)L=L.filter(k=>k!=='jeongisu');
   if(a>24)L=L.filter(k=>k!=='gisaeng');
   if(P.married)L=L.filter(k=>!['gisaeng','court'].includes(k));
@@ -550,6 +560,7 @@ function changeJob(k){
   P.lastJobChange=P.year;
   if(k==='gisaeng'){P.cls='cheonmin';P.sub='gisaeng';P.home='관아 근처 기방';setJob('gisaeng',P.age>=18?1:0);fx({fame:-8},true);say('기방에 들어가 기적에 이름을 올렸다. 이제 기생의 길을 걷게 되었다.','big');note('gisaeng');ev('job','기방에 들어갔다');return;}
   if(k==='court'){P.court=true;P.home='궁궐 안 처소';setJob('court',P.age>=18?1:0);say('궁에 들어가 생각시가 되었다. 이제 궁이 그대의 집이었다.','big');note('gungnyeo');ev('court','궁에 들어갔다');return;}
+  if(k==='naesi'){P.eunuch=true;P.court=true;P.home='궁궐 내시부 처소';setJob('naesi',P.age>=16?1:0);note('naesi');say('거세하고 내시부에 들어갔다. 이제 다시는 돌이킬 수 없는 길이었다. 아내를 둘 수는 있으나, 대는 양자로 이어야 한다.','big');ev('job','내시가 되었다');return;}
   if(k==='yein')fx({fame:-3},true);
   setJob(k,0);
   say(`앞으로 ‘${JOB_DESC[k][0]}’ 길을 걷기로 하였다.`,'big');ev('job',`${JOB_DESC[k][0]}의 길을 택하였다`);
@@ -1004,7 +1015,7 @@ function yMajor(){
     if(P.flags.askMore&&P.married&&fertile()){P.flags.askMore=0;add(44,()=>kidsScene(true));}
     const kw=P.kids.find(k=>k.alive&&!k.married&&P.year-k.born>=18&&P.year-k.born<=25&&!k.wedAsked);
     if(kw)add(42,()=>kidWedScene(kw));
-    if(P.married&&P.age>=33&&!P.kids.some(k=>k.alive)&&!P.flags.adoptAsked)add(38,()=>adoptScene());
+    if(P.married&&P.age>=(P.eunuch?26:33)&&!P.kids.some(k=>k.alive)&&!P.flags.adoptAsked)add(38,()=>adoptScene());
     else if(P.age>=25&&!P.flags.adoptAsked&&chance(.015))add(30,()=>adoptScene(true));
     if(P.married&&!P.female&&['yangban','royal'].includes(P.cls)&&P.age>=28&&P.cheopN===0&&chance(.08))add(28,()=>cheopScene());
     if(P.married&&P.female&&spouseP()&&['yangban','royal'].includes(spouseP().cls)&&!spouseP().kingRole&&!P.flags.hubCheop&&P.age>=26&&chance(.06))add(28,()=>husbandCheop());

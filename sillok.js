@@ -85,6 +85,9 @@ function buildSillok(){
     if(k==='concubine')return `후궁으로서 ${t}의 품계에 이르렀다.`;
     if(k==='queen')return lv>=1?'중전의 자리에 올라 국모가 되었다.':'세자빈의 자리에 올랐다.';
     if(k==='king')return '보위에 올라 임금이 되었다.';
+    if(k==='naesi')return lv>=4?'내시로서 내시부의 으뜸인 상선에 올라 궐 안 살림을 쥐었다.':`거세하고 내시가 되어 ${t}에 이르렀다.`;
+    if(k==='chongsin')return lv>=2?'임금의 총애를 등에 업고 권신이 되어 조정을 흔들었다.':'임금의 총애를 받는 총신이 되었다.';
+    if(k==='namchong')return '권세가 대감의 총애를 받으며 그 댁에 머물렀다.';
     if(k==='royalwife')return `${P.cls==='royal'?'':'신분의 벽을 넘어 '}왕실에 시집가 ${iga(t)} 되었다.`;
     if(k==='buma')return '공주(옹주)와 혼인하여 부마가 되었다.';
     if(k==='court')return `궁녀로서 ${t}에 이르렀다.`;

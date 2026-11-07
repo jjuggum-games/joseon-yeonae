@@ -319,7 +319,7 @@ function renderSide(){
   el.innerHTML=`<div class="tabs">${tabs.map(([k,n])=>`<button class="btn ${V.tab===k?'on':''}" data-a="tab" data-v="${k}">${n}</button>`).join('')}</div>${body}`;
 }
 function fertileWith(x){
-  if(!x||!x.alive)return 0;
+  if(!x||!x.alive||P.eunuch)return 0;
   if(x.kind==='spouse')return x.id===P.spouse?fertile():0;
   if(x.kind!=='cheop'||x.female===P.female)return 0;
   const fa=P.female?P.age:ageOf(x);if(fa<18||fa>44)return 0;

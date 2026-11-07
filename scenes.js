@@ -244,7 +244,7 @@ function gunghap(x){
   x.gh=g;return g;
 }
 function wed(x,silent,elope){
-  if(P.court&&!x.kingRole){P.court=false;if(P.job&&P.job.k==='court')P.job=null;P.home='사가(私家)';fx({fame:-12},true);say('궁녀의 몸으로 혼인하려면 궁을 떠나야 했다. 오랜 청원 끝에 출궁하였다.','big');ev('court','궁을 떠났다');}
+  if(P.court&&!x.kingRole&&P.female){P.court=false;if(P.job&&P.job.k==='court')P.job=null;P.home='사가(私家)';fx({fame:-12},true);say('궁녀의 몸으로 혼인하려면 궁을 떠나야 했다. 오랜 청원 끝에 출궁하였다.','big');ev('court','궁을 떠났다');}
   Object.values(P.people).forEach(y=>{if(y.kind==='cand'&&y.id!==x.id)delete P.people[y.id];});
   const love=x.kind==='love';
   x.kind='spouse';x.status='married';
@@ -817,6 +817,7 @@ function gazeScene(){
         else{fx({wealth:-P.wealth*.35,worry:15});say(`${iga(who)} 앙심을 품어 집안이 큰 화를 입었다. 가산이 크게 기울었다.`,'big');}}},
       ...(lover?[{t:`${gwawa(callOf(lover))} 함께 달아난다`,sub:'무예(배짱)가 필요하다',p:clamp(.3+st.brave/200),tags:['성공하면 정인과 맺어짐','실패하면 붙잡힘'],fn:()=>{delete P.people[p.id];if(chance(.3+st.brave/200)){lover.mode='wife';wed(lover,false,true);P.home='먼 고을의 초가';P.flags.elope=1;say(`야반도주하여 ${gwawa(callOf(lover))} 먼 고을에서 새 삶을 시작하였다.`,'big');}else{fx({health:-15,fame:-8,worry:15});say('달아나다 붙잡혀 호된 매를 맞았다.','big');}}}]:[])]};
   }
+  if(st.look>=72&&chance(.4))return favorScene();
   const who=R(['세도가 대감','권세 높은 판서','왕실 종친']);const royal=who==='왕실 종친';
   const b=newPerson({kind:'love',female:true,cls:royal?'royal':'yangban',born:P.year-ri(16,22),h:20,t:60});b.rich=3;if(royal){b.title=R(['숙','정','화','명'])+R(['신','안','혜'])+'옹주';}
   return {kind:'major',title:'억지 혼사',pid:b.id,text:`그대의 ${iga(top[1])} 소문나 ${who}의 귀에 들어갔다. ${who}가 그대를 ${royal?'옹주의 부마로':'사위로'} 삼겠다며 혼담을 밀어붙인다. 마음에 두지 않은 혼인이지만, 거절하면 무사하지 못할 것이다.`,opts:[
@@ -834,4 +835,24 @@ function gazeScene(){
       else if(r<.7){fx({wealth:-P.wealth*.3,worry:15});say(`${who}의 눈 밖에 나 집안 살림이 크게 기울었다.`,'big');}
       else{fx({health:-12,worry:12});say('트집을 잡혀 관아에서 곤장을 맞았다.','big');}}},
     ...(lover?[{t:`${callOf(lover)}에게 서둘러 청혼한다`,sub:'정인과 먼저 혼인해 버린다',p:clamp(.4+lover.h/300),tags:['성공하면 정인과 혼인'],fn:()=>{delete P.people[b.id];if(chance(.4+lover.h/300)){lover.mode='wife';wed(lover);say(`서둘러 ${gwawa(callOf(lover))} 혼례를 올렸다. ${who}도 어쩌지 못하였다.`,'big');}else{fx({worry:12});say('혼례를 서둘렀으나 일이 틀어졌다.');}}}]:[])]};
+}
+
+/* ===== 사내로서 높은 이의 총애를 받다 ===== */
+function favorScene(){
+  P.flags.gazeY=P.year;const st=P.st;const U=UNIT[P.cls]||.5;
+  const k=realKing(P.year);const nearCourt=P.court||(P.job&&['official','naesi','military','akgong','sajagwan'].includes(P.job.k))||['yangban','royal'].includes(P.cls);
+  const jaje=k.n==='공민왕'&&P.year>=1365;
+  const king=nearCourt||jaje;
+  const who=king?k.n:R(['세도가 대감','권세 높은 판서']);
+  const pr=clamp(rnd()*.5+.15+st.brave/400,.1,.75);
+  if(jaje)note('jajewi');else if(king)note('jajewi');
+  return {kind:'major',title:king?'임금의 총애':'대감의 총애',text:king?(jaje?`임금이 용모가 빼어난 젊은이들을 뽑아 자제위를 둔다고 한다. 그대가 그 가운데 뽑혀 [[${k.n}]]의 곁에 서게 되었다. 임금의 눈길이 유난히 그대에게 머문다.`:`[[${k.n}]]이 그대를 눈여겨보고 곁에 두려 한다. 밤늦도록 그대를 불러 이야기를 청하고, 그 눈길이 예사롭지 않다.`):`${who}가 그대를 각별히 아끼며 집에 두고 곁을 지키게 하려 한다. 그 정이 예사롭지 않다는 말이 돈다.`,opts:[
+    {t:'곁에 머문다',sub:king?'임금의 총신이 된다':'대감의 사람이 된다',p:null,tags:['재산·재력 ↑',king?'권세를 쥘 수 있음':'평판 조금 ↓','임금이 바뀌면 위태로움'],fn:()=>{
+      if(king){setJob('chongsin',0);P.court=true;P.favor=60;P.flags.favorKing=k.n;P.home='궁궐 가까운 사저';fx({wealth:U*30,fame:3});say(`${k.n}의 곁을 지키는 사람이 되었다. 밤마다 부름이 이어졌고, 그대를 시기하는 눈길도 늘었다.`,'big');ev('job',`${k.n}의 총애를 받았다`);}
+      else{setJob('namchong',1);P.home=`${who} 댁의 사랑채`;fx({wealth:U*15,fame:-3});say(`${who} 댁 사랑채에 머물게 되었다. 비단옷과 넉넉한 살림이 주어졌지만, 뒤에서 수군대는 소리가 따랐다.`,'big');}}},
+    {t:'정중히 물러난다',sub:'거절이 받아들여질지는 운에 달렸다',p:pr,tags:['실패하면 노여움을 삼'],fn:()=>{
+      if(chance(pr)){fx({fame:3});say('조심스레 물러났다. 다행히 노여움은 없었다.');return;}
+      const r=rnd();if(king&&r<.35&&P.age<70){exile(ri(2,4));say(`임금의 노여움을 사서 유배되었다.`);}
+      else if(r<.7){fx({worry:15,fame:-5});say(`${king?'임금':who}의 눈 밖에 나 한동안 숨죽여 지냈다.`,'big');}
+      else{fx({health:-10,worry:10});say('트집을 잡혀 매를 맞았다.','big');}}}]};
 }
