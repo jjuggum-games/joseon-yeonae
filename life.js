@@ -839,7 +839,7 @@ function seekLove(kind){
   else {o.cls=R(['sangmin','sangmin','jungin']);place=R(PLACES[o.cls]);}
   o.place=place;
   const x=newPerson(o);
-  if(x.seja){x.pos='세자';x.live='한양 궁궐 동궁';}
+  if(x.seja){x.pos='세자';x.live='한양 궁궐 동궁';x.fam='왕실 · 동궁';}
   if(kind==='royal')x.pos=fem?'옹주':'종친';
   if(kind==='direct'){x.pos=o.pos;if(o.isKing)x.isKing=true;if(o.seja)x.seja=true;}
   const pr=persona(x.persona);
@@ -1185,9 +1185,18 @@ function royalKidTitle(k){
   const seja=!king&&((other&&other.seja)||(P.job&&P.job.k==='queen'&&P.job.lv===0));
   if(!king&&!seja)return '';
   const legit=!k.seo&&!(P.job&&P.job.k==='concubine')&&!(P.female&&P.sub==='cheop');
-  if(king)return k.female?(legit?'공주':'옹주'):(legit?'대군':'군');
   const sons=P.kids.filter(x=>!x.female&&!x.seo&&x.alive).sort((a,b)=>a.born-b.born);
+  if(king)return k.female?(legit?'공주':'옹주'):(legit?(sons[0]===k?'원자':'대군'):'군');
   return k.female?(legit?'군주':'현주'):(legit&&sons[0]===k?'원손':'군');
+}
+const BONG1=['영','화','덕','은','숙','정','명','경','의','순','익','양','인','봉','능','안','효','숭','창','금'],BONG2=['창','원','안','성','양','천','평','춘','릉','산','림','선','신','혜','온','명','휘','숙'];
+/* 가족 탭에 보일 왕실 자식의 이름: 원손 이장 / 인평대군 이요 / 숙안공주 (명화) */
+function kidDisplayName(k){
+  const rt=royalKidTitle(k);if(!rt)return k.name;
+  if(rt==='원손'||rt==='원자')return `${rt} 이${k.name}`;
+  if(!k.bongho){let b;for(let i=0;i<20;i++){b=R(BONG1)+R(BONG2);if(!P.kids.some(x=>x.bongho===b))break;}k.bongho=b;}
+  if(k.female)return `${k.bongho}${rt} (${k.name})`;
+  return `${k.bongho}${rt} 이${k.name}`;
 }
 function kidJobTitle(k){{const rt=royalKidTitle(k);if(rt&&P.year-k.born<16)return rt;if(rt&&!k.job)return rt;}if(k.royalBride){const rb=k.royalBride;if(rb==='세자빈')return `세자빈 (${k.sejaOf?k.sejaOf+'의 며느리, ':''}${P.year-(k.wedY||P.year)+1}년째)`;if(rb==='중전')return `중전 (${k.kingOf?k.kingOf+'의 왕비, ':''}${P.year-(k.queenY||k.wedY||P.year)+1}년째)`;if(rb==='대비')return `대비${k.kingOf?' ('+k.kingOf+'의 왕비였음)':''}`;return rb;}if(!k.job&&k.alive&&P.year-k.born>=16)kidJob(k);if(!k.job||!JOBS[k.job.k])return '';if(k.female&&k.married&&['lady','farmer','slave'].includes(k.job.k))return '출가하여 살림';return JOBS[k.job.k].ladder[Math.min(k.job.lv,JOBS[k.job.k].ladder.length-1)];}
 function kidFeat(k){
