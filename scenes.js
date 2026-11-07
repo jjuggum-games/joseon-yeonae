@@ -598,9 +598,8 @@ function widowScene(){
 }
 function jeongnyeoScene(){
   P.flags.jeongnyeo=1;const y=P.year-P.flags.sujeol;
-  say(`${y}해 동안 절개를 지킨 일이 고을에 알려졌다. 나라에서 그대의 집 앞에 열녀문을 세우고 정려(旌閭)를 내렸다.`,'big');
-  fx({fame:30,worry:-10});ev('jeongnyeo','열녀문');note('yeollyeo');
-  return null;
+  return {kind:'major',title:'열녀문',text:`${kAge(y)} 해 동안 절개를 지킨 일이 고을을 넘어 조정에까지 알려졌다. 나라에서 그대의 집 앞에 붉은 정려문을 세우고 '열녀'라는 이름을 내렸다. 고을 사람들이 문 앞을 지날 때마다 걸음을 멈추고 고개를 숙였다.`,opts:[
+    {t:'삼가 받든다',p:null,safe:true,tags:['평판 크게 ↑','근심 ↓'],fn:()=>{fx({fame:30,worry:-10});ev('jeongnyeo','열녀문');note('yeollyeo');say('나라에서 열녀문을 내렸다. 집 앞에 붉은 정려문이 섰다.','big');}}]};
 }
 /* 자식의 신분: 시대마다 달랐던 법 */
 function kidClass(fa,mo){

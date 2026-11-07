@@ -966,7 +966,7 @@ function yMajor(){
   {const sp=spouseP();if(P.female&&P.married&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.kingRole&&P.year-(P.flags.wriseY||0)>=5){const sons=P.kids.filter(k=>k.alive&&!k.female).length;if(sp.wifeDead||sons>=2&&chance(.08+sons*.04))add(60,()=>wifeRiseScene());}}
   if(!P.female&&!P.married&&P.year-(P.flags.pcheopY||0)>=3){const c=peopleOf('cheop').find(x=>x.alive);if(c&&chance(.5))add(57,()=>promoteCheopScene(c));}
   if(P.female&&P.widowed&&!P.married&&!P.flags.widowAsked&&P.age>=18)add(62,()=>widowScene());
-  if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10&&P.st.fame>=45&&chance(.12+(P.st.fame-45)/300))add(61,()=>jeongnyeoScene());
+  if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10)add(90,()=>jeongnyeoScene());
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){
