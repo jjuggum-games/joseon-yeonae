@@ -446,6 +446,7 @@ function income(){
   const live={royal:120,yangban:18,jungin:9,sangmin:2.6,cheonmin:.3}[P.cls]||2;
   const kidsCost=P.kids.filter(k=>k.alive&&P.year-k.born<18).length*({royal:10,yangban:2,jungin:1,sangmin:.4,cheonmin:.05}[P.cls]||.4);
   v+=(P.flags.kidSupport||0)*(P.kids.some(k=>k.alive)?1:.5);
+  {const minors=P.kids.some(k=>k.alive&&P.year-k.born<18);if(minors){v+=(P.flags.csIn||0)-(P.flags.csOut||0);}else if(P.flags.csIn||P.flags.csOut){P.flags.csIn=0;P.flags.csOut=0;say('아이들이 다 자라 양육비를 주고받던 일도 끝이 났다.');}}
   let net=v-live-kidsCost+ri(-2,3)*(P.cls==='cheonmin'?.1:1);
   if(P.focus==='wealth')net+=Math.max(1,v*.4);
   P.wealth=Math.max(0,P.wealth+net);
@@ -996,6 +997,10 @@ function yMajor(){
   {const q=P.kids.find(k=>k.alive&&k.royalBride==='세자빈');if(q&&realKing(y).s===y&&y-(q.wedY||P.year-1)>=0){q.royalBride='중전';q.feat='중전이 되었다';say(`세자가 보위에 오르니, 딸 ${iga(q.name)} 중전이 되었다!`,'big');ev('kidfeat',`딸 ${q.name}`,{feat:q.feat});queenParentBoost(true);}}
   {const top=Math.max(P.st.look,P.st.know,P.st.art);if(P.age>=18&&P.age<=35&&top>=70&&!P.married&&!P.flags.sujeol&&!(P.widowed&&!P.flags.widowAsked)&&!P.court&&!(P.job&&['concubine','queen','king','buma'].includes(P.job.k))&&P.cls!=='royal'&&P.year-(P.flags.gazeY||0)>=6&&chance(.12+(top-70)/300))add(68,()=>gazeScene());}
   {const sp=spouseP();if(P.married&&sp&&sp.alive&&!sp.kingRole&&!sp.seja&&P.year-(P.flags.dthemY||0)>=6&&P.year-(P.flags.wedY||P.year)>=2){const bad=(sp.h<30?1:0)+(P.female&&!P.kids.some(k=>k.alive&&!k.female)&&P.year-(P.flags.wedY||P.year)>=7?1:0);if(bad&&chance(.08*bad))add(64,()=>divorceThemScene());}}
+  {const ex=Object.values(P.people).filter(x=>x.kind==='ex'&&x.alive).pop();const mine=P.kids.some(k=>k.alive&&!k.away&&y-k.born<18);const away=P.kids.some(k=>k.alive&&k.away&&y-k.born<18);
+   if(ex&&P.year-(P.flags.supportY||0)>=6&&y-(ex.exY||y)>=0&&y-(ex.exY||y)<=3){if(mine&&!P.flags.csIn)add(55,()=>supportScene('divorceWithMe',ex));else if(away&&!P.flags.csOut)add(55,()=>supportScene('divorceAway',ex));}
+   const dead=Object.values(P.people).filter(x=>x.kind==='spouse'&&!x.alive&&x.dy&&y-x.dy<=2).pop();
+   if(!P.married&&dead&&mine&&!dead.supportAsked&&!dead.kingRole){dead.supportAsked=1;add(54,()=>supportScene('widow',dead));}}
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){

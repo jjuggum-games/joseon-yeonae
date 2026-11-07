@@ -910,3 +910,41 @@ function divorceThemScene(){
       doDivorce(sp,P.female?'소박':'아내가 떠남',false);say(P.female?`끝내 소박을 맞아 친정으로 돌아왔다.`:`${iga(nm)} 끝내 친정으로 돌아갔다.`,'big');if(P.female)ev('sobak','소박을 맞았다');return custodyScene(sp);}},
     {t:'담담히 받아들인다',p:null,tags:['갈라섬'],fn:()=>{doDivorce(sp,P.female?'소박':'아내가 떠남',false);fx({worry:-5});say('붙잡지 않았다. 각자의 길을 가기로 하였다.','big');return custodyScene(sp);}}]};
 }
+
+/* ===== 양육비: 갈라선 뒤, 사별한 뒤 ===== */
+function supportScene(kind,x){
+  const U=UNIT[P.cls]||.5;const nm=x?callOf(x):'';const inlaw=P.female?'시댁':'처가';const mine=minorKids();const away=P.kids.filter(k=>k.alive&&k.away&&P.year-k.born<18);
+  const rich=x&&x.rich!=null?x.rich:1;const amt=Math.max(U*1.5,U*(1+rich));
+  P.flags.supportY=P.year;
+  const setIn=(v,from)=>{P.flags.csIn=(P.flags.csIn||0)+v;P.flags.csInFrom=from;};
+  if(kind==='divorceWithMe'){
+    const p1=clamp(.25+(P.st.know+P.st.fame)/500+rich*.08,.1,.8);
+    const sons=mine.filter(k=>!k.female).length;const p2=clamp(.3+rich*.1+sons*.12,.1,.85);
+    return {kind:'major',title:'양육비',pid:x&&x.id,text:`${iga(nm)} 떠난 뒤 아이들(${mine.map(k=>k.name).join(', ')})을 홀로 키운다. 먹이고 입히고 가르치는 데 드는 것이 만만치 않다.`,opts:[
+      {t:`${nm}에게 양육비를 청한다`,sub:'학식과 평판이 도움이 된다',p:p1,tags:['성공하면 해마다 살림 보탬'],fn:()=>{if(chance(p1)){setIn(amt,nm);say(`${iga(nm)} 아이들 몫으로 해마다 곡식과 돈을 보내기로 하였다.`,'big');}else{fx({worry:8});say(`${iga(nm)} 모른 척하였다.`);}}},
+      {t:`${nm}의 집안(${inlaw})에 청한다`,sub:sons?'손자가 있으면 그 집안도 외면하기 어렵다':'그 집안의 형편에 달렸다',p:p2,tags:['성공하면 넉넉히 보탬','아이를 데려가겠다 할 수도 있음'],fn:()=>{
+        if(!chance(p2)){fx({worry:8});say(`옛 ${inlaw}에서 문전박대를 당하였다.`);return null;}
+        if(sons&&chance(.4))return {kind:'major',title:'양육비 · 조건',text:`옛 ${inlaw}에서 돈은 보태겠으나, 대를 이을 손자만은 그 집안에서 키우겠다고 한다.`,opts:[
+          {t:'손자를 보내고 양육비를 받는다',p:null,tags:['아들은 그 집에서 자람','재산 ↑'],fn:()=>{mine.filter(k=>!k.female).forEach(k=>k.away=1);setIn(amt*1.5,inlaw);fx({worry:12});say(`아들을 옛 ${inlaw}에 보냈다. 대신 해마다 넉넉한 양육비가 왔다.`,'big');}},
+          {t:'아이는 내가 키운다',p:null,safe:true,tags:['양육비 없음'],fn:()=>{say('돈은 받지 않고 아이들을 곁에 두었다.');}}]};
+        setIn(amt*1.3,inlaw);say(`옛 ${inlaw}에서 손주들 몫으로 해마다 살림을 보태 주기로 하였다.`,'big');return null;}},
+      {t:'도움 없이 홀로 키운다',p:null,safe:true,tags:['평판 조금 ↑','살림 빠듯'],fn:()=>{fx({fame:3,worry:5});say('누구에게도 손 벌리지 않고 아이들을 키우기로 하였다.');}}]};
+  }
+  if(kind==='divorceAway'){
+    const ask=!P.female;
+    return {kind:'major',title:'양육비',pid:x&&x.id,text:ask?`${nm}의 친정에서 아이들(${away.map(k=>k.name).join(', ')}) 양육비를 보내라는 기별이 왔다. 아비 된 도리라는 것이다.`:`${nm}의 집에서 자라는 아이들(${away.map(k=>k.name).join(', ')})이 눈에 밟힌다.`,opts:ask?[
+      {t:'해마다 양육비를 보낸다',p:null,tags:['재산 해마다 ↓','평판 ↑','아이들과의 정 유지'],fn:()=>{P.flags.csOut=(P.flags.csOut||0)+amt;fx({fame:4});say('아이들 몫으로 해마다 돈과 곡식을 보내기로 하였다.');}},
+      {t:'한 번에 목돈을 보낸다',p:null,tags:['재산 크게 ↓'],fn:()=>{fx({wealth:-amt*6,fame:2});say('목돈을 한 번에 보내고 셈을 끝냈다.');}},
+      {t:'보내지 않는다',p:null,safe:true,tags:['평판 ↓','아이들이 그대를 원망함'],fn:()=>{fx({fame:-8});away.forEach(k=>k.estranged=1);say('양육비를 보내지 않았다. 고을에 매정한 아비라는 말이 돌았다.');}}]:[
+      {t:'몰래 돈과 옷을 보낸다',p:null,tags:['재산 해마다 ↓','아이들과의 정 유지'],fn:()=>{P.flags.csOut=(P.flags.csOut||0)+amt*.5;say('해마다 남몰래 아이들 옷과 엿값을 보냈다.');}},
+      {t:'마음만 보낸다',p:null,safe:true,tags:['마음고생 ↑'],fn:()=>{fx({worry:6});say('먼발치에서 아이들 소식만 들었다.');}}]};
+  }
+  /* 사별: 시댁/처가의 도움 */
+  const sons=mine.filter(k=>!k.female).length;const ir=(x&&x.rich!=null?x.rich:1);
+  const offer=P.female&&sons&&chance(.45)?'take':'help';
+  return {kind:'major',title:`${inlaw}의 도움`,text:offer==='take'?`${nm}${bat(nm)?'을':'를'} 잃은 뒤, ${inlaw}에서 대를 이을 손자들을 데려다 키우겠다고 한다. 대신 살림을 넉넉히 보태 주겠다고 한다.`:`${nm}${bat(nm)?'을':'를'} 잃은 뒤, ${inlaw}에서 남은 손주들 키우는 데 보태라며 사람을 보냈다.`,opts:offer==='take'?[
+      {t:'손자들을 보낸다',p:null,tags:['아들들은 그 집에서 자람','재산 ↑'],fn:()=>{mine.filter(k=>!k.female).forEach(k=>k.away=1);setIn(amt*(1+ir*.3),inlaw);fx({worry:12});say(`아들들을 ${inlaw}에 보냈다. 해마다 살림이 보태졌지만 집이 텅 빈 것 같았다.`,'big');}},
+      {t:'아이들은 내가 키운다',sub:'그 집안을 설득해야 한다',p:clamp(.35+(P.st.fame+P.st.know)/400),tags:['실패하면 아이들을 빼앗김'],fn:()=>{if(chance(.35+(P.st.fame+P.st.know)/400)){setIn(amt*.5,inlaw);say(`${inlaw}을 설득해 아이들을 곁에 두었다. 조금이나마 살림도 보태 주었다.`);}else{mine.filter(k=>!k.female).forEach(k=>k.away=1);fx({worry:20});say(`끝내 ${inlaw}에서 손자들을 데려갔다.`,'big');}}}]:[
+      {t:'고맙게 받는다',p:null,tags:['해마다 살림 보탬'],fn:()=>{setIn(amt*(.8+ir*.3),inlaw);say(`${inlaw}에서 해마다 손주들 몫을 보내 주었다.`);}},
+      {t:'정중히 사양한다',p:null,safe:true,tags:['평판 조금 ↑'],fn:()=>{fx({fame:3});say('마음만 고맙게 받겠다며 사양하였다.');}}]};
+}
