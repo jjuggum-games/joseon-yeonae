@@ -49,7 +49,7 @@ const Music={
     const m=this.mode||'calm';this.ensure();
     /* 같은 분위기의 곡이 이미 걸려 있으면 처음부터 다시 틀지 않고 멈춘 자리에서 이어 튼다 */
     if(!force&&this.cur===m&&this.el.src){if(this.el.paused)this.resume();return;}
-    const list=this.tr[m];const src=m==='calm'?list[this.ci%list.length]:R(list);
+    const list=this.tr[m];const pool=list.length>1?list.filter(x=>x!==this.lastSrc):list;const src=R(pool);this.lastSrc=src;
     this.cur=m;this.el.loop=m==='sad';this.el.src=src;this.el.volume=.5;
     this.resume();
   },
