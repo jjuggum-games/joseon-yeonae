@@ -995,6 +995,7 @@ function yMajor(){
   if(P.female&&P.widowed&&!P.married&&!P.flags.widowAsked&&P.age>=18)add(62,()=>widowScene());
   if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10)add(90,()=>jeongnyeoScene());
   if(P.age>=12&&P.year-(P.flags.fameY||0)>=3&&chance(.55))add(25,()=>fameScene());
+  if(!P.married&&P.age>=(P.widowed||P.divorced?18:22)&&!P.court&&!P.exile&&!(P.job&&['monk','king','concubine','naesi'].includes(P.job.k))&&P.year-(P.flags.soloY||0)>=1&&chance(P.flags.sujeol?.7:.5))add(34,()=>soloScene());
   if(P.kids.some(k=>k.alive)&&P.year-(P.flags.kidStoryY||0)>=3&&chance(.4))add(27,()=>kidStoryScene());
   if(y===1777&&P.kids.some(k=>k.alive&&k.seo))say('나라에서 서얼허통절목을 내려 서얼에게도 벼슬길을 열어 주었다. 서얼 자식들의 앞날에 빛이 비쳤다.','big');
   {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=13&&P.year-k.born<=17&&!k.seo&&k.cls!=='cheonmin');if(d&&P.cls==='yangban'&&chance(.25))add(80,()=>kidRoyalScene(d));}

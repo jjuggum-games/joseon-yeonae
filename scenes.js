@@ -1172,3 +1172,102 @@ function postEventGeneric(){
       else{fx(hurt?{fame:-3,health:-ri(6,14)}:{fame:-ri(3,6)});say(o.ev.no);}}},
     {t:'무리하지 않는다',p:null,safe:true,tags:[],fn:()=>{say('무리하지 않고 넘겼다.');}}]};
 }
+
+/* ===== 홀로 사는 삶: 사별·이혼·미혼 ===== */
+function soloKind(){if(P.flags.sujeol)return 'S';if(P.widowed)return 'W';if(P.divorced)return 'D';return 'N';}
+const SOLO=[
+  {id:'inlawcare',c:k=>P.female&&(k==='S'||k==='W'),f:()=>({title:'시어머니의 병',text:'늙은 시어머니가 자리에 누웠다. 동서들은 저마다 핑계를 대며 발을 뺀다.',opts:[
+    {t:'곁에서 극진히 모신다',p:null,tags:['평판 ↑','건강 ↓'],fn:()=>{fx({fame:ri(5,9),health:-ri(4,8)});say('밤낮으로 시어머니 곁을 지켰다. 고을에 효부라는 말이 돌았다.','big');}},
+    {t:'약값만 대고 동서에게 맡긴다',p:null,tags:['재산 ↓'],fn:()=>{fx({wealth:-soloU()*4});say('약값을 보태고 병구완은 동서에게 맡겼다.');}},
+    {t:'모른 척한다',p:null,tags:['평판 ↓'],fn:()=>{fx({fame:-6});say('발길을 끊었다. 시댁 사람들의 원망이 컸다.');}}]})},
+  {id:'rearkids',c:k=>(k!=='N')&&P.kids.some(x=>x.alive&&!x.away&&P.year-x.born<15),f:()=>{const ks=P.kids.filter(x=>x.alive&&!x.away&&P.year-x.born<15);return {title:'홀로 키우는 자식',text:`${P.female?'아비':'어미'} 없이 자라는 ${ks.map(x=>x.name).join(', ')}${bat(ks[ks.length-1].name)?'을':'를'} 홀로 키운다. 살림은 빠듯하고 아이들은 쑥쑥 자란다.`,opts:[
+    {t:'밤새 일해 글공부를 시킨다',p:null,tags:['재산 ↓','건강 ↓','자식 학식 ↑'],fn:()=>{fx({wealth:-soloU()*5,health:-5});ks.forEach(x=>{if(x.st)x.st.know=clamp((x.st.know||30)+ri(5,10),0,100);});say('밤마다 삯일을 해 아이들 서당비를 댔다.','big');}},
+    {t:'친정·형제에게 도움을 청한다',p:.7,tags:['체면 ↓'],fn:()=>{if(chance(.7)){fx({wealth:soloU()*5,fame:-2});say('형제들이 쌀과 돈을 보태 주었다.');}else{fx({worry:8});say('형제들도 형편이 어렵다며 고개를 저었다.');}}},
+    {t:'아이들에게 일찍 일을 가르친다',p:null,tags:['재산 ↑','자식 건강 ↑'],fn:()=>{fx({wealth:soloU()*3});ks.forEach(x=>{if(x.st)x.st.health=clamp((x.st.health||40)+ri(3,7),0,100);});say('아이들이 어린 손으로 살림을 거들었다.');}}]};}},
+  {id:'greedy',c:k=>P.female&&(k==='S'||k==='W')&&P.wealth>soloU()*20,f:()=>({title:'재산을 노리는 시댁',text:'세상을 떠난 이의 형제가 찾아와, 이 집 재산은 본디 문중의 것이니 내놓으라고 윽박지른다.',opts:[
+    {t:'관아에 소지를 올린다',sub:'학식이 중요하다',p:clamp(.3+P.st.know/160),tags:['이기면 재산을 지킴','지면 재산 ↓'],fn:()=>{if(chance(.3+P.st.know/160)){fx({fame:4});say('사또가 그대의 손을 들어 주었다. 재산을 지켰다.','big');}else{P.wealth*=.6;say('송사에서 졌다. 재산의 상당 부분을 내주었다.','big');}}},
+    {t:'문중 어른께 호소한다',sub:'평판이 중요하다',p:clamp(.3+P.st.fame/150),tags:['평판에 달림'],fn:()=>{if(chance(.3+P.st.fame/150)){say('문중 어른들이 시동생을 꾸짖었다.','big');}else{P.wealth*=.8;say('문중도 시동생 편을 들었다. 땅 몇 마지기를 내주었다.');}}},
+    {t:'다툼이 싫어 나눠 준다',p:null,tags:['재산 ↓','평판 조금 ↑'],fn:()=>{P.wealth*=.75;fx({fame:2,worry:-3});say('재산을 나눠 주고 다툼을 끝냈다.');}}]})},
+  {id:'matchmaker',c:k=>k==='S'&&!P.flags.jeongnyeo,f:()=>({title:'중매쟁이의 발걸음',text:'중매쟁이가 문턱이 닳도록 드나들며, 젊은 나이에 홀로 늙기 아깝다고 재가를 권한다.',opts:[
+    {t:'단호히 내친다',p:null,tags:['평판 ↑'],fn:()=>{fx({fame:4});say('다시는 그런 말을 꺼내지 말라며 중매쟁이를 내쳤다.');}},
+    {t:'수절을 그만두고 재가를 생각한다',p:null,tags:['다시 혼인할 수 있음','평판 크게 ↓'],fn:()=>{P.flags.sujeol=null;P.flags.noRemarry=0;fx({fame:-10});say('수절을 그만두기로 하였다. 고을에 수군거림이 일었다.','big');ev('note','수절을 그만두었다');}}]})},
+  {id:'yeolvisit',c:k=>k==='S'&&P.flags.jeongnyeo,f:()=>({title:'열녀를 찾아온 여인들',text:'열녀문 소문을 듣고 고을 여인들이 하나둘 찾아와 저마다의 속사정을 털어놓는다.',opts:[
+    {t:'귀 기울여 들어 주고 다독인다',p:null,tags:['평판 ↑','마음고생 ↓'],fn:()=>{fx({fame:ri(4,8),worry:-6});say('여인들이 그대를 어머니처럼 따랐다.','big');}},
+    {t:'수절의 도리를 엄히 가르친다',p:null,tags:['평판 ↑','원망도 삼'],fn:()=>{fx({fame:5});say('그대의 가르침이 고을에 퍼졌다. 다만 뒤에서 야박하다는 말도 돌았다.');}},
+    {t:'문을 닫고 조용히 지낸다',p:null,safe:true,tags:[],fn:()=>{say('찾아오는 이들을 정중히 돌려보냈다.');}}]})},
+  {id:'yeolgift',c:k=>k==='S'&&P.flags.jeongnyeo&&!P.flags.yeolGift,f:()=>{P.flags.yeolGift=1;return {title:'나라의 하사',text:'열녀의 집안이라 하여 나라에서 부역을 면해 주고 쌀과 베를 내렸다.',opts:[
+    {t:'하사품을 굶는 이웃과 나눈다',p:null,tags:['평판 크게 ↑'],fn:()=>{fx({fame:10});say('하사받은 쌀을 이웃과 나누었다.','big');}},
+    {t:'집안 살림에 보탠다',p:null,tags:['재산 ↑'],fn:()=>{fx({wealth:soloU()*15});say('하사품으로 살림이 넉넉해졌다.');}},
+    {t:'사당에 바쳐 제사에 쓴다',p:null,tags:['평판 ↑'],fn:()=>{fx({fame:5,worry:-4});say('하사품을 사당에 올려 세상을 떠난 이의 제사를 정성껏 모셨다.');}}]};}},
+  {id:'gye',c:k=>P.female,f:()=>({title:'동네 계 모임',text:'동네 여인들이 돈을 모아 차례로 목돈을 타는 계를 만들자고 한다.',opts:[
+    {t:'계에 든다',p:.75,tags:['목돈이 생길 수 있음','계주가 달아날 수 있음'],fn:()=>{if(chance(.75)){fx({wealth:soloU()*ri(6,12),worry:-3});say('차례가 돌아와 목돈을 탔다. 여인들과도 가까워졌다.','big');}else{fx({wealth:-soloU()*6,worry:8});say('계주가 곗돈을 들고 달아났다!','big');}}},
+    {t:'곗돈 장부를 맡는다',sub:'학식이 중요하다',p:clamp(.4+P.st.know/200),tags:['평판 ↑'],fn:()=>{if(chance(.4+P.st.know/200)){fx({fame:6});say('장부를 깔끔히 맡아 동네의 믿음을 얻었다.');}else{fx({fame:-4});say('셈이 어긋나 의심을 받았다.');}}},
+    {t:'들지 않는다',p:null,safe:true,tags:[],fn:()=>{say('계에 들지 않았다.');}}]})},
+  {id:'temple',c:k=>!P.job||!['monk','official','military','king','queen','concubine'].includes(P.job.k),f:()=>({title:'산사의 불공',text:'마음이 허한 날 산사에 올라 불공을 드렸다. 노승이 그대를 한참 바라보더니, 속세의 인연이 다했으면 머리를 깎는 것도 길이라고 한다.',opts:[
+    {t:'불공만 드리고 내려온다',p:null,safe:true,tags:['마음고생 ↓'],fn:()=>{fx({worry:-8});say('향 내음 속에서 마음이 조금 가라앉았다.');}},
+    {t:'시주를 넉넉히 한다',p:null,tags:['재산 ↓','평판 ↑'],fn:()=>{fx({wealth:-soloU()*5,fame:3,worry:-5});say('넉넉히 시주하였다. 절에 그대의 이름이 새겨졌다.');}},
+    {t:'머리를 깎고 출가한다',p:null,tags:['승려가 됨','혼인 못 함'],fn:()=>{P.flags.noRemarry=1;P.home='산사';setJob('monk',0);say(`머리를 깎고 ${P.female?'비구니':'승려'}가 되었다.`,'big');ev('job','출가하였다');}}]})},
+  {id:'teach',c:k=>P.age>=25,f:()=>({title:'마을 아이들',text:P.female?'이웃 아낙들이 딸들에게 바느질과 언문을 가르쳐 달라고 부탁한다.':'이웃들이 아이들에게 글을 좀 가르쳐 달라고 부탁한다.',opts:[
+    {t:'기꺼이 가르친다',p:null,tags:['평판 ↑',P.female?'재주 ↑':'학식 ↑'],fn:()=>{fx(P.female?{fame:5,art:2}:{fame:5,know:2});say('아이들이 그대를 스승처럼 따랐다.','big');}},
+    {t:'삯을 받고 가르친다',p:null,tags:['재산 ↑'],fn:()=>{fx({wealth:soloU()*4,fame:1});say('조금씩 삯을 받으며 아이들을 가르쳤다.');}},
+    {t:'사양한다',p:null,safe:true,tags:[],fn:()=>{say('정중히 사양하였다.');}}]})},
+  {id:'trade',c:k=>!P.job||['housewife','lady','sosil'].includes(P.job.k),f:()=>({title:'먹고살 길',text:'홀로 살림을 꾸리려니 손 놓고 있을 수만은 없다. 이웃이 장사를 해 보라고 권한다.',opts:[
+    {t:P.female?'주막을 연다':'장터에 좌판을 편다',p:null,tags:['직업을 얻음'],fn:()=>{if(P.female)setJob('jumo',0);else setJob('merchant',0);say(P.female?'길목에 작은 주막을 열었다.':'장터에 좌판을 폈다.','big');ev('job',P.female?'주막을 열었다':'장사를 시작하였다');}},
+    {t:P.female?'방물 보따리를 진다':'품을 판다',p:null,tags:['직업을 얻음'],fn:()=>{if(P.female)setJob('bangmul',0);else setJob('farmer',0);say(P.female?'방물 보따리를 이고 이 집 저 집 다니기 시작했다.':'남의 논밭에 품을 팔았다.','big');}},
+    {t:'모아 둔 것으로 버틴다',p:null,safe:true,tags:[],fn:()=>{say('아껴 쓰며 버티기로 하였다.');}}]})},
+  {id:'nephew',c:k=>P.age>=28&&!P.kids.some(x=>x.alive&&!x.away),f:()=>({title:'형제의 아이',text:'형제가 살림이 어려워 아이 하나를 그대에게 맡기고 싶어 한다.',opts:[
+    {t:'아이를 거둔다',p:null,tags:['양자·양녀'],fn:()=>adoptScene(true)},
+    {t:'쌀만 보내 준다',p:null,tags:['재산 ↓','평판 ↑'],fn:()=>{fx({wealth:-soloU()*3,fame:2});say('아이 대신 쌀을 보냈다.');}},
+    {t:'거절한다',p:null,safe:true,tags:[],fn:()=>{say('형편이 안 된다며 거절하였다.');}}]})},
+  {id:'oldsingle',c:k=>k==='N'&&P.age>=(P.female?22:28)&&canRemarry(),f:()=>({title:P.female?'노처녀 소리':'노총각 소리',text:`${P.female?'혼기를 놓친 노처녀':'장가 못 간 노총각'}이라는 수군거림이 들린다. 집안 어른들이 중매를 서겠다고 나선다.`,opts:[
+    {t:'중매를 받아들인다',p:null,tags:['혼처를 찾음'],fn:()=>matchScene(true)},
+    {t:'홀로 살겠다고 못 박는다',p:null,tags:['마음고생 ↓','평판 조금 ↓'],fn:()=>{P.flags.soloVow=1;fx({worry:-6,fame:-2});say('혼인하지 않고 내 뜻대로 살겠다고 하였다.','big');}}]})},
+  {id:'travel',c:k=>P.age>=20&&P.age<=60,f:()=>({title:'유람',text:'벗이 금강산 유람을 함께 가자고 한다. 매인 데 없는 몸이니 떠나 볼 만하다.',opts:[
+    {t:'짐을 꾸려 떠난다',p:null,tags:['재산 ↓','건강·재주 ↑','평판 ↑'],fn:()=>{fx({wealth:-soloU()*5,health:4,art:3,fame:3,worry:-8});say('금강산 일만이천봉을 두루 보고 돌아왔다. 그때 지은 시가 사람들 입에 오르내렸다.','big');ev('note','금강산을 유람하였다');}},
+    {t:'가까운 절과 계곡만 둘러본다',p:null,tags:['마음고생 ↓'],fn:()=>{fx({worry:-4,health:2});say('가까운 계곡에서 며칠 쉬다 왔다.');}},
+    {t:'집에 머문다',p:null,safe:true,tags:[],fn:()=>{say('집에 머물렀다.');}}]})},
+  {id:'house',c:k=>k!=='N'||P.age>=30,f:()=>({title:'홀로 살 집',text:'홀로 살기에 집이 너무 크고 쓸쓸하다. 집을 줄이거나 옮길까 싶다.',opts:[
+    {t:'작은 집으로 옮기고 차액을 모은다',p:null,tags:['재산 ↑'],fn:()=>{fx({wealth:soloU()*8});P.home=R(['마을 어귀의 작은 초가','개울가 오두막','읍내 골목의 작은 집']);say(`${euro(P.home)} 옮겼다.`);}},
+    {t:'방을 세놓는다',p:null,tags:['재산 ↑','시끄러움'],fn:()=>{fx({wealth:soloU()*4});say('빈방을 길손에게 세놓았다.');}},
+    {t:'정든 집을 지킨다',p:null,safe:true,tags:[],fn:()=>{say('정든 집을 지키기로 하였다.');}}]})},
+  {id:'oldage',c:k=>P.age>=45,f:()=>({title:'홀로 맞는 노년',text:'머리에 서리가 내렸다. 홀로 늙어 가는 날들을 어떻게 꾸릴지 생각한다.',opts:[
+    {t:'논밭을 사 두어 노후를 대비한다',p:null,tags:['재산이 땅으로'],fn:()=>{fx({wealth:-soloU()*5});P.flags.oldLand=1;say('논밭 몇 마지기를 사 두었다. 해마다 소작료가 들어왔다.');}},
+    {t:'재산을 고을에 내놓는다',p:null,tags:['평판 크게 ↑','재산 ↓'],fn:()=>{const g=P.wealth*.3;P.wealth-=g;fx({fame:12});say('모은 재산을 고을에 내놓았다. 사람들이 그대의 이름으로 비를 세웠다.','big');ev('rise','고을에 재산을 내놓았다');}},
+    {t:'친척에게 의지한다',p:null,tags:['마음고생 ↓'],fn:()=>{fx({worry:-5});say('친척들이 그대를 돌보겠다고 하였다.');}}]})},
+  {id:'stigma',c:k=>k==='D',f:()=>({title:'헤어진 몸',text:`${P.female?'소박맞은 여인':'아내를 내친 사내'}이라며 사람들이 뒤에서 손가락질한다.`,opts:[
+    {t:'꿋꿋이 고개를 든다',sub:'평판이 중요하다',p:clamp(.35+P.st.fame/150),tags:['이겨 내면 마음고생 ↓'],fn:()=>{if(chance(.35+P.st.fame/150)){fx({worry:-6,fame:3});say('당당히 사는 모습에 수군거림이 잦아들었다.');}else{fx({worry:6});say('뒷말이 끊이지 않았다.');}}},
+    {t:'낯선 고을로 떠나 새로 시작한다',p:null,tags:['평판 초기화에 가까움','재산 ↓'],fn:()=>{fx({wealth:-soloU()*4,worry:-5});P.fame0=P.st.fame;P.st.fame=Math.max(P.st.fame,30);P.home=R(['낯선 고을의 셋집','포구 마을의 작은 집','산골 마을의 초가']);say(`${euro(P.home)} 옮겨 새로 시작하였다.`,'big');}}]})},
+  {id:'exnews',c:k=>k==='D'&&Object.values(P.people).some(x=>x.kind==='ex'&&x.alive),f:()=>{const x=Object.values(P.people).find(x=>x.kind==='ex'&&x.alive);return {title:'헤어진 이의 소식',text:`헤어진 ${iga(callOf(x))} 몹시 어렵게 산다는 소식이 들려왔다.`,opts:[
+    {t:'몰래 쌀과 돈을 보낸다',p:null,tags:['재산 ↓','평판 ↑'],fn:()=>{fx({wealth:-soloU()*4,fame:3});x.h=Math.min(100,(x.h||30)+10);say('이름을 숨기고 쌀과 돈을 보냈다.');}},
+    {t:'찾아가 만난다',p:null,tags:['다시 이어질 수도'],fn:()=>{x.h=Math.min(100,(x.h||30)+20);if(x.h>=60&&chance(.5)){x.kind='love';x.status='crush';say(`${gwawa(callOf(x))} 오래 이야기를 나누었다. 마음에 다시 불씨가 일었다.`,'big');}else say(`${gwawa(callOf(x))} 서먹하게 인사만 나누었다.`);}},
+    {t:'모른 척한다',p:null,safe:true,tags:[],fn:()=>{say('모른 척하였다.');}}]};}},
+  {id:'widower',c:k=>!P.female&&(k==='W'||k==='D'),f:()=>({title:'홀아비 살림',text:'홀아비 살림이 엉망이다. 옷은 해지고 부엌은 썰렁하다.',opts:[
+    {t:'침모와 찬모를 들인다',p:null,tags:['재산 ↓'],fn:()=>{fx({wealth:-soloU()*4,health:3});say('일손을 들여 살림이 제자리를 찾았다.');}},
+    {t:'손수 해 본다',p:null,tags:['재주 ↑','건강 ↓'],fn:()=>{fx({art:2,health:-3});say('서툰 솜씨로 밥을 짓고 바느질을 하였다.');}},
+    {t:'새 아내를 맞으려 중매를 넣는다',p:null,tags:['새 인연'],fn:()=>{if(canRemarry())return matchScene(true);say('아직은 다시 장가들 때가 아니라는 말을 들었다.');}}]})},
+  {id:'lonely',c:k=>true,f:()=>({title:'긴 밤',text:'홀로 맞는 밤이 유난히 길다.',opts:[
+    {t:'등잔 아래 글과 시를 짓는다',p:null,tags:['학식·재주 ↑','마음고생 ↓'],fn:()=>{fx({know:2,art:2,worry:-5});say('긴 밤을 글로 채웠다.');}},
+    {t:'술로 달랜다',p:null,tags:['마음고생 ↓','건강 ↓'],fn:()=>{fx({worry:-7,health:-5});say('술잔을 기울이며 밤을 보냈다.');}},
+    {t:'길쌈을 하며 밤을 새운다',p:null,tags:['재산 ↑'],fn:()=>{fx({wealth:soloU()*3});say('밤새 베를 짰다.');}}]})},
+  {id:'neighbor',c:k=>true,f:()=>({title:'이웃의 억울한 일',text:'옆집 사람이 빚을 갚지 못했다며 양반 댁 머슴들에게 끌려가고 있다.',opts:[
+    {t:'나서서 사정을 말한다',sub:'평판이 중요하다',p:clamp(.3+P.st.fame/140),tags:['성공하면 평판 ↑'],fn:()=>{if(chance(.3+P.st.fame/140)){fx({fame:7});say('그대의 말에 머슴들이 물러갔다.','big');}else{fx({fame:-2,worry:5});say('도리어 봉변을 당했다.');}}},
+    {t:'빚을 대신 갚아 준다',p:null,tags:['재산 ↓','평판 크게 ↑'],fn:()=>{fx({wealth:-soloU()*6,fame:9});say('빚을 대신 갚아 주었다. 이웃이 눈물로 고마워했다.','big');}},
+    {t:'모른 척한다',p:null,safe:true,tags:[],fn:()=>{say('문을 닫아걸었다.');}}]})},
+  {id:'thief',c:k=>true,f:()=>({title:'한밤의 도둑',text:'홀로 사는 집이라 얕보았는지, 한밤중 도둑이 담을 넘었다.',opts:[
+    {t:'몽둥이를 들고 쫓는다',sub:'무예가 중요하다',p:clamp(.3+P.st.brave/140),tags:['성공하면 평판 ↑','다칠 수 있음'],fn:()=>{if(chance(.3+P.st.brave/140)){fx({fame:4});say('도둑을 쫓아냈다. 이튿날 동네에 그대의 담력이 소문났다.');}else{fx({health:-ri(5,12),wealth:-soloU()*3});say('도둑에게 떠밀려 다치고 세간도 털렸다.');}}},
+    {t:'소리쳐 이웃을 부른다',p:.7,tags:[],fn:()=>{if(chance(.7))say('이웃들이 달려와 도둑이 달아났다.');else{fx({wealth:-soloU()*3});say('이웃이 오기 전에 도둑이 세간을 챙겨 달아났다.');}}},
+    {t:'숨죽이고 숨는다',p:null,tags:['재산 ↓'],fn:()=>{fx({wealth:-soloU()*4});say('숨어 있는 사이 도둑이 세간을 털어 갔다.');}}]})},
+  {id:'ancestral',c:k=>(k==='S'||k==='W')&&['yangban','jungin'].includes(P.cls),f:()=>({title:'제사를 모시는 일',text:'세상을 떠난 이의 기일이 다가온다. 제사를 누가 모실지를 두고 문중이 말이 많다.',opts:[
+    {t:'내가 정성껏 모신다',p:null,tags:['재산 ↓','평판 ↑'],fn:()=>{fx({wealth:-soloU()*3,fame:5,worry:-3});say('손수 제수를 장만해 제사를 모셨다.');}},
+    {t:'양자를 들여 제사를 잇게 한다',p:null,tags:['양자'],fn:()=>adoptScene(true)},
+    {t:'문중에 맡긴다',p:null,safe:true,tags:[],fn:()=>{say('제사를 문중에 맡겼다.');}}]})}
+];
+function soloU(){return UNIT[P.cls]||.5;}
+function soloScene(){
+  P.flags.soloY=P.year;const k=soloKind();const seen=P.flags.soloSeen=P.flags.soloSeen||[];
+  let pool=SOLO.filter(s=>{try{return s.c(k);}catch(e){return false;}});
+  let fresh=pool.filter(s=>!seen.includes(s.id));if(!fresh.length){P.flags.soloSeen=[];fresh=pool;}
+  if(!fresh.length)return null;const s=R(fresh);P.flags.soloSeen.push(s.id);
+  const sc=s.f();if(!sc)return null;sc.kind='major';
+  const lab={S:'수절',W:P.female?'과부살이':'홀아비살이',D:'헤어진 뒤',N:'홀몸'}[k];sc.title=`${lab} · ${sc.title}`;return sc;
+}
