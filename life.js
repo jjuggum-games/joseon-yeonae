@@ -7,7 +7,7 @@ const Store={
   get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},
   put(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}},
   _codex:null,
-  codex(){if(!this._codex)this._codex=Object.assign({cls:{},titles:{},kings:{},branches:{},rare:{},notes:{},post:{},rise:{},scene:{}},this.get(this.k.codex,{}));return this._codex;},
+  codex(){if(!this._codex)this._codex=Object.assign({cls:{},titles:{},kings:{},branches:{},rare:{},notes:{},post:{},rise:{},scene:{},spec:{}},this.get(this.k.codex,{}));return this._codex;},
   saveCodex(){this.put(this.k.codex,this.codex());this.changed('codex');},
   hist(){return this.get(this.k.hist,[]);},
   addHist(h){const a=this.hist();a.unshift(h);a.forEach((x,i)=>{if(i>=15&&x.log)delete x.log;});let b=a.slice(0,300);if(!this.put(this.k.hist,b)){b.forEach((x,i)=>{if(i>=1&&x.log)delete x.log;});this.put(this.k.hist,b);}this.changed('hist',h);},
@@ -240,6 +240,7 @@ const CHEON_SUB=['nobi','gisaeng','baekjeong','gwangdae','mudang','gong'];
 const STATE_JOB=['official','military','naesi','court','ajeon','yulgwan','gwansang','sanwon','sajagwan','newarmy'];
 function syncStatus(){
   const y=P.year,J=P.job;
+  if(P.originCls==='cheonmin'&&P.cls!=='cheonmin'&&!P.titles.includes('속량된 몸'))P.titles.push('속량된 몸');
   if(P.cls!=='cheonmin'&&CHEON_SUB.includes(P.sub))P.sub='';
   if(J&&J.k==='slave'&&P.cls!=='cheonmin'){P.job=null;say('노비 문서에서 이름이 지워졌으니, 더는 남의 집 일을 하지 않아도 되었다.');}
   if(J&&J.k==='gisaeng'&&P.cls!=='cheonmin'&&y<1894){P.job=null;say('기적에서 이름이 지워져 기방을 떠났다.');}
@@ -249,6 +250,7 @@ function syncStatus(){
   if(P.job&&['housewife','royalwife','sosil'].includes(P.job.k)&&!P.married&&!P.widowed&&!P.flags.sujeol){P.job=null;}
   if(P.job&&P.job.k==='lady'&&P.job.lv>0&&!P.married&&!P.widowed&&!P.flags.sujeol)P.job=null;
   P.kids.forEach(k=>{if(!k.alive||!k.job)return;
+    if(typeof jobSexOk==='function'&&!jobSexOk(k.job.k,k.female)&&!k.royalBride){k.job=k.female?{k:k.married?'housewife':'weaver',lv:0}:{k:'farmer',lv:0};}
     if((k.cls||P.cls)!=='cheonmin'&&(k.job.k==='slave'||(k.job.k==='gisaeng'&&y<1894))){k.job=null;kidJob(k);}
     if(y>=1910&&!P.alt&&['official','scholar','court','naesi','military'].includes(k.job.k)){k.job=k.job.k==='official'&&chance(.4)?{k:'clerk',lv:Math.min(2,k.job.lv>8?2:1)}:{k:k.female?'housewife':'cheosa',lv:0};}
     if(y>=1894&&!P.alt&&k.job.k==='scholar')k.job={k:'cheosa',lv:0};
@@ -399,6 +401,7 @@ function birth(given){
 
 /* ---- 직업 ---- */
 function yJob(){
+  {const sp=specOf();if(sp&&chance(.4)&&P.st[sp.st]!=null&&P.st[sp.st]<100)P.st[sp.st]=Math.min(100,P.st[sp.st]+1);}
   {const r=riseRule();if(r&&!r.ask)riseScene(r);}
   const a=P.age,J=P.job;
   // 시작
@@ -578,6 +581,10 @@ const JOB_DESC={
   slave:['주인집 일','시키는 일을 하며 산다.']
 };
 const JOB_TAGS={naesi:['거세(돌이킬 수 없음)','친자식을 볼 수 없음','궁에 매임'],baekjeong:['평판 ↓'],hunter:['다칠 수 있음'],haenyeo:['위험한 일'],bandit:['잡히면 큰일', '평판 ↓'],monk:['혼담이 들어오지 않음'],mudang:['평판 조금 ↓'],nurse:['대갓집에 매임'],gisaeng:['신분 변화: 천민(기적)','평판 ↓','다시 벗어나려면 속량해야 함'],court:['궁에 매임','혼인이 어려움'],yein:['떠돌이 삶','평판 조금 ↓'],sword:[],hunjang:[]};
+/* 남자만, 여자만 할 수 있던 일 */
+const MALE_JOBS=['official','military','scholar','naesi','doctor','interp','sanwon','gwansang','yulgwan','sajagwan','ajeon','soldier','smith','carpenter','fisher','salt','mabu','hunter','gatjang','chaekkwae','jeongisu','newarmy','telegraph','clerk','cheosa','buma','king','prince','chongsin','namchong','gwangdae','akgong','hunjang','sword','reporter','photo','westdoc','baekjeong','bandit','slave_m'];
+const FEMALE_JOBS=['gisaeng','uinyeo','court','nurse','sanpa','haenyeo','bangmul','weaver','lady','housewife','sosil','royalwife','queen','concubine'];
+function jobSexOk(k,F){if(F)return !MALE_JOBS.includes(k)||(P.flags&&P.flags.namjangOk&&k==='official');return !FEMALE_JOBS.includes(k);}
 function jobChoices(){
   const a=P.age;
   if(a<8)return {list:[],why:'아직 생업을 정할 나이가 아니다.'};
@@ -598,6 +605,7 @@ function jobChoices(){
   if(P.year>=1860&&P.year<=1898&&['sangmin','cheonmin'].includes(P.cls))L.push('donghak');
   if(P.year>=1910&&P.year<1945){if(!F&&P.cls!=='cheonmin')L.push('clerk');L.push('indep');}
   L=L.filter(k=>jobInEra(k));
+  L=L.filter(k=>jobSexOk(k,F));
   if(a>17)L=L.filter(k=>k!=='court');
   if(a>20||P.married)L=L.filter(k=>k!=='naesi');
   if(P.year<1600)L=L.filter(k=>k!=='chaekkwae');if(P.year<1700)L=L.filter(k=>k!=='jeongisu');
@@ -1067,6 +1075,7 @@ function yMajor(){
    const dead=Object.values(P.people).filter(x=>x.kind==='spouse'&&!x.alive&&x.dy&&y-x.dy<=2).pop();
    if(!P.married&&dead&&mine&&!dead.supportAsked&&!dead.kingRole){dead.supportAsked=1;add(54,()=>supportScene('widow',dead));}}
   {const r=riseRule();if(r&&r.ask)add(72,()=>riseScene(r));}
+  if(P.job&&SPECS[P.job.k]&&!specOf()&&P.flags.specAsk!==P.job.k&&P.age>=14)add(69,()=>specScene());
   if(P.job&&POSTS[P.job.k]&&P.job.lv>=POSTS[P.job.k].min&&(P.postK!==P.job.k||P.job.lv>=(P.postLv||0)+POSTS[P.job.k].every)&&P.year-(P.flags.postY||0)>=2)add(71,()=>postScene());
   if(P.job&&P.post&&P.postK===P.job.k&&(POST_EV[P.post]||(curPost()&&curPost().ev))&&P.year-(P.flags.postEvY||0)>=4&&chance(.35))add(30,()=>postEventScene());
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
@@ -1102,7 +1111,8 @@ function yMajor(){
     const rv=peopleOf('rival').find(r=>r.alive&&!r.crushed&&r.grudge>=55&&P.year>=(r.quietUntil||0));
     if(rv&&chance(.2))add(32,()=>rivalScene(rv));
     if(P.cls==='cheonmin'&&P.sub==='nobi'&&P.wealth>=40&&!P.flags.napsokAsked)add(40,()=>napsokScene());
-    if(P.female&&['yangban','jungin','sangmin'].includes(P.cls)&&P.st.know>=70&&P.st.brave>=45&&!P.married&&P.age<=30&&!Store.codex().rare.namjang&&!P.flags.namjang&&chance(.06))add(25,()=>namjangScene());
+    if(P.female&&['yangban','jungin','sangmin'].includes(P.cls)&&P.st.know>=70&&P.st.brave>=45&&!P.married&&P.age<=30&&!P.flags.namjang&&P.year<1894&&chance(.06))add(25,()=>namjangScene());
+    if(P.flags.namjangOk&&P.job&&P.job.k==='official'&&P.year-(P.flags.namjangOff||P.year)>=1&&chance(clamp(.07-P.st.brave/2000+P.job.lv/400,.03,.15)))add(88,()=>namjangCaught('office'));
     if(P.flags.wasGisaeng&&P.married&&!P.flags.rare3&&P.year-(P.flags.wedY||0)>=5&&chance(.04))add(22,()=>{P.flags.rare3=1;rare('gisaeng2lady','정실이 세상을 떠나 그대가 집안의 안주인 자리에 올랐다. 훗날 남편이 정1품에 올라 그대는 정경부인의 칭호를 받았다. 기녀 출신으로는 전에 없던 일이라 하였다.');fx({fame:30});return null;});
     if(P.age>=20&&(P.married||P.age>=25)&&P.year-(P.flags.homeY||0)>=3&&chance(.4))add(26,()=>homeScene());
     if(P.widowed&&!P.married&&P.age<=45&&canRemarry())add(46,()=>{P.widowed=P.widowed;return matchScene(true);});
@@ -1120,6 +1130,7 @@ function canRemarry(){
   return true;
 }
 function marriageable(){
+  if(P.flags.namjangOk)return false;
   if(P.flags.noMatch&&P.year<P.flags.noMatch)return false;
   if(P.married||P.age<18)return false;
   if(P.job&&P.job.k==='monk')return false;
@@ -1312,11 +1323,11 @@ function officialYear(J,a){
   const ten=P.year-J.since;const kn=P.st.know,fm=P.st.fame,M=postMul();
   if(J.chisa)return;
   /* 일흔이 넘으면 벼슬을 내려놓는다 (치사) */
-  if(a>=70&&!J.chisa&&chance(.5)){J.chisa=1;say(J.lv>=14?'일흔이 넘어 벼슬을 내려놓고 기로소에 들었다. 임금이 궤장을 내려 원로로 예우하였다.':'일흔이 넘어 벼슬을 내려놓고 물러났다(치사).','big');ev('job',J.lv>=14?'치사하고 기로소에 들었다':'벼슬에서 물러났다');if(J.lv>=14)fx({fame:5});return;}
+  if(a>=70&&!J.chisa&&chance(.5)){J.chisa=1;say(J.lv>=14?'일흔이 넘어 벼슬을 내려놓고 기로소에 들었다. 임금이 궤장을 내려 원로로 예우하였다.':'일흔이 넘어 벼슬을 내려놓고 물러났다(치사).','big');ev('job',J.lv>=14?'치사하고 기로소에 들었다':'벼슬에서 물러났다');if(J.lv>=14)fx({fame:5});if(!P.titles.includes('봉조하(치사)'))P.titles.push('봉조하(치사)');return;}
   /* 정1품: 판중추부사 → 우의정 → 좌의정 → 영의정 */
   if(J.lv>=16){
     if(J.seat==null)J.seat=0;
-    if(J.seat<3&&ten>=2&&chance(M*(.08+fm/1200+kn/2000))){J.seat++;J.since=P.year;const t=jobTitle(J);say(J.seat===3?`마침내 백관의 으뜸인 영의정에 올랐다!`:`${euro(t)} 제수되었다.`,'big');ev('job',`${t}에 올랐다`);fx({fame:J.seat===3?12:6});}
+    if(J.seat<3&&ten>=2&&chance(M*(.08+fm/1200+kn/2000))){J.seat++;J.since=P.year;const t=jobTitle(J);if(!P.titles.includes(t))P.titles.push(t);say(J.seat===3?`마침내 백관의 으뜸인 영의정에 올랐다!`:`${euro(t)} 제수되었다.`,'big');ev('job',`${t}에 올랐다`);fx({fame:J.seat===3?12:6});}
     return;
   }
   let need,p;
@@ -1329,7 +1340,7 @@ function officialYear(J,a){
   const up=J.lv<11&&chance(.12)?2:1;const nl=Math.min(16,J.lv+up);
   setJob('official',nl);
   if(nl===12)say(`정3품 통정대부, 당상관의 반열에 올랐다. 이제 임금 앞에서 정사를 논하는 자리다.`,'big');
-  else if(nl===16){P.job.seat=chance(.5)?1:0;say(P.job.seat?'정1품에 올라 우의정에 제수되었다! 삼정승의 한 자리다.':'정1품 판중추부사에 올랐다. 정승 자리가 비기를 기다린다.','big');}
+  else if(nl===16){P.job.seat=chance(.5)?1:0;{const tt=jobTitle(P.job);if(!P.titles.includes(tt))P.titles.push(tt);}say(P.job.seat?'정1품에 올라 우의정에 제수되었다! 삼정승의 한 자리다.':'정1품 판중추부사에 올랐다. 정승 자리가 비기를 기다린다.','big');}
   else say(`${up===2?'특지로 품계를 뛰어넘어 ':''}${euro(RANKS[nl])} 승진하였다.`,nl>=12?'big':'n');
   if(nl>=12)ev('job',`${jobTitle(P.job)}에 올랐다`);
 }

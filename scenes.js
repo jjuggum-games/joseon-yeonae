@@ -145,7 +145,7 @@ function marryOpts(x,afterFail){
     O.push({t:'사위로 받아 주기를 청한다',sub:`${CLS[x.cls].n} 집안의 데릴사위가 된다`,p,tags:['신분은 그대로','재산 ↑','처가의 힘','집안의 반대가 거셈'],fn:()=>{
       if(!chance(p))return refuse(x,afterFail);
       freeMe();fx({wealth:xRich*.4,fame:4});x.mode='wife';x.cls=P.cls==='cheonmin'?'sangmin':P.cls==='royal'?x.cls:P.cls;
-      say(`낭자 집안이 마침내 그대를 사위로 받아들였다. 신분은 그대로였으나 처가의 도움을 받게 되었다. ${iga(nm)} 그대를 따라 ${CLS[x.cls].n}의 아낙이 되었다.`,'big');ev('marry_note','데릴사위가 되었다');P.flags.deril=1;wed(x);P.home='처가';}});
+      say(`낭자 집안이 마침내 그대를 사위로 받아들였다. 신분은 그대로였으나 처가의 도움을 받게 되었다. ${iga(nm)} 그대를 따라 ${CLS[x.cls].n}의 아낙이 되었다.`,'big');ev('marry_note','데릴사위가 되었다');P.flags.deril=1;if(!P.titles.includes('데릴사위'))P.titles.push('데릴사위');wed(x);P.home='처가';}});
     const pe=clamp(.25+P.st.brave/300+heart,.1,.6);
     O.push({t:'함께 달아난다',sub:'무예(담력)가 중요하다',p:pe,tags:['혼인','평판 크게 ↓','처가와 의절'],fn:()=>{
       if(!chance(pe)){say('달아나다 낭자 집안 사람들에게 붙잡혔다. 낭자는 끌려가고 그대는 모진 매를 맞았다.','big');fx({health:-15,fame:-8,worry:15});x.blocked=P.year;return null;}
@@ -399,9 +399,42 @@ function napsokScene(){
 }
 function namjangScene(){
   P.flags.namjang=1;note('gwageo');
-  return {kind:'major',title:'남장',text:'과거 날이 다가온다. 여인은 과거를 볼 수 없다. 그러나 사내 옷을 입고 갓을 쓰면 어떨까.',opts:[
-    {t:'남장하고 과거장에 들어간다',p:clamp(P.st.know/150),tags:['아주 드문 일','들키면 큰일'],fn:()=>{if(chance(P.st.know/150)){rare('namjang','남장을 하고 과거장에 들어가 글을 지었다. 이름이 방에 붙었으나, 끝내 그 이름의 주인이 누구인지 아무도 알지 못하였다.');fx({fame:10,know:5});}else{say('과거장에서 정체가 드러날 뻔하여 허둥지둥 빠져나왔다. 고을에 이상한 소문이 돌았다.','big');fx({fame:-12});}}},
+  const pass=clamp(.15+P.st.know/160,.1,.8);const hide=clamp(.55+P.st.brave/300-P.st.look/500,.2,.9);
+  return {kind:'major',title:'남장',text:'과거 날이 다가온다. 여인은 과거를 볼 수 없다. 그러나 사내 옷을 입고 갓을 눌러쓰면 어떨까.',opts:[
+    {t:'남장하고 과거장에 들어간다',sub:`들키지 않을 가능성 ${Math.round(hide*100)}% · 붙을 가능성 ${Math.round(pass*100)}%`,p:hide*pass,tags:['아주 드문 일','들키면 큰일'],fn:()=>{
+      if(!chance(hide))return namjangCaught('exam');
+      if(!chance(pass)){say('들키지 않고 과거장을 빠져나왔으나, 방에 이름은 없었다.','big');fx({know:2});return null;}
+      return {kind:'major',title:'남장 급제',text:'방에 그대의 이름이 붙었다! 아무도 그 이름의 주인이 여인인 줄 모른다.',opts:[
+        {t:'사내로 행세하며 벼슬길에 나아간다',p:null,tags:['문관이 됨','해마다 들킬 위험','혼인할 수 없음'],fn:()=>{P.flags.namjangOk=1;P.flags.namjangOff=P.year;setJob('official',0);fx({fame:6});rare('namjang','여인의 몸으로 남장을 하고 과거에 급제하여 벼슬길에 나아갔다.');say('갓끈을 단단히 매고 사내의 이름으로 벼슬길에 나아갔다.','big');ev('job','남장을 하고 문과에 급제하였다');}},
+        {t:'이름만 남기고 사라진다',p:null,safe:true,tags:['평판 ↑'],fn:()=>{rare('namjang','남장을 하고 과거장에 들어가 글을 지었다. 이름이 방에 붙었으나, 끝내 그 이름의 주인이 누구인지 아무도 알지 못하였다.');fx({fame:10,know:5});}}]};}},
     {t:'그만둔다',p:null,safe:true,tags:[],fn:()=>{say('붓을 꺾었다.');}}]};
+}
+/* 남장이 들통났을 때 */
+function namjangCaught(where){
+  bookSeen('scene','namjang');
+  const x=newPerson({kind:'love',female:false,cls:'yangban',born:P.year-ri(P.age-2,P.age+8),place:where==='exam'?'과거장':'관청'});x.h=35;x.t=55;
+  const xn=callOf(x);
+  const txt=where==='exam'?`과거장에서 갓이 벗겨지며 머리채가 드러났다! 시험관 ${iga(xn)} 그대를 내려다본다.`:`함께 숙직하던 ${iga(xn)} 그대가 여인임을 알아차렸다. 그가 조용히 그대를 불러 세웠다.`;
+  return {kind:'major',title:'남장이 들통나다',text:txt,opts:[
+    {t:'무릎 꿇고 죄를 청한다',sub:'평판이 중요하다',p:clamp(.25+P.st.fame/300),tags:['너그러이 넘어갈 수도','안 되면 벌을 받음'],fn:()=>{
+      const out=()=>{if(P.job&&P.job.k==='official'){P.job=null;P.post=null;}P.flags.namjangOk=0;};
+      if(chance(.25+P.st.fame/300)){out();fx({fame:5});say(where==='exam'?'시험관이 그대의 글재주를 아껴 조용히 돌려보냈다.':'임금이 사연을 듣고 그 재주를 아껴 벌하지 않았다. 다만 벼슬에서는 물러나게 하였다.','big');rare('namjang_found','남장이 들통났으나 그 재주를 아낀 이들 덕에 벌을 면하였다.');}
+      else{out();fx({fame:-12,health:-8});say('국법을 어겼다 하여 매를 맞고 먼 곳으로 귀양 보내졌다.','big');exile(ri(2,4));}}},
+    {t:`${eulreul(xn)} 설득해 비밀을 지킨다`,sub:'매력이 중요하다',p:clamp(.25+P.st.look/250+P.st.know/500),tags:['통하면 그가 비밀을 지킴','그와 인연이 생김'],fn:()=>{
+      if(chance(.25+P.st.look/250+P.st.know/500)){x.h=Math.min(100,x.h+25);x.t=Math.min(100,x.t+20);say(`${iga(xn)} 한참 그대를 바라보다 고개를 끄덕였다. 이 일은 두 사람만의 비밀이 되었다.`,'big');if(where==='exam')say('그날의 일 이후로 그가 자꾸 그대를 찾아왔다.');return null;}
+      x.alive=false;return namjangCaught2(where);}},
+    {t:`${gwawa(xn)} 혼인을 약조하고 남장을 그만둔다`,p:clamp(.35+P.st.look/250),tags:['혼인','벼슬은 내려놓음'],fn:()=>{
+      if(!chance(.35+P.st.look/250)){x.alive=false;return namjangCaught2(where);}
+      if(P.job&&P.job.k==='official'){P.job=null;P.post=null;}P.flags.namjangOk=0;x.mode='wife';x.h=60;x.t=70;
+      say(`${iga(xn)} 그대의 비밀을 덮어 주는 대신 혼인을 청하였다. 남장을 벗고 그에게 시집가기로 하였다.`,'big');rare('namjang_wed','남장이 들통났으나, 그 비밀을 안 사내와 혼인하였다.');if(canWed(x))wed(x);}},
+    {t:'달아난다',sub:'무예가 중요하다',p:clamp(.3+P.st.brave/200),tags:['성공하면 숨어 지냄'],fn:()=>{
+      if(P.job&&P.job.k==='official'){P.job=null;P.post=null;}P.flags.namjangOk=0;
+      if(chance(.3+P.st.brave/200)){say('어둠을 틈타 달아났다. 한동안 이름을 숨기고 먼 고을에 숨어 지냈다.','big');P.home='먼 고을의 셋방';fx({fame:-5});}
+      else{say('달아나다 붙잡혀 매를 맞고 귀양 보내졌다.','big');fx({fame:-15,health:-10});exile(ri(2,4));}}}]};
+}
+function namjangCaught2(where){
+  return {kind:'major',title:'비밀이 새어 나가다',text:'끝내 비밀은 지켜지지 않았다. 여인이 남장을 하고 '+(where==='exam'?'과거장에 들었다':'벼슬을 살았다')+'는 소문이 온 나라에 퍼졌다.',opts:[
+    {t:'벌을 달게 받는다',p:null,safe:true,tags:['평판 ↓','귀양'],fn:()=>{if(P.job&&P.job.k==='official'){P.job=null;P.post=null;}P.flags.namjangOk=0;fx({fame:-10});say('국법을 어겼다 하여 귀양 보내졌다. 그러나 그 재주를 아깝게 여기는 이들도 적지 않았다.','big');exile(ri(2,4));}}]};
 }
 
 /* ---- 한 해의 끝과 죽음 ---- */
@@ -1035,6 +1068,10 @@ const POSTS={
     {k:'jo',n:'육조 낭관',place:'한양',t:'육조의 실무 자리',sub:'호조·예조 같은 관청에서 나랏일을 맡는다. 무난하지만 승진은 더디다.',mul:.6,pay:1.2,tags:['안정','승진 더딤 (만년 낭관)']},
     {k:'local',n:'고을 수령',place:'지방',t:'외직으로 나가 고을 수령이 된다',sub:'한 고을의 원님이 되어 떵떵거린다. 벌이는 좋지만 조정과 멀어진다.',mul:.75,pay:1.9,tags:['수입 크게 ↑','지방에서 위세','승진 조금 더딤']},
     {k:'gaehwa',n:'개화 관료',place:'한양',t:'통리기무아문·외무아문의 개화 관료',sub:'새 문물과 외교를 맡는다. 출세가 빠르나 정변에 휘말리기 쉽다.',mul:1.4,pay:1.2,tags:['승진 빠름','정변 위험'],from:1881},
+    {k:'seungji',n:'승정원',place:'한양',t:'승정원 승지',sub:'임금의 명을 출납하는 비서실. 임금 곁에 늘 붙어 있다.',mul:1.4,pay:1.1,tags:['임금의 신임','당쟁에 휘말림'],need:12,ev:{tx:'임금이 밤늦게 그대를 불러 은밀한 교지를 받아 적게 하였다.',ok:'교지를 한 자 틀림없이 전하여 임금의 신임을 얻었다.',no:'교지가 새어 나갔다는 의심을 받았다.'}},
+    {k:'uigeum',n:'의금부',place:'한양',t:'의금부 관원',sub:'임금의 명으로 죄인을 다스리는 곳. 권세가 있지만 원한도 산다.',mul:1.1,pay:1.2,tags:['권세','원한을 삼'],ev:{tx:'역모 죄인을 국문하는 자리에 앉았다. 죄인이 억울하다며 울부짖는다.',ok:'사실을 꼼꼼히 가려 억울한 이를 풀어 주었다.',no:'윗선의 압박에 밀려 억지 자백을 받아 냈다는 뒷말이 돌았다.'}},
+    {k:'gyogwan',n:'성균관',place:'한양',t:'성균관 학관',sub:'유생들을 가르치는 자리. 학문으로 이름을 얻는다.',mul:.9,pay:1,tags:['학식 ↑','평판 ↑','승진 조금 더딤'],ev:{tx:'성균관 유생들이 동맹 휴학(권당)을 벌이겠다고 한다.',ok:'유생들을 설득해 강의실로 돌려보냈다.',no:'유생들이 끝내 성균관을 비웠다. 책임을 물었다.'}},
+    {k:'envoy',n:'사신단',place:'연경',t:'연경으로 가는 사신단의 서장관·부사',sub:'나라를 대표해 청나라(명나라)에 다녀온다. 먼 길이지만 견문과 이름이 높아진다.',mul:1.2,pay:1.3,tags:['평판 ↑','먼 길·병 위험'],need:6,ev:{tx:'사신단을 이끌고 연경에 닿았다. 황제를 알현하는 자리에서 예법을 두고 트집이 잡혔다.',ok:'당당히 예를 갖추어 나라의 체면을 세웠다. 돌아오자 임금이 크게 치하하였다.',no:'말실수로 나라의 체면을 깎았다는 탄핵을 받았다.'}},
     {k:'gamsa',n:'관찰사',place:'지방',t:'한 도의 관찰사(감사)',sub:'한 도를 다스리는 감사가 된다.',mul:.9,pay:2.4,tags:['수입 크게 ↑','평판 ↑'],need:9}]},
   military:{min:1,every:2,opts:[
     {k:'guard',n:'궁궐 호위',place:'한양',t:'내금위·선전관',sub:'임금 곁을 지키는 무관. 출세가 빠르고 눈에 띄기 쉽다.',mul:1.4,pay:1,tags:['승진 빠름','임금의 눈에 띔']},
@@ -1582,8 +1619,10 @@ function bookSeen(cat,k){const cx=Store.codex();cx[cat]=cx[cat]||{};if(!cx[cat][
 const SOLO_T={inlawcare:'시어머니의 병',rearkids:'홀로 키우는 자식',greedy:'재산을 노리는 시댁',matchmaker:'중매쟁이의 발걸음',yeolvisit:'열녀를 찾아온 여인들',yeolgift:'나라의 하사',gye:'동네 계 모임',temple:'산사의 불공',teach:'마을 아이들',trade:'먹고살 길',nephew:'형제의 아이',oldsingle:'노처녀·노총각 소리',travel:'유람',house:'홀로 살 집',oldage:'홀로 맞는 노년',stigma:'헤어진 몸',exnews:'헤어진 이의 소식',widower:'홀아비 살림',lonely:'긴 밤',neighbor:'이웃의 억울한 일',thief:'한밤의 도둑',ancestral:'제사를 모시는 일'};
 function bookList(cat){
   if(cat==='post'){const out=[];for(const k in POSTS){if(!POSTS[k]||!JOBS[k])continue;POSTS[k].opts.forEach(o=>out.push([k+':'+o.k,`${JOBS[k].n} · ${o.n}`]));}return out;}
+  if(cat==='spec'){const out=[];for(const k in SPECS)if(JOBS[k])SPECS[k].forEach(([n])=>out.push([k+':'+n,`${JOBS[k].n} · ${n}`]));return out;}
+  if(cat==='title2')return TITLE2.map(t=>[t,t]);
   if(cat==='rise')return RISE.map(r=>[r.k+r.to,`${JOBS[r.k].n} → ${CLS[r.to].n}`]).filter((x,i,a)=>a.findIndex(y=>y[0]===x[0])===i);
-  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['kidsamgan','자식 · 딸의 삼간택 낙선'],['arranged','혼인 · 집안이 정한 혼처'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
+  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['kidsamgan','자식 · 딸의 삼간택 낙선'],['arranged','혼인 · 집안이 정한 혼처'],['namjang','남장 · 남장이 들통나다'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
   return [];
 }
 
@@ -1734,7 +1773,7 @@ function updateHonor(){
   if(dae)parts.push(P.female?'대비의 어머니':'대비의 아버지');if(jung)parts.push(P.female?'중전의 어머니':'중전의 아버지');{const hg=ks.find(k=>['숙의','빈'].includes(k.royalBride));if(hg)parts.push(`${hg.royalBride}의 ${P.female?'어머니':'아버지'}`);}
   if(sj)parts.push(P.female?'세자빈의 어머니':'세자빈의 아버지');
   if(!q&&sj&&!P.female)parts[parts.length-1]+=' (국구 집안)';
-  P.honor=parts.join(' · ');
+  P.honor=parts.join(' · ');parts.forEach(t=>{const b=t.replace(/ \(국구 집안\)/,'').replace(/^.*(부원군|부부인)$/,'$1');if(TITLE2.includes(b)&&!P.titles.includes(b))P.titles.push(b);});
 }
 
 /* ===== 천인 자식의 속량 ===== */
@@ -1781,6 +1820,7 @@ function sisQ(k){return P.kids.find(x=>x!==k&&x.alive&&['중전','대비'].inclu
 /* ===== 집안이 정한 혼처 (억지 혼인) =====
    신분이 높을수록, 여자일수록 집안 뜻대로 혼인하는 일이 잦았다. 노비는 주인이 짝을 지어 주었다. */
 function arrangeChance(){
+  if(P.flags.namjangOk)return 0;
   if(P.married||P.court||P.flags.sujeol||P.flags.soloVow||P.eunuch)return 0;
   if(P.job&&['monk','concubine','queen','king','naesi','gisaeng','court'].includes(P.job.k))return 0;
   if(P.sub==='gisaeng')return 0;
@@ -1819,3 +1859,48 @@ function arrangedScene(){
   if(C==='cheonmin'&&P.wealth>20)opts.push({t:'몸값을 모아 주인과 흥정한다',p:.35,tags:['재산 ↓'],fn:()=>{P.wealth*=.8;if(chance(.35)){say('엽전을 바치고 짝짓기를 면하였다.');return null;}forced('주인은 돈만 받고 뜻을 바꾸지 않았다.');}});
   return {kind:'major',title:C==='cheonmin'?'혼인 · 주인이 정한 짝':'혼인 · 집안이 정한 혼처',pid:x.id,text:txt,opts};
 }
+
+/* ===== 직업의 갈래(특기): 같은 직업이라도 잘하는 분야가 다르다 ===== */
+/* [이름, 오르는 능력, 설명] */
+const SPECS={
+  gisaeng:[['가무','art','춤과 노래로 잔치를 휘어잡는 가무 기생'],['가야금','art','가야금 한 가락으로 이름난 기생'],['시서화','know','시를 짓고 글씨를 쓰는 시기(詩妓)'],['검무','brave','칼춤을 추는 검무 기생'],['약방 기생','know','내의원에서 약을 다루던 약방 기생']],
+  hunter:[['범 사냥','brave','호랑이를 쫓는 범 포수'],['매사냥','art','매를 길들여 꿩을 잡는 응사'],['활과 덫','know','덫과 활로 짐승을 잡는 사냥꾼'],['총포','brave','화승총을 다루는 포수']],
+  interp:[['한학(중국말)','know','청나라 사신을 맞는 한어 역관'],['왜학(일본말)','know','왜관을 오가는 왜어 역관'],['몽학(몽골말)','know','몽골말을 익힌 역관'],['청학(만주말)','know','만주말을 익힌 역관']],
+  doctor:[['내과','know','약을 지어 병을 다스리는 의원'],['침구','art','침과 뜸에 능한 침의'],['본초','know','약재에 밝은 의원'],['소아과','look','아이 병을 잘 보는 의원']],
+  uinyeo:[['진맥','know','맥을 짚는 의녀'],['침술','art','침을 놓는 의녀'],['해산','health','아기 받는 일에 밝은 의녀']],
+  painter:[['산수화','art','산과 물을 그리는 화원'],['초상화','art','어진과 초상을 그리는 화원'],['화조화','look','꽃과 새를 그리는 화원'],['풍속화','know','저잣거리 사람들을 그리는 화원']],
+  military:[['궁술','brave','활을 잘 쏘는 무관'],['기마술','health','말을 잘 타는 무관'],['병법','know','병법에 밝은 무관'],['총포','brave','조총을 다루는 무관']],
+  official:[['문장','art','글을 잘 짓는 문신'],['경학','know','경서에 밝은 문신'],['행정','know','실무에 밝은 문신'],['외교','look','사신을 맞고 보내는 데 능한 문신']],
+  scholar:[['경학','know','사서삼경을 파고드는 선비'],['사장(詩文)','art','시와 문장에 능한 선비'],['예학','know','예법을 연구하는 선비'],['실학','know','백성의 살림에 쓸모 있는 학문을 하는 선비']],
+  merchant:[['비단','look','비단을 다루는 상인'],['인삼','know','인삼을 사고파는 상인'],['소금·어물','health','소금과 어물을 다루는 상인'],['곡물','know','쌀과 곡식을 사고파는 상인']],
+  smith:[['무기','brave','칼과 창을 벼리는 대장장이'],['농기구','health','호미와 낫을 만드는 대장장이'],['유기(놋그릇)','art','놋그릇을 만드는 유기장']],
+  potter:[['백자','art','희고 맑은 백자를 굽는 사기장'],['분청','art','분청사기를 빚는 사기장'],['옹기','health','옹기를 굽는 옹기장']],
+  mudang:[['강신무','brave','신이 내린 무당'],['세습무','art','대대로 굿을 이어 온 무당'],['점복','know','점을 치는 무당']],
+  yein:[['판소리','art','소리를 하는 소리꾼'],['줄타기','brave','줄 위를 걷는 어름사니'],['탈춤','look','탈을 쓰고 춤추는 광대'],['풍물','health','꽹과리와 장구를 치는 풍물잡이']],
+  gwangdae:[['판소리','art','소리를 하는 소리꾼'],['줄타기','brave','줄 위를 걷는 어름사니'],['탈춤','look','탈을 쓰고 춤추는 광대'],['풍물','health','꽹과리와 장구를 치는 풍물잡이']],
+  akgong:[['가야금','art','가야금을 타는 악공'],['거문고','art','거문고를 타는 악공'],['대금','health','대금을 부는 악공'],['해금','art','해금을 켜는 악공']],
+  monk:[['참선','know','참선하는 선승'],['경전','know','경전을 가르치는 강백'],['승병','brave','산성을 지키는 승병'],['불화','art','탱화를 그리는 화승']],
+  soldier:[['궁수','brave','활을 쏘는 군사'],['창수','health','창을 쓰는 군사'],['포수','brave','조총을 쏘는 군사'],['기병','health','말을 타는 군사']],
+  farmer:[['벼농사','health','논농사를 짓는 농부'],['목화','know','목화를 기르는 농부'],['인삼 재배','know','인삼을 기르는 농부'],['과수','look','과일나무를 가꾸는 농부']],
+  fisher:[['조기잡이','health','조기를 잡는 어부'],['고래잡이','brave','고래를 쫓는 어부'],['김·미역','know','김과 미역을 기르는 어부']],
+  carpenter:[['궁궐','art','궁궐을 짓는 대목'],['사찰','art','절을 짓는 대목'],['배','health','배를 짓는 선장(船匠)'],['가구','look','소목장']],
+  herb:[['산삼','brave','산삼을 캐는 심마니'],['약초 재배','know','약초를 기르는 약초꾼'],['약 달이기','know','약을 짓는 약재상']],
+  sword:[['검술','brave','칼을 쓰는 검객'],['창술','health','창을 쓰는 무사'],['권법','brave','맨손 무예를 하는 무사']],
+  weaver:[['비단','art','비단을 짜는 직녀'],['모시','health','모시를 짜는 직녀'],['자수','look','수를 놓는 수방 나인']],
+  gwansang:[['천문','know','별을 살피는 관원'],['지리(풍수)','know','땅을 보는 관원'],['명과(사주)','know','날을 가리는 관원']],
+  sajagwan:[['해서','art','반듯한 해서를 쓰는 사자관'],['초서','art','흘림체 초서의 명필'],['전서','know','옛 전서를 쓰는 사자관']],
+  jeomjaeng:[['관상','look','얼굴을 보는 관상쟁이'],['사주','know','사주를 보는 점쟁이'],['풍수','know','묏자리를 보는 지관']],
+  teacher:[['국문','know','국문을 가르치는 교원'],['산술','know','산술을 가르치는 교원'],['외국어','know','영어·일본어를 가르치는 교원'],['체조','health','체조를 가르치는 교원']],
+  westdoc:[['내과','know','내과 양의'],['외과','brave','수술하는 양의'],['산과','health','해산을 돕는 양의']],
+  reporter:[['사회','know','세상일을 캐는 기자'],['논설','art','논설을 쓰는 기자'],['외신','know','바깥 나라 소식을 옮기는 기자']],
+  hunjang:[['천자문','know','아이들에게 글을 깨치게 하는 훈장'],['과거 공부','know','과거를 준비시키는 훈장'],['언문','look','언문을 가르치는 훈장']],
+  court:[['수놓기','art','수놓기에 능한 나인'],['음식','health','음식을 잘하는 나인'],['서책','know','글을 잘 읽는 나인']]
+};
+function specOf(){return P.job&&P.spec&&P.spec.job===P.job.k?P.spec:null;}
+function specScene(){
+  const L=SPECS[P.job.k];P.flags.specAsk=P.job.k;
+  return {kind:'major',title:'어느 갈래에 힘쓸 것인가',text:`${iga(jobTitle(P.job))} 되었다. 같은 일을 해도 잘하는 갈래가 저마다 다르다. 어느 쪽에 힘을 쏟을까.`,opts:L.map(([n,st,d])=>({t:n,sub:d,p:null,tags:[`${STATN[st]||'능력'} ↑`],fn:()=>{P.spec={job:P.job.k,n,st};bookSeen('spec',P.job.k+':'+n);fx({[st]:3});say(`${n} 쪽으로 이름을 쌓아 가기로 하였다.`);}}))};
+}
+
+/* 직책 밖에서 얻는 칭호들 */
+const TITLE2=['부원군','부부인','세자빈의 아버지','세자빈의 어머니','중전의 아버지','중전의 어머니','대비의 아버지','대비의 어머니','숙의의 아버지','숙의의 어머니','정1품 판중추부사','정1품 우의정','정1품 좌의정','정1품 영의정','봉조하(치사)','열녀','데릴사위','속량된 몸'];

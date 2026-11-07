@@ -269,9 +269,22 @@ function note(k){
   say(`${NOTES[k][0]}|${NOTES[k][1]}`,'note');
 }
 const COURT_DEPT={jimil:['지밀','wit'],chim:['침방','art'],su:['수방','art'],soju:['소주방','health'],saeng:['생과방','art'],sedap:['세답방','health']};
+/* 근무지와 품계에 따른 실제 관직명 */
+const OFFICE={
+  local:l=>l<5?'찰방':l<7?'현감':l<9?'현령':l<11?'군수':l<12?'도호부사':l<13?'목사':'부윤',
+  gamsa:l=>'관찰사',
+  cheongyo:l=>l<5?'홍문관 정자':l<8?'홍문관 교리':l<11?'사헌부 장령':l<12?'사간원 사간':l<13?'홍문관 부제학':'사헌부 대사헌',
+  jo:l=>l<6?'육조 좌랑':l<11?'육조 정랑':l<13?'육조 참의':l<14?'육조 참판':'육조 판서',
+  seungji:l=>l<13?'승정원 동부승지':l<14?'승정원 좌승지':'승정원 도승지',
+  uigeum:l=>l<9?'의금부 도사':l<13?'의금부 경력':l<15?'의금부 동지사':'의금부 판사',
+  gyogwan:l=>l<9?'성균관 박사':l<12?'성균관 사성':'성균관 대사성',
+  envoy:l=>l<12?'사신단 서장관':l<14?'사신단 부사':'사신단 정사',
+  gaehwa:l=>l<9?'외무아문 주사':l<13?'외무아문 참의':l<15?'외무아문 협판':'외무아문 대신'
+};
 function jobTitle(j){if(!j)return '';const d=JOBS[j.k];
   if(j.k==='court'&&typeof P!=='undefined'&&P&&P.courtDept&&j.lv>=1){const n=COURT_DEPT[P.courtDept][0];return j.lv===1?n+' 나인':j.lv===2?n+' 상궁':P.courtDept==='jimil'?'제조상궁':'부제조상궁';}
   if(j.k==='official'&&j.lv>=16&&j.seat!=null)return `정1품 ${['판중추부사','우의정','좌의정','영의정'][j.seat]}`;
+  if(j.k==='official'&&!j.chisa&&typeof P!=='undefined'&&P&&j===P.job&&P.postK==='official'&&OFFICE[P.post]&&j.lv<16)return `${RANKS[j.lv]} ${OFFICE[P.post](j.lv)}`;
   if(j.k==='official'&&j.chisa)return `${RANKS[Math.min(j.lv,16)]} 봉조하(치사)`;
   return d.ladder[Math.min(j.lv,d.ladder.length-1)];}
 function setJob(k,lv){

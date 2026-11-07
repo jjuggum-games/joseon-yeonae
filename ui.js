@@ -217,7 +217,7 @@ function renderMe(){
     <div class="meta">${esc(P.bon&&P.cls!=='cheonmin'?P.bon+' '+P.sur+'씨 · ':'')}${esc(P.region)} 출생 · ${P.born}년</div></div>
     <div class="kv"><span>거처</span><span>${esc(P.home)}</span></div>
     <div class="kv"><span>재산</span><span>${money(P.wealth)}</span></div>
-    ${P.honor?`<div class="kv"><span>작호</span><span>${esc(P.honor)}</span></div>`:''}${P.job?`<div class="kv"><span>직책</span><span>${fmt(jobTitle(P.job))}${curPost()?` · ${esc(curPost().n)}`:''}</span></div>`:''}
+    ${P.honor?`<div class="kv"><span>작호</span><span>${esc(P.honor)}</span></div>`:''}${P.job?`<div class="kv"><span>직책</span><span>${fmt(jobTitle(P.job))}${specOf()?` (${esc(specOf().n)})`:''}${curPost()?` · ${esc(curPost().n)}`:''}</span></div>`:''}
     ${jobChoices().list.length?`<div style="text-align:right;margin:2px 0 4px"><button class="btn sm" data-a="jobpick">생업 고르기·바꾸기</button></div>`:(P.age>=8&&jobChoices().why?`<div class="fnote">${esc(jobChoices().why)}</div>`:'')}
     ${P.married&&spouseP()?`<div class="kv"><span>${P.female?(spouseP().kingRole?'임금':'남편'):'아내'}</span><span>${esc(spouseP().title||callOf(spouseP()))}</span></div>`:P.widowed?`<div class="kv"><span>혼인</span><span>${P.female?'과부':'홀아비'}</span></div>`:''}
     ${P.alt?`<div class="kv"><span>역사</span><span style="color:var(--jok)">정사와 다름</span></div>`:''}
@@ -475,7 +475,7 @@ function renderSillok(h,fresh){
   V.screen='end';V.viewing=h;const sl=h.sillok;
   let newc='';
   if(fresh&&V.codexBefore){const cx=Store.codex(),b=V.codexBefore;const add=[];
-    for(const cat of ['cls','titles','kings','branches','rare','post','rise','scene'])for(const k in (cx[cat]||{}))if(!(b[cat]||{})[k])add.push(codexLabel(cat,k));
+    for(const cat of ['cls','titles','kings','branches','rare','post','rise','scene','spec'])for(const k in (cx[cat]||{}))if(!(b[cat]||{})[k])add.push(codexLabel(cat,k));
     if(add.length)newc=`<div class="newcodex"><div class="sec">이번 삶에서 새로 채운 도감</div>${add.slice(0,30).map(t=>`<span class="chip j">${esc(t)}</span>`).join('')}</div>`;}
   $('#app').innerHTML=`<div id="scr-end">
     <div class="sillok" id="sillokBox"><div class="stamp">實錄</div><h2>${esc(sl.title)}</h2><div class="ep">${esc(sl.epithet)}</div>
@@ -530,14 +530,15 @@ async function saveImage(sl,mode){
 
 /* ===== 도감 ===== */
 const CLS_KEYS=[['royal','왕족'],['yangban','양반'],['seo','서얼'],['jungin','중인'],['sangmin','상민'],['nobi','노비'],['gisaeng','관기의 딸'],['gwangdae','광대']];
-const RARES=[['namjang','남장한 급제자'],['amhaeng','암행어사가 된 정인'],['gisaeng2lady','기녀에서 정경부인으로'],['descendant','전생의 후손으로 태어남']];
+const RARES=[['namjang','남장한 급제자'],['namjang_found','남장이 들통났으나 벌을 면함'],['namjang_wed','남장의 비밀을 안 사내와 혼인'],['amhaeng','암행어사가 된 정인'],['gisaeng2lady','기녀에서 정경부인으로'],['descendant','전생의 후손으로 태어남']];
 function allTitles(){const s=new Set();for(const k in JOBS)JOBS[k].ladder.forEach(t=>s.add(t));['부실','폐세자빈','임금의 어머니','열녀'].forEach(t=>s.add(t));Object.values(COURT_DEPT).forEach(([n])=>{s.add(n+' 나인');s.add(n+' 상궁');});s.add('부제조상궁');return [...s];}
-function codexLabel(cat,k){if(['post','rise','scene'].includes(cat)){const f=bookList(cat).find(x=>x[0]===k);return f?f[1]:k;}if(cat==='cls')return (CLS_KEYS.find(x=>x[0]===k)||[0,k])[1];if(cat==='branches')return (BRANCHES.find(b=>b.id===k)||{}).title||k;if(cat==='rare')return (RARES.find(x=>x[0]===k)||[0,k])[1];return k;}
+function codexLabel(cat,k){if(['post','rise','scene','spec'].includes(cat)){const f=bookList(cat).find(x=>x[0]===k);return f?f[1]:k;}if(cat==='cls')return (CLS_KEYS.find(x=>x[0]===k)||[0,k])[1];if(cat==='branches')return (BRANCHES.find(b=>b.id===k)||{}).title||k;if(cat==='rare')return (RARES.find(x=>x[0]===k)||[0,k])[1];return k;}
 function renderCodex(){
   V.screen='codex';const cx=Store.codex();
-  const tabs=[['cls','신분'],['titles','직책'],['post','진로'],['rise','신분의 길'],['scene','삶의 장면'],['kings','임금의 시대'],['branches','역사의 갈림길'],['rare','드문 일'],['notes','역사 노트']];
+  const tabs=[['cls','신분'],['titles','직책'],['title2','칭호'],['spec','특기'],['post','진로'],['rise','신분의 길'],['scene','삶의 장면'],['kings','임금의 시대'],['branches','역사의 갈림길'],['rare','드문 일'],['notes','역사 노트']];
   let items=[];
-  if(['post','rise','scene'].includes(V.codexTab))items=bookList(V.codexTab).map(([k,n])=>[n,!!(cx[V.codexTab]&&cx[V.codexTab][k])]);
+  if(['post','rise','scene','spec'].includes(V.codexTab))items=bookList(V.codexTab).map(([k,n])=>[n,!!(cx[V.codexTab]&&cx[V.codexTab][k])]);
+  if(V.codexTab==='title2')items=TITLE2.map(t=>[t,!!cx.titles[t]]);
   if(V.codexTab==='cls')items=CLS_KEYS.map(([k,n])=>[n,!!cx.cls[k]]);
   if(V.codexTab==='titles')items=allTitles().map(t=>[t,!!cx.titles[t]]);
   if(V.codexTab==='kings')items=KINGS.map(k=>[(k.g?'고려 ':'')+k.n,!!cx.kings[k.n]]);
