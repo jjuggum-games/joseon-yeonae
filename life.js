@@ -1195,7 +1195,7 @@ function kidDisplayName(k){
   const rt=royalKidTitle(k);if(!rt)return k.name;
   if(rt==='원손'||rt==='원자')return `${rt} 이${k.name}`;
   if(!k.bongho){let b;for(let i=0;i<20;i++){b=R(BONG1)+R(BONG2);if(!P.kids.some(x=>x.bongho===b))break;}k.bongho=b;}
-  if(k.female)return `${k.bongho}${rt} (${k.name})`;
+  if(k.female)return `${k.bongho}${rt} (이${k.name})`;
   return `${k.bongho}${rt} 이${k.name}`;
 }
 function kidJobTitle(k){{const rt=royalKidTitle(k);if(rt&&P.year-k.born<16)return rt;if(rt&&!k.job)return rt;}if(k.royalBride){const rb=k.royalBride;if(rb==='세자빈')return `세자빈 (${k.sejaOf?k.sejaOf+'의 며느리, ':''}${P.year-(k.wedY||P.year)+1}년째)`;if(rb==='중전')return `중전 (${k.kingOf?k.kingOf+'의 왕비, ':''}${P.year-(k.queenY||k.wedY||P.year)+1}년째)`;if(rb==='대비')return `대비${k.kingOf?' ('+k.kingOf+'의 왕비였음)':''}`;return rb;}if(!k.job&&k.alive&&P.year-k.born>=16)kidJob(k);if(!k.job||!JOBS[k.job.k])return '';if(k.female&&k.married&&['lady','farmer','slave'].includes(k.job.k))return '출가하여 살림';return JOBS[k.job.k].ladder[Math.min(k.job.lv,JOBS[k.job.k].ladder.length-1)];}
