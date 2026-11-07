@@ -294,7 +294,7 @@ function inherit(){
   const late=P.year>=1650;
   let share=P.birthWealth*.5/n*(prel()/60);
   if(late&&P.female)share*=.25;if(late&&!P.female&&P.order===0)share*=2.2;
-  if(share>1){fx({wealth:share});say(`아버지의 재산을 물려받았다. ${late&&P.female?'출가한 딸의 몫은 적었다.':''}${P.parentRel<35?' 부모와 사이가 멀었던 탓에 몫이 줄었다.':''}`);note('jaesan');}
+  if(share>1){fx({wealth:share});say(`아버지의 재산을 물려받았다.${late&&P.female?' 출가한 딸의 몫은 적었다.':''}${P.parentRel<35?' 부모와 사이가 멀었던 탓에 몫이 줄었다.':''}`);note('jaesan');}
   if(n>2&&chance(.3)){say('형제들 사이에 재산을 두고 다툼이 일었다.');fx({worry:8},true);}
 }
 function fertile(){
@@ -968,14 +968,14 @@ function yMajor(){
   // 사화
   {const sp=spouseP();const can=!P.alt&&!P.flags.noThrone&&P.age>=20&&P.age<=55&&P.year-(P.flags.throneY||0)>=4&&((P.female&&P.married&&sp&&sp.cls==='royal'&&!sp.kingRole&&!sp.real)||(!P.female&&P.cls==='royal'&&P.job&&P.job.k==='prince'));
    if(can&&chance(.12))add(70,()=>throneScene());}
-  {const sp=spouseP();if(sp&&sp.seja&&sp.alive&&realKing(y).s===y&&!P.alt){sp.seja=false;sp.kingRole=true;const kn=(sp.name||'새')+'왕';sp.title=kn;P.alt={year:y,king:kn,from:y};setJob('queen',1);P.home='중궁전';say(`선왕이 승하하고 세자였던 남편이 보위에 올랐다. 그대는 중전이 되었다. 이 판의 역사에서 임금은 ${kn}이다.`,'big');ev('branch',`세자였던 남편이 ${iga(kn)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});fx({fame:25});}}
+  {const sp=spouseP();if(sp&&sp.seja&&sp.alive&&realKing(y).s===y&&!P.alt){sp.seja=false;sp.kingRole=true;const kn=(sp.name||'새')+'왕';sp.title=kn;P.alt={year:y,king:kn,from:y,title:'세자빈의 남편이 보위에',line:`세자였던 그대의 남편이 보위에 올라 ${iga(kn)} 되었다.`};setJob('queen',1);P.home='중궁전';say(`선왕이 승하하고 세자였던 남편이 보위에 올랐다. 그대는 중전이 되었다. 이 판의 역사에서 임금은 ${kn}이다.`,'big');ev('branch',`세자였던 남편이 ${iga(kn)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});fx({fame:25});}}
   {const sp=spouseP();if(P.female&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.wifeDead&&chance(.025)){sp.wifeDead=true;say(`${callOf(sp)}의 정실이 병으로 세상을 떠났다.`);}}
   if(P.job&&P.job.k==='concubine'&&P.job.lv>=6&&P.favor>=60&&P.year-(P.flags.qriseY||0)>=5&&chance(.06+royalSons()*.04))add(72,()=>queenRiseScene());
   {const sp=spouseP();if(P.female&&P.married&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.kingRole&&P.year-(P.flags.wriseY||0)>=5){const sons=P.kids.filter(k=>k.alive&&!k.female).length;if(sp.wifeDead||sons>=2&&chance(.08+sons*.04))add(60,()=>wifeRiseScene());}}
   if(!P.female&&!P.married&&P.year-(P.flags.pcheopY||0)>=3){const c=peopleOf('cheop').find(x=>x.alive);if(c&&chance(.5))add(57,()=>promoteCheopScene(c));}
   if(P.female&&P.widowed&&!P.married&&!P.flags.widowAsked&&P.age>=18)add(62,()=>widowScene());
   if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10)add(90,()=>jeongnyeoScene());
-  if(P.age>=12&&P.year-(P.flags.fameY||0)>=3&&chance(.45))add(25,()=>fameScene());
+  if(P.age>=12&&P.year-(P.flags.fameY||0)>=3&&chance(.55))add(25,()=>fameScene());
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){

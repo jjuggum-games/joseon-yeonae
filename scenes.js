@@ -536,6 +536,7 @@ function courtDeptScene(){
 const JOB_KEEP=['gisaeng','court','uinyeo','weaver','merchant','farmer','jumo','mudang','nurse','herb','hunjang','yein','sanpa','bangmul','haenyeo','dyer','poet','slave','gwangdae','sword','monk','queen','concubine','royalwife','lady'];
 /* 왕실과 혼인한 이가 보위를 넘보는 일 */
 function throneScene(){
+  if(P.year<1392)return null;
   const self=!P.female&&P.cls==='royal';const x=self?null:spouseP();
   const nm=self?displayName():callOf(x);const tt=self?(P.job?jobTitle(P.job):'왕자'):(x.title||nm);
   P.flags.throneY=P.year;
@@ -545,7 +546,7 @@ function throneScene(){
     {t:'세력을 모아 거사를 꾀한다',sub:'학식과 평판, 세력 모으기가 도움이 된다',p,tags:['역사의 갈림길','실패하면 유배나 사약'],fn:()=>{
       note('branch');
       if(chance(p)){
-        const from=P.year+1;P.alt={year:P.year,king:kingName,from};ev('branch',`${self?'그대':nm}${self?'가':bat(nm)?'이':'가'} 보위에 올라 ${iga(kingName)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});
+        const from=P.year+1;P.alt={year:P.year,king:kingName,from,title:'보위를 바꾸다',line:`${self?'그대':nm}${self?'가':bat(nm)?'이':'가'} 거사로 보위에 올라 ${iga(kingName)} 되었다.`};ev('branch',`${self?'그대':nm}${self?'가':bat(nm)?'이':'가'} 보위에 올라 ${iga(kingName)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});
         if(self){setJob('king',0);P.home='대전';P.court=true;say(`거사가 성공하였다. 이듬해 그대가 보위에 올랐다. 이 판의 역사에서 그대는 ${kingName}이다.`,'big');}
         else{x.kingRole=true;x.title=kingName;x.rank=20;setJob('queen',1);P.home='중궁전';P.court=true;say(`거사가 성공하였다. ${iga(nm)} 보위에 올라 ${iga(kingName)} 되었고, 그대는 중전이 되었다.`,'big');}
         fx({fame:30,worry:-10});
