@@ -803,7 +803,7 @@ function gazeScene(){
     const isSu=low;
     const p=newPerson({kind:'love',female:false,cls:'yangban',born:P.year-ri(35,55),h:20,t:70});p.rich=3;
     const role={'고을 사또':['사또','고을 수령(종6품)'],'관찰사':['관찰사','관찰사(종2품)'],'권세 높은 대감':['대감','판서(정2품)'],'세도가 대감':['대감','세도가의 참판(종2품)'],'권세 높은 판서 댁':['대감','판서(정2품)']}[who]||['대감','대감'];
-    p.title=`${p.sur} ${role[0]}`;p.pos=role[1];p.fam=`${p.bon} ${p.sur}씨 집안`;describePerson(p);p.pos=role[1];
+    p.title=`${p.sur}${p.name} ${role[0]}`;p.pos=role[1];p.fam=`${p.bon} ${p.sur}씨 집안`;describePerson(p);p.pos=role[1];
     return {kind:'major',title:isSu?'수청':'억지 혼사',pid:p.id,text:isSu?`그대의 ${iga(top[1])} 소문나 ${p.pos} ${p.title}의 귀에까지 들어갔다. ${iga(p.title)} 그대에게 수청을 들라는 명을 내렸다. 거역하면 무사하지 못할 것이다.`:`그대의 ${iga(top[1])} 소문나 ${p.pos} ${p.title} 댁에서 그대를 첩으로 들이겠다고 사람을 보냈다. 집안에서는 감히 거절하기 어렵다며 한숨을 쉰다.`,opts:[
       {t:'명을 따른다',sub:`${p.title}의 첩이 된다`,p:null,tags:['재산·재력 ↑','신분 변화: 첩','다른 인연과 멀어짐'],fn:()=>{
         if(P.cls==='cheonmin'){P.cls='sangmin';P.sub='';if(P.job&&['slave','gisaeng'].includes(P.job.k))P.job=null;say(`${iga(p.title)} 값을 치러 그대를 속량해 주었다.`);ev('freed','권세가의 첩이 되며 속량되었다');}
@@ -822,7 +822,7 @@ function gazeScene(){
   if(st.look>=72&&chance(.4))return favorScene();
   const who=R(['세도가 대감','권세 높은 판서','왕실 종친']);const royal=who==='왕실 종친';
   const b=newPerson({kind:'love',female:true,cls:royal?'royal':'yangban',born:P.year-ri(16,22),h:20,t:60});b.rich=3;describePerson(b);if(royal){b.title=R(['숙','정','화','명'])+R(['신','안','혜'])+'옹주';b.pos='옹주';}else{b.fam=`${b.bon} ${b.sur}씨 집안`;b.pos=`${who.replace(' 댁','')}의 딸`;}
-  const whoN=royal?`종친 ${R(['영','화','덕','익'])}${R(['원','천','성','양'])}군`:`${b.sur} ${/판서/.test(who)?'판서':'대감'}`;
+  const whoN=royal?`종친 ${R(['영','화','덕','익'])}${R(['원','천','성','양'])}군`:`${b.sur}${hanName(false).n} ${/판서/.test(who)?'판서':'참판'}`;b.pos=royal?b.pos:`${whoN}의 딸`;
   return {kind:'major',title:'억지 혼사',pid:b.id,text:`그대의 ${iga(top[1])} 소문나 ${whoN}의 귀에 들어갔다. ${iga(whoN)} 그대를 ${royal?'옹주의 부마로':'사위로'} 삼겠다며 혼담을 밀어붙인다. 마음에 두지 않은 혼인이지만, 거절하면 무사하지 못할 것이다.`,opts:[
     {t:'혼인을 받아들인다',sub:'권세가의 사위가 된다',p:null,tags:['재산·재력·평판 ↑',royal?'신분 변화: 부마':'벼슬길이 열릴 수 있음','다른 인연과 멀어짐'],fn:()=>{
       b.mode='wife';wed(b,true);fx({wealth:U*ri(30,60),fame:8});
