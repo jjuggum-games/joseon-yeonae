@@ -349,7 +349,7 @@ function birth(given){
   const twins=chance(.03);
   const partner=cm||P.people[pr.father]||spouseP();const meP={cls:P.cls};
   const kcls=P.female?kidClass(partner,meP):kidClass(meP,partner);
-  const mk=(fem,name)=>{const kid={id:uid(),name,female:fem,born:P.year,alive:true,adopted:false,married:false,grand:0,seo,cls:kcls,father:pr.father||P.spouse,mother:cm?cm.id:undefined,st:kidStats(cm)};P.kids.push(kid);ev('child',kid.name,{female:fem});return kid;};
+  const mk=(fem,name)=>{const kid={id:uid(),name,female:fem,born:P.year,alive:true,adopted:false,married:false,grand:0,seo,cls:kcls,father:P.female?(pr.father||P.spouse):undefined,mother:cm?cm.id:(P.female?undefined:(partner&&partner.id)),st:kidStats(cm)};P.kids.push(kid);ev('child',kid.name,{female:fem});return kid;};
   const k1=mk(female,nm);
   if(twins){const f2=chance(.5)?female:!female;const k2=mk(f2,personName(kidNameCls(cm,pr),f2));
     const who=P.female?'':cm?iga(callOf(cm))+' ':'아내가 ';

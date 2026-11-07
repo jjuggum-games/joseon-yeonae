@@ -404,7 +404,7 @@ function sideFam(){
   /* 자식 */
   if(P.kids.length){
     const kd=P.kids.map(k=>{const a=P.year-k.born;const st=kidSt(k);
-      const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?' (양자)':'')+(k.seo?' (서출)':'')+(k.cls&&k.cls!==P.cls?' · '+CLS[k.cls].n:'')+(k.estranged?' · 의절':'')+(k.away?' · 따로 자람':''),[k.alive?a+'세':'',k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
+      const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?(k.female?' (양녀)':' (양자)'):'')+(k.seo?' (서출)':'')+(k.cls&&k.cls!==P.cls?' · '+CLS[k.cls].n:'')+(k.estranged?' · 의절':'')+(k.away?' · 따로 자람':''),[k.alive?a+'세':'',otherParent(k),k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
       if(!k.alive)return base;
       const stl=`<div class="kst">${KID_ST.map(([s,n])=>`<span>${n} <b>${st[s]}</b></span>`).join('')}</div>`;
       const sel=a>=6&&a<18?`<div class="kedu"><span>배움</span><select data-kedu="${k.id}">${Object.entries(EDU).map(([key,[n]])=>`<option value="${key}" ${(k.edu||'play')===key?'selected':''}>${n}</option>`).join('')}</select></div>`:a<6?'<div class="kedu muted">여섯 살이 되면 배울 것을 정할 수 있습니다.</div>':'';
@@ -757,3 +757,13 @@ function wealthScore(){
   return Math.max(0,Math.min(100,Math.round((m*.35+i*.3+ht*.2+fam*.15)*100)));
 }
 function wealthWord(v){return v>=85?'갑부':v>=70?'넉넉함':v>=50?'살 만함':v>=30?'빠듯함':v>=15?'가난함':'끼니가 어려움';}
+
+/* 자식의 다른 부모: 내가 여자면 아비, 남자면 어미 */
+function otherParent(k){
+  if(k.adopted)return '';
+  const id=P.female?k.father:k.mother;const x=id&&P.people[id];
+  const w=P.female?'아비':'어미';
+  if(!x){if(!P.female&&!k.mother)return '';return '';}
+  const rel=x.kind==='cheop'?'첩':x.kind==='ex'?'헤어진 배우자':x.kind==='spouse'?(x.id===P.spouse?(P.female?'남편':'아내'):(x.alive?'배우자':'세상을 떠난 배우자')):x.kind==='love'?'정인':'';
+  return `${w}: ${x.title||callOf(x)}${rel?` (${rel})`:''}${x.alive?'':' · 故'}`;
+}
