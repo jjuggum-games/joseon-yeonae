@@ -732,7 +732,7 @@ function kidStoryScene(){
   const pick=(f)=>{const c=K.filter(f);return c.length?R(c):null;};
   /* 서얼 아들 */
   {const k=pick(k=>k.seo&&!k.female&&!k.seoDone&&age(k)>=14&&age(k)<=28&&P.year<1777&&['yangban','royal'].includes(k.cls||P.cls));
-   if(k)L.push([9,()=>{k.seoDone=1;const legit=K.some(x=>!x.female&&!x.seo&&x!==k);note('seoeol');
+   if(k)L.push([9,()=>{k.seoDone=1;const legit=K.some(x=>!x.female&&!x.seo&&x!==k)||(()=>{const fa=P.female?(P.people[k.father]||spouseP()):null;const H=fa&&typeof ensureHousehold==='function'?ensureHousehold(fa):null;return !!(H&&H.kids&&H.kids.some(x=>x.alive&&!x.female&&(H.role==='bonchoe')));})();note('seoeol');
      return {title:'서얼의 설움',text:`아들 ${iga(k.name)} 글을 읽다 말고 책을 덮었다. "서얼은 문과를 볼 수 없다 하니, 글을 읽어 무엇 합니까." 아비를 아비라 부르지 못하고 형을 형이라 부르지 못하는 설움이 그 얼굴에 서려 있다.`,opts:[
        {t:'잡과나 무과의 길을 권한다',sub:'역관·의원·무관은 서얼에게도 열려 있다',p:.55,tags:['자식의 앞날 ↑'],fn:()=>{if(chance(.55)){k.feat=R(['잡과에 붙어 역관이 되었다','잡과에 붙어 의관이 되었다','무과에 급제하여 무관이 되었다']);fx({fame:4});say(`${iga(k.name)} 마음을 다잡고 다른 길을 걸어, 마침내 ${k.feat}.`,'big');ev('kidfeat',`아들 ${k.name}`,{feat:k.feat});}else say(`${iga(k.name)} 한동안 방황하였다.`);}},
        ...(!legit?[{t:'적자로 세운다',sub:'적자가 없으니 대를 잇게 한다',p:.6,tags:['자식의 서얼 신분이 풀림','평판 ↓ (법도에 어긋남)'],fn:()=>{if(chance(.6)){k.seo=false;fx({fame:-6});say(`문중을 설득해 ${eulreul(k.name)} 적자로 세웠다. 대를 이을 아들이 되었다.`,'big');ev('rise',`서자 ${eulreul(k.name)} 적자로 세웠다`);}else{fx({fame:-3});say('문중 어른들이 거세게 반대하여 뜻을 이루지 못하였다.');}}}]:[]),
