@@ -82,7 +82,7 @@ function buildSillok(){
   const jobLine=(k,lv)=>{const t=jobTitle({k,lv});
     if(k==='official')return `문과에 급제하여 벼슬이 ${RANKS[lv]}에 이르렀다.`;
     if(k==='military')return lv?`무과에 급제하여 무관으로서 ${t.replace(/\(.*\)/,'')}에 이르렀다.`:'무과를 준비하며 무예를 닦았다.';
-    if(k==='gisaeng')return lv>=3?'명기로 이름을 팔도에 떨쳤다.':`${t}로 살았다.`;
+    if(k==='gisaeng')return lv>=3?'명기로 이름을 팔도에 떨쳤다.':`${euro(t)} 살았다.`;
     if(k==='concubine')return `후궁으로서 ${t}의 품계에 이르렀다.`;
     if(k==='queen')return lv>=1?'중전의 자리에 올라 국모가 되었다.':'세자빈의 자리에 올랐다.';
     if(k==='king')return '보위에 올라 임금이 되었다.';
@@ -102,15 +102,36 @@ function buildSillok(){
   /* 학생 시절이 벼슬로 이어졌으면 앞의 것은 생략 */
   const skip=new Set();if(order.includes('official'))skip.add('scholar');if(order.includes('queen')&&P.jobBest&&P.jobBest.queen>=1)skip.add('royalwife');if(order.includes('lady')&&order.includes('housewife'))skip.add('housewife');
   const JL=order.filter(k=>!skip.has(k)).map(k=>jobLine(k,P.jobBest&&P.jobBest[k]!=null?P.jobBest[k]:(P.peak&&P.peak.k===k?P.peak.lv:0))).filter(Boolean);
-  JL.slice(0,5).forEach(t=>W.push(t));
-  if(P.post&&typeof POSTS!=='undefined'&&P.postK&&POSTS[P.postK]){const o=POSTS[P.postK].opts.find(x=>x.k===P.post);if(o)W.push(`${o.t}에서 일하였다.`);}
-  if(P.titles.includes('임금의 어머니'))W.push('훗날 아들이 보위에 올라 임금의 어머니가 되었다.');
-  P.ev.filter(e=>['freed','rise','fall','unwed'].includes(e.type)).forEach(e=>W.push(`${kAge(e.a)} 살에 ${e.t}.`));
-  if(P.ev.some(e=>e.type==='sujeol'))W.push('남편을 여읜 뒤 평생 수절하였다.');
-  P.ev.filter(e=>e.type==='jeongnyeo').forEach(e=>W.push(`${kAge(e.a)} 살에 나라에서 열녀문을 내려 그 절개를 기렸다.`));
-  P.ev.filter(e=>e.type==='exile').forEach(e=>W.push(`${kAge(e.a)} 살에 ${euro(e.t)} 유배되기도 하였다.`));
-  const wars=[...new Set(P.ev.filter(e=>e.type==='war').map(e=>e.t))];if(wars.length)W.push(`${wars.join(', ')}의 난리를 겪었다.`);
-  P.ev.filter(e=>e.type==='rare').forEach(e=>W.push(e.t));
+  /* 일생: 나이 순서대로 */
+  const LT=[];const put=(a,t)=>{if(t)LT.push([a==null?99:a,LT.length,t]);};
+  const jAge=k=>{if(P.jobBestAge&&P.jobBestAge[k]!=null&&P.jobBest[k]>0)return P.jobBestAge[k];if(P.jobAge&&P.jobAge[k]!=null)return P.jobAge[k];const m=['royalwife','sosil','lady','housewife','buma','queen'].includes(k)?P.ev.find(e=>e.type==='marry'):null;return m?m.a+.1:null;};
+  const AG=a=>a==null||a>=99?'':`${kAge(Math.floor(a))} 살에 `;
+  order.filter(k=>!skip.has(k)).forEach(k=>{const t=jobLine(k,P.jobBest&&P.jobBest[k]!=null?P.jobBest[k]:(P.peak&&P.peak.k===k?P.peak.lv:0));const a=jAge(k);if(t&&!P.ev.some(e=>e.type==='job'&&!e.post&&a!=null&&Math.floor(e.a)===Math.floor(a)&&e.a>=a-0.01&&k!=='official'&&k!=='military'))put(a==null?a:a+.1,AG(a)+t);});
+  P.ev.filter(e=>e.type==='job'&&e.post).forEach(e=>put(e.a+.2,`${kAge(e.a)} 살에 ${e.t}.`));
+  {const jl=new Set();P.ev.filter(e=>e.type==='job'&&!e.post&&e.t).forEach(e=>{const key=e.a+e.t;if(jl.has(key))return;jl.add(key);put(e.a+.05,`${kAge(e.a)} 살에 ${e.t}.`);});}
+  P.ev.filter(e=>e.type==='marry').forEach(e=>{const x=P.people[e.t];if(!x)return;const nm=callOf(x);put(e.a,`${kAge(e.a)} 살에 ${e.bushil||e.mode==='cheop'?(P.female?nm+'의 부실이 되었다':eulreul(nm)+' 첩으로 들였다'):x.kingRole?'임금의 여인이 되었다':(P.female?nm+'에게 시집갔다':eulreul(nm)+' 아내로 맞았다')}.`);});
+  P.ev.filter(e=>e.type==='cheop').forEach(e=>put(e.a,`${kAge(e.a)} 살에 첩 ${eulreul(e.t)} 들였다.`));
+  P.ev.filter(e=>e.type==='divorce').forEach(e=>put(e.a+.3,`${kAge(e.a)} 살에 ${gwawa(e.t)} 갈라섰다.`));
+  P.ev.filter(e=>e.type==='sobak'&&!P.ev.some(d=>d.type==='divorce'&&d.a===e.a)).forEach(e=>put(e.a,`${kAge(e.a)} 살에 소박을 맞았다.`));
+  P.ev.filter(e=>e.type==='widow').forEach(e=>put(e.a+.4,`${kAge(e.a)} 살에 ${P.female?'남편을':'아내를'} 여의었다.`));
+  {const ch=P.ev.filter(e=>e.type==='child');if(ch.length){put(ch[0].a+.5,`${kAge(ch[0].a)} 살에 첫아이 ${eulreul(ch[0].t)} 얻었다.`);if(ch.length>1)put(ch[ch.length-1].a+.5,`${kAge(ch[ch.length-1].a)} 살에 막내 ${eulreul(ch[ch.length-1].t)} 얻었다.`);}}
+  P.ev.filter(e=>e.type==='adopt').forEach(e=>put(e.a,`${kAge(e.a)} 살에 ${eulreul(e.t)} 거두어 자식으로 삼았다.`));
+  P.ev.filter(e=>e.type==='kidloss').forEach(e=>put(e.a,`${kAge(e.a)} 살에 자식 ${eulreul(e.t)} 먼저 떠나보냈다.`));
+  P.ev.filter(e=>e.type==='loss').forEach(e=>put(e.a,`${kAge(e.a)} 살에 ${e.t}.`));
+  P.ev.filter(e=>e.type==='kidwed').forEach(e=>put(e.a,`${kAge(e.a)} 살에 자식 ${eulreul(e.t)} 혼인시켰다.`));
+  P.ev.filter(e=>e.type==='kidfeat').forEach(e=>put(e.a,`${kAge(e.a)} 살에 ${e.t}${bat(e.t)?'이':'가'} ${e.feat||'이름을 떨쳤다'}${/다$/.test(e.feat||'')?'.':'.'}`));
+  P.ev.filter(e=>['court','expel'].includes(e.type)).forEach(e=>put(e.a,`${kAge(e.a)} 살에 ${e.t}.`));
+  P.ev.filter(e=>['freed','rise','fall','unwed'].includes(e.type)).forEach(e=>put(e.a,`${kAge(e.a)} 살에 ${e.t}.`));
+  P.ev.filter(e=>e.type==='sujeol').forEach(e=>put(e.a+.5,`${kAge(e.a)} 살부터 평생 수절하였다.`));
+  if(!P.ev.some(e=>e.type==='sujeol')&&P.flags.sujeol)put(P.flags.sujeol-P.born+.5,'남편을 여읜 뒤 평생 수절하였다.');
+  P.ev.filter(e=>e.type==='jeongnyeo').forEach(e=>put(e.a,`${kAge(e.a)} 살에 나라에서 열녀문을 내려 그 절개를 기렸다.`));
+  P.ev.filter(e=>e.type==='exile').forEach(e=>put(e.a,`${kAge(e.a)} 살에 ${euro(e.t)} 유배되었다.`));
+  {const seen=new Set();P.ev.filter(e=>e.type==='war').forEach(e=>{if(seen.has(e.t))return;seen.add(e.t);put(e.a,`${kAge(e.a)} 살에 ${e.t}의 난리를 겪었다.`);});}
+  P.ev.filter(e=>e.type==='note'&&e.t).forEach(e=>put(e.a,`${kAge(e.a)} 살에 ${e.t}.`));
+  P.ev.filter(e=>e.type==='live').forEach(e=>put(e.a,`${kAge(e.a)} 살부터 ${e.t}.`));
+  P.ev.filter(e=>e.type==='rare').forEach(e=>put(e.a,e.t));
+  if(P.titles.includes('임금의 어머니'))put(99,'훗날 아들이 보위에 올라 임금의 어머니가 되었다.');
+  LT.sort((x,y)=>x[0]-y[0]||x[1]-y[1]).forEach(r=>W.push(r[2]));
   if(W.length)S.push({h:'일생',b:W.join(' ')});
 
   if(P.alt){S.push({h:'정사와 다른 역사',b:`정사(正史)와 달리, 이 판에서는 ${P.alt.line}`,alt:true});}

@@ -270,7 +270,7 @@ function setJob(k,lv){
   /* 승진하거나 급제하면 평판이 크게 오른다 */
   if(prev&&k!=='bandit'&&typeof fx==='function'&&((prev.k===k&&lv>prev.lv)||(prev.k!==k&&['official','military'].includes(k))||(prev.k==='scholar'&&k==='scholar'&&lv>prev.lv)))fx({fame:ri(6,12)+Math.min(8,lv)});const t=jobTitle(P.job);
   if(!P.titles.includes(t))P.titles.push(t);
-  P.jobBest=P.jobBest||{};if(P.jobBest[k]==null||lv>P.jobBest[k])P.jobBest[k]=lv;P.jobOrder=P.jobOrder||[];if(!P.jobOrder.includes(k))P.jobOrder.push(k);
+  P.jobBest=P.jobBest||{};P.jobBestAge=P.jobBestAge||{};if(P.jobBest[k]==null||lv>P.jobBest[k]){P.jobBest[k]=lv;P.jobBestAge[k]=P.age;}P.jobOrder=P.jobOrder||[];if(!P.jobOrder.includes(k))P.jobOrder.push(k);P.jobAge=P.jobAge||{};if(P.jobAge[k]==null)P.jobAge[k]=P.age;
   const score=x=>x?((x.k==='official'||x.k==='military'?2:x.k==='queen'?5:x.k==='concubine'?3:x.k==='gisaeng'||x.k==='court'?1.4:1)*(x.lv+1)):0;
   if(!P.peak||score(P.job)>=score(P.peak))P.peak={k,lv};
 }

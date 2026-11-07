@@ -7,7 +7,7 @@ const Store={
   get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},
   put(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}},
   _codex:null,
-  codex(){if(!this._codex)this._codex=Object.assign({cls:{},titles:{},kings:{},branches:{},rare:{},notes:{}},this.get(this.k.codex,{}));return this._codex;},
+  codex(){if(!this._codex)this._codex=Object.assign({cls:{},titles:{},kings:{},branches:{},rare:{},notes:{},post:{},rise:{},scene:{}},this.get(this.k.codex,{}));return this._codex;},
   saveCodex(){this.put(this.k.codex,this.codex());this.changed('codex');},
   hist(){return this.get(this.k.hist,[]);},
   addHist(h){const a=this.hist();a.unshift(h);a.forEach((x,i)=>{if(i>=15&&x.log)delete x.log;});let b=a.slice(0,300);if(!this.put(this.k.hist,b)){b.forEach((x,i)=>{if(i>=1&&x.log)delete x.log;});this.put(this.k.hist,b);}this.changed('hist',h);},
@@ -82,7 +82,7 @@ function startLife(p,ci){
   P.birthWealth=P.wealth;
   const cx=Store.codex();cx.cls[clsKey(P)]=1;Store.saveCodex();
   P.kings=[kingAt(P.born,P).n];
-  G.plan=[];G.pi=0;G.acc=0;G.scene=null;
+  G.plan=[];G.pi=0;G.acc=0;G.scene=null;G.deathPending=false;
   feedYear();
   const k=kingAt(P.born,P);
   say(`${P.born<1392?'고려 '+k.n+' 때':reignLabel(P.born,P)}, ${P.region} ${clsWord()}의 ${P.female?'딸':'아들'}로 태어났다.`,'big');
@@ -144,6 +144,7 @@ function runStep(){
   let r=null;try{r=f();}catch(e){console.error(e);}
   if(r&&r.opts)showScene(r);
 }
+function goDeath(){if(!G.deathPending)return;G.deathPending=false;showScene(deathScene());}
 function showScene(s){G.scene=s;G.autoAt=performance.now()+(G.hidden?0:1500);if(typeof UI!=='undefined')UI.onScene();}
 function choose(i){
   const s=G.scene;if(!s)return;const o=s.opts[i];if(!o||o.dis)return;
@@ -163,12 +164,13 @@ function autoChoose(){
 function tick(now){
   if(!P||P.dead||P.closed){G.lastT=now;return false;}
   let dt=now-(G.lastT||now);G.lastT=now;
+  if(G.deathPending)return false;
   if(G.scene){if(G.auto&&now>=G.autoAt){autoChoose();return true;}return false;}
   if(G.paused)return false;
   G.acc+=dt*G.speed;
   const cap=G.yearMs*40;if(G.acc>cap)G.acc=cap;
   let moved=false,guard=0;
-  while(!G.scene&&!P.dead&&!P.closed&&guard++<4000){
+  while(!G.scene&&!G.deathPending&&!P.dead&&!P.closed&&guard++<4000){
     if(G.pi>=G.plan.length){
       if(G.acc<G.yearMs/(G.plan.length+2)&&G.plan.length)break;
       G.acc-=G.yearMs/(Math.max(G.plan.length,1)+2);
@@ -995,6 +997,10 @@ function yMajor(){
   if(P.female&&P.widowed&&!P.married&&!P.flags.widowAsked&&P.age>=18)add(62,()=>widowScene());
   if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10)add(90,()=>jeongnyeoScene());
   if(P.age>=12&&P.year-(P.flags.fameY||0)>=3&&chance(.55))add(25,()=>fameScene());
+  if(P.age>=14&&P.year-(P.flags.famY||0)>=2&&chance(.5))add(28,()=>famScene());
+  if(P.age>=18&&!peopleOf('friend').some(x=>x.alive)&&P.year-(P.flags.nfY||0)>=8&&chance(.15))add(20,()=>newFriendScene());
+  {const k=P.kids.find(k=>k.alive&&!k.female&&k.married&&!k.homeAsked&&!k.away&&!k.estranged&&!k.royalBride);if(k)add(40,()=>bunScene(k));}
+  if(P.age>=55&&!P.flags.liveDone&&P.kids.some(k=>k.alive&&!k.estranged&&P.year-k.born>=18)&&chance(.5))add(45,()=>liveScene());
   if(!P.married&&P.age>=(P.widowed||P.divorced?18:22)&&!P.court&&!P.exile&&!(P.job&&['monk','king','concubine','naesi'].includes(P.job.k))&&P.year-(P.flags.soloY||0)>=1&&chance(P.flags.sujeol?.7:.5))add(34,()=>soloScene());
   if(P.kids.some(k=>k.alive)&&P.year-(P.flags.kidStoryY||0)>=3&&chance(.4))add(27,()=>kidStoryScene());
   if(y===1777&&P.kids.some(k=>k.alive&&k.seo))say('나라에서 서얼허통절목을 내려 서얼에게도 벼슬길을 열어 주었다. 서얼 자식들의 앞날에 빛이 비쳤다.','big');

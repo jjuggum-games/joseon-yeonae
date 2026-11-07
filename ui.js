@@ -285,6 +285,7 @@ function renderFeed(force){
     }
     h+=`</div>`;
   }
+  if(G.deathPending)h+=`<div class="deathnext"><div class="serif muted">숨이 점점 가늘어진다. 지난 일들을 천천히 돌아보아도 좋다.</div><button class="btn pri" data-a="todeath">다음 ▶ 마지막 순간으로</button></div>`;
   el.innerHTML=h;
   if(near||force){V._auto=true;el.scrollTop=el.scrollHeight;}
   $('#feedtools').innerHTML=`<span>최근 10년은 펼쳐 두고, 지난 해는 접어 둡니다.</span><span><button class="btn sm ghost" data-a="openall">모두 펼치기</button><button class="btn sm ghost" data-a="closeall">모두 닫기</button></span>`;
@@ -407,7 +408,7 @@ function sideFam(){
   /* 자식 */
   if(P.kids.length){
     const kd=P.kids.map(k=>{const a=P.year-k.born;const st=kidSt(k);
-      const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?(k.female?' (양녀)':' (양자)'):'')+(k.seo?' (서출)':'')+(k.cls&&k.cls!==P.cls?' · '+CLS[k.cls].n:'')+(k.estranged?' · 의절':'')+(k.away?' · 따로 자람':''),[k.alive?a+'세':'',otherParent(k),k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
+      const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?(k.female?' (양녀)':' (양자)'):'')+(k.seo?' (서출)':'')+(k.cls&&k.cls!==P.cls?' · '+CLS[k.cls].n:'')+(k.estranged?' · 의절':'')+(k.away?' · 따로 자람':'')+(k.alive&&P.livesWith===k.id?' · 노년을 함께 삶':k.alive&&k.home==='with'?' · 한집에 삶':k.alive&&k.home==='apart'?' · 분가':''),[k.alive?a+'세':'',otherParent(k),k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
       if(!k.alive)return base;
       const stl=`<div class="kst">${KID_ST.map(([s,n])=>`<span>${n} <b>${st[s]}</b></span>`).join('')}</div>`;
       const sel=a>=6&&a<18?`<div class="kedu"><span>배움</span><select data-kedu="${k.id}">${Object.entries(EDU).map(([key,[n]])=>`<option value="${key}" ${(k.edu||'play')===key?'selected':''}>${n}</option>`).join('')}</select></div>`:a<6?'<div class="kedu muted">여섯 살이 되면 배울 것을 정할 수 있습니다.</div>':'';
@@ -480,7 +481,7 @@ function renderSillok(h,fresh){
   V.screen='end';V.viewing=h;const sl=h.sillok;
   let newc='';
   if(fresh&&V.codexBefore){const cx=Store.codex(),b=V.codexBefore;const add=[];
-    for(const cat of ['cls','titles','kings','branches','rare'])for(const k in cx[cat])if(!b[cat][k])add.push(codexLabel(cat,k));
+    for(const cat of ['cls','titles','kings','branches','rare','post','rise','scene'])for(const k in (cx[cat]||{}))if(!(b[cat]||{})[k])add.push(codexLabel(cat,k));
     if(add.length)newc=`<div class="newcodex"><div class="sec">이번 삶에서 새로 채운 도감</div>${add.slice(0,30).map(t=>`<span class="chip j">${esc(t)}</span>`).join('')}</div>`;}
   $('#app').innerHTML=`<div id="scr-end">
     <div class="sillok" id="sillokBox"><div class="stamp">實錄</div><h2>${esc(sl.title)}</h2><div class="ep">${esc(sl.epithet)}</div>
@@ -536,12 +537,13 @@ async function saveImage(sl,mode){
 /* ===== 도감 ===== */
 const CLS_KEYS=[['royal','왕족'],['yangban','양반'],['seo','서얼'],['jungin','중인'],['sangmin','상민'],['nobi','노비'],['gisaeng','관기의 딸'],['gwangdae','광대']];
 const RARES=[['namjang','남장한 급제자'],['amhaeng','암행어사가 된 정인'],['gisaeng2lady','기녀에서 정경부인으로'],['descendant','전생의 후손으로 태어남']];
-function allTitles(){const s=new Set();for(const k in JOBS)JOBS[k].ladder.forEach(t=>s.add(t));['부실','폐세자빈','임금의 어머니'].forEach(t=>s.add(t));return [...s];}
-function codexLabel(cat,k){if(cat==='cls')return (CLS_KEYS.find(x=>x[0]===k)||[0,k])[1];if(cat==='branches')return (BRANCHES.find(b=>b.id===k)||{}).title||k;if(cat==='rare')return (RARES.find(x=>x[0]===k)||[0,k])[1];return k;}
+function allTitles(){const s=new Set();for(const k in JOBS)JOBS[k].ladder.forEach(t=>s.add(t));['부실','폐세자빈','임금의 어머니','열녀'].forEach(t=>s.add(t));Object.values(COURT_DEPT).forEach(([n])=>{s.add(n+' 나인');s.add(n+' 상궁');});s.add('부제조상궁');return [...s];}
+function codexLabel(cat,k){if(['post','rise','scene'].includes(cat)){const f=bookList(cat).find(x=>x[0]===k);return f?f[1]:k;}if(cat==='cls')return (CLS_KEYS.find(x=>x[0]===k)||[0,k])[1];if(cat==='branches')return (BRANCHES.find(b=>b.id===k)||{}).title||k;if(cat==='rare')return (RARES.find(x=>x[0]===k)||[0,k])[1];return k;}
 function renderCodex(){
   V.screen='codex';const cx=Store.codex();
-  const tabs=[['cls','신분'],['titles','직책'],['kings','임금의 시대'],['branches','역사의 갈림길'],['rare','드문 일'],['notes','역사 노트']];
+  const tabs=[['cls','신분'],['titles','직책'],['post','진로'],['rise','신분의 길'],['scene','삶의 장면'],['kings','임금의 시대'],['branches','역사의 갈림길'],['rare','드문 일'],['notes','역사 노트']];
   let items=[];
+  if(['post','rise','scene'].includes(V.codexTab))items=bookList(V.codexTab).map(([k,n])=>[n,!!(cx[V.codexTab]&&cx[V.codexTab][k])]);
   if(V.codexTab==='cls')items=CLS_KEYS.map(([k,n])=>[n,!!cx.cls[k]]);
   if(V.codexTab==='titles')items=allTitles().map(t=>[t,!!cx.titles[t]]);
   if(V.codexTab==='kings')items=KINGS.map(k=>[(k.g?'고려 ':'')+k.n,!!cx.kings[k.n]]);
@@ -657,9 +659,10 @@ document.addEventListener('click',async e=>{
     case 'accept':renderName();break;
     case 'name':{Music.unlock();const p=V.birth;if(p.ancestor){const cx=Store.codex();cx.rare.descendant=1;Store.saveCodex();}
       G.len=SET.len;G.paused=false;G.speed=SET.speed||1;startLife(p,+a.dataset.i);enterPlay();break;}
-    case 'resume':{const c=Store.loadCur();if(!c)return;Music.unlock();V.codexBefore=JSON.parse(JSON.stringify(Store.codex()));P=normalizeSt(c);G.plan=[];G.pi=0;G.acc=0;G.scene=null;G.paused=false;G.cur=P.feed[P.feed.length-1];setYearMs();enterPlay();break;}
+    case 'resume':{const c=Store.loadCur();if(!c)return;G.deathPending=false;Music.unlock();V.codexBefore=JSON.parse(JSON.stringify(Store.codex()));P=normalizeSt(c);G.plan=[];G.pi=0;G.acc=0;G.scene=null;G.paused=false;G.cur=P.feed[P.feed.length-1];setYearMs();enterPlay();break;}
     case 'home':confirmBox('처음 화면으로 돌아갈까요? 지금 삶은 해가 바뀔 때마다 저장되어 있어 이어서 할 수 있습니다.','돌아간다',()=>{Store.saveCur();G.scene=null;P=null;renderTitle();});break;
     case 'title':P=null;renderTitle();break;
+    case 'todeath':goDeath();break;
     case 'pause':G.paused=!G.paused;G.autoHold=false;renderTop();break;
     case 'speed':G.speed=+v;SET.speed=+v;Store.saveSettings(SET);renderTop();break;
     case 'auto':G.auto=!G.auto;SET.auto=G.auto;Store.saveSettings(SET);if(G.auto&&G.scene)G.autoAt=performance.now()+800;renderTop();break;
