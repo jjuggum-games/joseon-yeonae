@@ -214,7 +214,7 @@ function renderMe(){
     <div class="meta">${esc(P.bon&&P.cls!=='cheonmin'?P.bon+' '+P.sur+'씨 · ':'')}${esc(P.region)} 출생 · ${P.born}년</div></div>
     <div class="kv"><span>거처</span><span>${esc(P.home)}</span></div>
     <div class="kv"><span>재산</span><span>${money(P.wealth)}</span></div>
-    ${P.job?`<div class="kv"><span>직책</span><span>${fmt(jobTitle(P.job))}</span></div>`:''}
+    ${P.job?`<div class="kv"><span>직책</span><span>${fmt(jobTitle(P.job))}${curPost()?` · ${esc(curPost().n)}`:''}</span></div>`:''}
     ${jobChoices().list.length?`<div style="text-align:right;margin:2px 0 4px"><button class="btn sm" data-a="jobpick">생업 고르기·바꾸기</button></div>`:(P.age>=8&&jobChoices().why?`<div class="fnote">${esc(jobChoices().why)}</div>`:'')}
     ${P.married&&spouseP()?`<div class="kv"><span>${P.female?(spouseP().kingRole?'임금':'남편'):'아내'}</span><span>${esc(spouseP().title||callOf(spouseP()))}</span></div>`:P.widowed?`<div class="kv"><span>혼인</span><span>${P.female?'과부':'홀아비'}</span></div>`:''}
     ${P.alt?`<div class="kv"><span>역사</span><span style="color:var(--jok)">정사와 다름</span></div>`:''}

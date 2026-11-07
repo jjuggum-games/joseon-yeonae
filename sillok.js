@@ -103,6 +103,7 @@ function buildSillok(){
   const skip=new Set();if(order.includes('official'))skip.add('scholar');if(order.includes('queen')&&P.jobBest&&P.jobBest.queen>=1)skip.add('royalwife');if(order.includes('lady')&&order.includes('housewife'))skip.add('housewife');
   const JL=order.filter(k=>!skip.has(k)).map(k=>jobLine(k,P.jobBest&&P.jobBest[k]!=null?P.jobBest[k]:(P.peak&&P.peak.k===k?P.peak.lv:0))).filter(Boolean);
   JL.slice(0,5).forEach(t=>W.push(t));
+  if(P.post&&typeof POSTS!=='undefined'&&P.postK&&POSTS[P.postK]){const o=POSTS[P.postK].opts.find(x=>x.k===P.post);if(o)W.push(`${o.t}에서 일하였다.`);}
   if(P.titles.includes('임금의 어머니'))W.push('훗날 아들이 보위에 올라 임금의 어머니가 되었다.');
   P.ev.filter(e=>['freed','rise','fall','unwed'].includes(e.type)).forEach(e=>W.push(`${kAge(e.a)} 살에 ${e.t}.`));
   if(P.ev.some(e=>e.type==='sujeol'))W.push('남편을 여읜 뒤 평생 수절하였다.');

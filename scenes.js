@@ -981,3 +981,72 @@ function onClassChange(from,to){
   const out=P.kids.filter(k=>k.alive&&(k.away||(k.female&&k.married))&&CRANK.indexOf(k.cls||from)<CRANK.indexOf(to));
   if(out.length)say(`출가했거나 따로 사는 ${out.map(k=>k.name).join(', ')}의 신분은 그대로였다.`);
 }
+
+/* ===== 근무지와 진로: 승진 때마다 고르는 길 ===== */
+const POSTS={
+  official:{min:1,every:4,opts:[
+    {k:'cheongyo',n:'청요직',place:'한양',t:'홍문관·사헌부의 청요직',sub:'임금 곁에서 글을 다루는 자리. 출세가 빠르지만 당쟁의 칼날 앞에 선다.',mul:1.5,pay:1,tags:['승진 빠름','평판 ↑','사화·환국 때 위험 ↑']},
+    {k:'jo',n:'육조 낭관',place:'한양',t:'육조의 실무 자리',sub:'호조·예조 같은 관청에서 나랏일을 맡는다. 무난하지만 승진은 더디다.',mul:.6,pay:1.2,tags:['안정','승진 더딤 (만년 낭관)']},
+    {k:'local',n:'고을 수령',place:'지방',t:'외직으로 나가 고을 수령이 된다',sub:'한 고을의 원님이 되어 떵떵거린다. 벌이는 좋지만 조정과 멀어진다.',mul:.75,pay:1.9,tags:['수입 크게 ↑','지방에서 위세','승진 조금 더딤']},
+    {k:'gamsa',n:'관찰사',place:'지방',t:'한 도의 관찰사(감사)',sub:'한 도를 다스리는 감사가 된다.',mul:.9,pay:2.4,tags:['수입 크게 ↑','평판 ↑'],need:9}]},
+  military:{min:1,every:2,opts:[
+    {k:'guard',n:'궁궐 호위',place:'한양',t:'내금위·선전관',sub:'임금 곁을 지키는 무관. 출세가 빠르고 눈에 띄기 쉽다.',mul:1.4,pay:1,tags:['승진 빠름','임금의 눈에 띔']},
+    {k:'border',n:'변방 진',place:'변방',t:'북방·남해 변방의 진',sub:'오랑캐와 왜구를 막는 최전선. 전쟁이 나면 공을 세우기 쉽지만 위험하다.',mul:1,pay:1.3,tags:['전쟁 때 공 ↑','다칠 수 있음']},
+    {k:'camp',n:'훈련도감',place:'한양',t:'한양 군영',sub:'군사를 조련하는 자리. 무난하다.',mul:.7,pay:1.1,tags:['안정','승진 더딤']}]},
+  yein:{min:1,every:1,opts:[
+    {k:'palace',n:'궁중 진연',place:'한양',t:'장악원과 궁중 잔치',sub:'궁중 잔치에 뽑혀 올라간다. 이름이 높아진다.',mul:1.3,pay:1.2,tags:['평판 ↑','권세가의 눈에 띔']},
+    {k:'tour',n:'유랑 놀이패',place:'팔도',t:'팔도를 떠도는 놀이패',sub:'장터와 고을을 돌며 판을 벌인다. 자유롭고 백성들의 사랑을 받는다.',mul:1,pay:1.1,tags:['백성의 인기','떠돌이 삶']},
+    {k:'patron',n:'대감 댁 전속',place:'한양',t:'세도가 대감 댁에 매인 예인',sub:'한 집안에 매여 넉넉히 산다.',mul:.8,pay:1.7,tags:['수입 ↑','평판 조금 ↓']}]},
+  gwangdae:null,
+  gisaeng:{min:1,every:1,opts:[
+    {k:'seonsang',n:'선상기',place:'한양',t:'궁중 진연에 뽑혀 올라간 선상기',sub:'지방 관기가 궁중 잔치에 뽑혀 한양으로 올라간다.',mul:1.4,pay:1.2,tags:['명기 되기 쉬움','평판 ↑']},
+    {k:'gyobang',n:'고을 교방',place:'지방',t:'고을 교방의 관기',sub:'고을 잔치와 사또의 연회를 맡는다.',mul:1,pay:1,tags:['안정']},
+    {k:'patron',n:'권세가 전속',place:'한양',t:'권세가가 아끼는 기생',sub:'한 권세가의 사랑을 받으며 넉넉히 지낸다.',mul:.8,pay:1.8,tags:['수입 ↑','속량될 수 있음']}]},
+  doctor:{min:1,every:1,opts:[
+    {k:'naeui',n:'내의원',place:'한양',t:'내의원 의관',sub:'임금의 병을 돌본다. 이름이 높아지지만 임금이 승하하면 책임을 진다.',mul:1.3,pay:1.2,tags:['평판 ↑','위험']},
+    {k:'hyemin',n:'혜민서',place:'한양',t:'혜민서 의원',sub:'백성을 고친다.',mul:.9,pay:1,tags:['백성의 칭송']},
+    {k:'private',n:'개업 의원',place:'고을',t:'고을에 약방을 차린다',sub:'약방을 열어 돈을 번다.',mul:.8,pay:1.8,tags:['수입 ↑']}]},
+  interp:{min:1,every:1,opts:[
+    {k:'sahaeng',n:'사행 역관',place:'연경',t:'연경 가는 사신단의 역관',sub:'사신을 따라 청나라에 가며 몰래 무역으로 큰돈을 번다.',mul:1.1,pay:2.2,tags:['수입 크게 ↑','먼 길']},
+    {k:'sayeok',n:'사역원',place:'한양',t:'사역원 교수',sub:'역관을 길러 낸다.',mul:1,pay:1,tags:['안정','평판 ↑']},
+    {k:'waegwan',n:'왜관',place:'동래',t:'동래 왜관의 역관',sub:'왜인과의 교역을 맡는다.',mul:.9,pay:1.6,tags:['수입 ↑']}]}
+};
+POSTS.gwangdae=POSTS.yein;
+function postMul(){const o=curPost();return o?o.mul:1;}
+function postPay(){const o=curPost();return o?o.pay:1;}
+function curPost(){if(!P.job||!P.post||P.postK!==P.job.k)return null;const d=POSTS[P.job.k];return d?d.opts.find(o=>o.k===P.post):null;}
+function postScene(){
+  const d=POSTS[P.job.k];P.flags.postY=P.year;const first=P.postK!==P.job.k;
+  const opts=d.opts.filter(o=>!o.need||P.job.lv>=o.need).map(o=>({t:o.n+(o.k===P.post?' (지금 자리)':''),sub:`${o.t}. ${o.sub}`,p:null,tags:o.tags,fn:()=>{
+    const moved=P.post!==o.k;P.post=o.k;P.postK=P.job.k;P.postLv=P.job.lv;
+    if(o.place==='지방'||o.place==='고을'||o.place==='변방')P.home=`${o.n} 관사`;else if(o.place==='한양'&&/관사/.test(P.home||''))P.home='한양 사저';
+    if(o.k==='cheongyo'||o.k==='palace'||o.k==='seonsang'||o.k==='naeui')fx({fame:4});
+    if(o.k==='patron')fx({fame:-3});
+    say(moved?`${euro(o.t)} 나아갔다.`:`${o.n}에 그대로 머물렀다.`,'big');ev('job',`${o.n}에서 일하였다`);}}));
+  return {kind:'major',title:first?'어디서 일할 것인가':'자리를 옮길 것인가',text:first?`${iga(jobTitle(P.job))} 되었다. 이제 어디에서 일할지 정해야 한다.`:`${euro(jobTitle(P.job))} 올랐다. 지금 자리에 머물지, 다른 자리로 옮길지 정할 때다.`,opts};
+}
+/* 근무지에서 생기는 일 */
+const POST_EV={local:1,gamsa:1,cheongyo:1,jo:1,border:1,guard:1,tour:1,patron:1,sahaeng:1,naeui:1,seonsang:1};
+function postEventScene(){
+  P.flags.postEvY=P.year;const U=UNIT[P.cls]||.5;const o=curPost();const p=P.post;
+  if(p==='local'||p==='gamsa')return {kind:'major',title:'고을의 원님',text:'흉년이 들었는데도 고을 아전들이 세금을 더 걷자고 한다. 그 가운데 얼마는 사또의 몫이 될 것이라 귀띔한다.',opts:[
+    {t:'세금을 덜어 주고 곳간을 연다',p:null,tags:['평판 크게 ↑','수입 ↓'],fn:()=>{fx({fame:10,wealth:-U*5});say('세금을 덜어 주고 관아 곳간을 열었다. 고을 사람들이 송덕비를 세웠다.','big');ev('rise','고을 백성들이 송덕비를 세웠다');}},
+    {t:'정해진 만큼만 걷는다',p:null,safe:true,tags:[],fn:()=>{say('법대로만 걷었다.');}},
+    {t:'더 걷어 사사로이 챙긴다',p:.65,tags:['재산 크게 ↑','암행어사에게 걸리면 파직'],fn:()=>{fx({wealth:U*ri(20,40),fame:-6});if(!chance(.65)){say('암행어사 출두요! 탐학이 드러나 파직되고 유배되었다.','big');P.job=null;P.post=null;exile(ri(2,4));}else say('곳간이 그득해졌다. 백성들의 원성이 높았다.');}}]};
+  if(p==='cheongyo'||p==='jo')return {kind:'major',title:'조정의 당파',text:p==='cheongyo'?'조정이 두 갈래로 나뉘어 서로를 탄핵한다. 그대에게도 어느 편에 설지 묻는다.':'만년 낭관으로 같은 자리를 지키는 사이, 동료들이 하나둘 승진해 나간다. 줄을 서야 하나 싶다.',opts:[
+    {t:'세력 있는 편에 선다',p:.6,tags:['성공하면 승진','실패하면 파직'],fn:()=>{if(chance(.6)){setJob('official',Math.min(16,P.job.lv+2));say(`줄을 잘 서서 ${euro(RANKS[P.job.lv])} 뛰어올랐다.`,'big');}else{say('편을 잘못 들어 파직되었다.','big');fx({fame:-8});P.job.lv=Math.max(1,P.job.lv-2);}}},
+    {t:'어느 편에도 서지 않는다',p:null,safe:true,tags:['평판 ↑','승진 기회는 놓침'],fn:()=>{fx({fame:5});say('어느 편에도 서지 않고 소신을 지켰다.');}}]};
+  if(p==='border'||p==='guard')return {kind:'major',title:p==='border'?'변방의 싸움':'임금의 행차',text:p==='border'?'국경 너머 오랑캐가 쳐들어왔다는 봉화가 올랐다.':'임금의 사냥 행차를 호위하는 날, 멧돼지가 어가로 달려들었다.',opts:[
+    {t:'앞장서 맞선다',sub:'무예가 중요하다',p:clamp(.35+P.st.brave/180),tags:['성공하면 승진·평판 ↑','다칠 수 있음'],fn:()=>{if(chance(.35+P.st.brave/180)){fx({fame:10});if(P.job.lv<6)setJob('military',P.job.lv+1);say(p==='border'?'적을 물리치고 공을 세웠다. 품계가 올랐다.':'단칼에 멧돼지를 베었다. 임금이 크게 칭찬하였다.','big');}else{fx({health:-ri(10,20)});say('맞서다 크게 다쳤다.','big');}}},
+    {t:'군사를 지휘해 뒤를 받친다',p:null,safe:true,tags:[],fn:()=>{say('무리하지 않고 군사들을 지휘하였다.');}}]};
+  if(p==='tour'||p==='patron'||p==='seonsang')return {kind:'major',title:'판을 벌이다',text:p==='tour'?'큰 장터에서 판을 벌였다. 구경꾼이 구름처럼 모였다.':p==='seonsang'?'궁중 진연에서 홀로 춤을 추라는 명이 떨어졌다.':'대감 댁 잔치에 이름난 손님들이 모였다.',opts:[
+    {t:'온 힘을 다해 재주를 보인다',sub:'재주가 중요하다',p:clamp(.35+P.st.art/170),tags:['성공하면 평판·재산 ↑'],fn:()=>{if(chance(.35+P.st.art/170)){fx({fame:8,wealth:U*ri(3,8)});say('판이 끝나자 박수와 엽전이 쏟아졌다.','big');}else{fx({fame:-3});say('실수가 나와 판이 식었다.');}}},
+    {t:'늘 하던 대로 한다',p:null,safe:true,tags:[],fn:()=>{say('늘 하던 대로 판을 마쳤다.');}}]};
+  if(p==='sahaeng')return {kind:'major',title:'연경 가는 길',text:'사신단을 따라 연경에 왔다. 비단과 서책, 인삼을 몰래 사고팔면 큰돈이 된다.',opts:[
+    {t:'몰래 장사를 크게 벌인다',p:.7,tags:['재산 크게 ↑','들키면 처벌'],fn:()=>{if(chance(.7)){fx({wealth:U*ri(30,60)});say('사행 무역으로 큰돈을 벌었다.','big');}else{fx({fame:-10,wealth:-P.wealth*.2});say('밀무역이 들통나 벌을 받았다.','big');}}},
+    {t:'맡은 일만 한다',p:null,safe:true,tags:['평판 조금 ↑'],fn:()=>{fx({fame:3});say('통역만 충실히 하였다.');}}]};
+  if(p==='naeui')return {kind:'major',title:'임금의 병환',text:'임금이 병석에 누웠다. 내의원이 발칵 뒤집혔다.',opts:[
+    {t:'새 처방을 올린다',sub:'학식이 중요하다',p:clamp(.35+P.st.know/180),tags:['성공하면 크게 이름남','실패하면 문책'],fn:()=>{if(chance(.35+P.st.know/180)){fx({fame:12});say('그대의 처방으로 임금이 쾌차하였다.','big');}else{fx({fame:-10});say('처방이 듣지 않아 문책을 받았다.','big');}}},
+    {t:'선배 의관들을 따른다',p:null,safe:true,tags:[],fn:()=>{say('선배들의 처방을 따랐다.');}}]};
+  return null;
+}

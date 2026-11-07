@@ -401,15 +401,15 @@ function yJob(){
     if(J.lv===0){if(chance(.12+P.st.know/220)){const lv=chance(.5)?1:2;setJob('scholar',lv);say(`${exn} 소과에 붙어 ${iga(JOBS.scholar.ladder[lv])} 되었다.`,'big');fx({fame:8});ev('job',`${iga(JOBS.scholar.ladder[lv])} 되었다`);}else say('과거를 보았으나 이름이 방에 오르지 않았다.');}
     else{if(chance(.06+Math.max(0,P.st.know-30)/180)){const lv=P.st.know>80?4:P.st.know>65?2:0;setJob('official',lv);say(`문과에 급제하였다! ${RANKS[lv]} 벼슬을 받았다.`,'big');fx({fame:15});ev('job','문과에 급제하였다');P.home=P.cls==='yangban'?'사랑채 딸린 기와집':P.home;}else say('대과에 나아갔으나 낙방하였다.');}
   } else if(k==='scholar'&&P.sub==='seo'&&examY&&a>=18&&!P.seen.seoNo){P.seen.seoNo=1;say('서얼이라 문과에 나아갈 수 없었다. 붓을 쥔 손이 떨렸다.');fx({worry:10},true);}
-  if(k==='official'&&J.lv<16&&chance(.05+Math.max(0,P.st.know+P.st.wit-110)/650+P.st.fame/1600-(J.lv>=12?.03:0))){const up=chance(.25)?2:1;setJob('official',Math.min(16,J.lv+up));say(`${euro(RANKS[P.job.lv])} 승진하였다.`,P.job.lv>=12?'big':'n');if(P.job.lv>=12)ev('job',`${RANKS[P.job.lv]}에 올랐다`);}
+  if(k==='official'&&J.lv<16&&chance(postMul()*(.05+Math.max(0,P.st.know+P.st.wit-110)/650+P.st.fame/1600-(J.lv>=12?.03:0)))){const up=chance(.25)?2:1;setJob('official',Math.min(16,J.lv+up));say(`${euro(RANKS[P.job.lv])} 승진하였다.`,P.job.lv>=12?'big':'n');if(P.job.lv>=12)ev('job',`${RANKS[P.job.lv]}에 올랐다`);}
   if(k==='military'){
     if(J.lv===0&&examY&&a>=17&&a<=50){note('mugwa');if(chance(.1+Math.max(0,P.st.brave-30)/170+P.st.art/1000)){setJob('military',1);say(`${isGwageoYear(P.year)?'식년시':'별시'} 무과에 급제하였다! ${jobTitle(P.job)} 자리를 받았다.`,'big');fx({fame:12});ev('job','무과에 급제하였다');}else say('무과를 보았으나 활이 과녁을 비껴갔다.');}
-    else if(J.lv>=1&&J.lv<6&&(J.lv<3||chance(.45))&&(J.lv<5||P.flags.warYear||chance(.15))&&chance(.03+Math.max(0,P.st.brave+P.st.wit-120)/900+P.st.fame/2500+(P.flags.warYear?.12:0))){setJob('military',J.lv+1);say(`${euro(jobTitle(P.job))} 올랐다.`,J.lv+1>=4?'big':'n');if(P.job.lv>=4)ev('job',`${jobTitle(P.job)}에 올랐다`);}
+    else if(J.lv>=1&&J.lv<6&&(J.lv<3||chance(.45))&&(J.lv<5||P.flags.warYear||chance(.15))&&chance(postMul()*(.03+Math.max(0,P.st.brave+P.st.wit-120)/900+P.st.fame/2500+(P.flags.warYear?.12:0)+(P.post==='border'&&P.flags.warYear?.1:0)))){setJob('military',J.lv+1);say(`${euro(jobTitle(P.job))} 올랐다.`,J.lv+1>=4?'big':'n');if(P.job.lv>=4)ev('job',`${jobTitle(P.job)}에 올랐다`);}
   }
   if(k==='soldier'&&J.lv>=1&&examY&&a<=45&&P.st.brave>=55&&chance(.15)){setJob('military',1);say(`군공을 인정받아 무과에 나아가 급제하였다. ${jobTitle(P.job)} 자리를 받았다.`,'big');ev('job','무과에 급제하였다');}
   if(['naesi','namchong','doctor','interp','painter','uinyeo','gwangdae','weaver','soldier','hunjang','sword','yein','jumo','fisher','smith','potter','carpenter','mudang','ajeon','sanwon','monk','herb','nurse','baekjeong','chaekkwae','jeongisu','hunter','sanpa','jeomjaeng','bangmul','dyer','gatjang','mabu','salt','haenyeo','gwansang','yulgwan','sajagwan','akgong','poet','cheosa','bandit'].includes(k)&&J.lv<d.ladder.length-1&&a>=15){
     const st=P.st[d.stat]||P.st.art;
-    if((J.lv===0||a>=28)&&chance(.04+(st-45)/380+(J.lv===0&&a>=20?.1:0))){setJob(k,J.lv+1);say(`${iga(d.ladder[P.job.lv])} 되었다.`+(P.job.lv===d.ladder.length-1?' 솜씨가 널리 알려졌다.':''),'big');if(P.job.lv===d.ladder.length-1)ev('job',`${iga(d.ladder[P.job.lv])} 되었다`);}}
+    if((J.lv===0||a>=28)&&chance(postMul()*(.04+(st-45)/380+(J.lv===0&&a>=20?.1:0)))){setJob(k,J.lv+1);say(`${iga(d.ladder[P.job.lv])} 되었다.`+(P.job.lv===d.ladder.length-1?' 솜씨가 널리 알려졌다.':''),'big');if(P.job.lv===d.ladder.length-1)ev('job',`${iga(d.ladder[P.job.lv])} 되었다`);}}
   if(k==='housewife'){if(J.lv===0&&P.married&&chance(.35))setJob(k,1);else if(J.lv===1&&a>=38&&chance(.25)){setJob(k,2);say('집안 살림을 도맡는 안주인이 되었다.');}}
   if(k==='royalwife'&&J.lv===0&&P.st.fame>=60&&chance(.05)){setJob(k,1);say('남편이 대군으로 봉해져 그대도 부부인의 작호를 받았다.','big');}
   if(k==='merchant'){if(J.lv===0&&a>=18&&(P.wealth>=90||chance(.02+P.st.wit/1500))){setJob(k,1);say('밑천이 모여 객주를 차렸다.','big');}else if(J.lv===1&&(P.wealth>=700||P.wealth>=300&&chance(.02+P.st.wit/2000))){setJob(k,2);say('사람들이 그대를 거상이라 불렀다.','big');ev('job','거상이 되었다');}}
@@ -439,12 +439,12 @@ function isGwageoYear(y){return [0,3,6,9].includes((y-4+6000)%12);}
 function jobPay(J){const L=J.lv;return ({official:6+L*7,merchant:[6,28,90][L],gisaeng:[0,6,16,40][L],concubine:25+L*12,queen:[150,300][L],king:[600][0],royalwife:[60,90][L],housewife:[0,1,3][L],court:2+L*4,farmer:[2,6,14][L],weaver:[2,4,9][L],doctor:[6,15,32][L],interp:[8,20,45][L],painter:[5,12,28][L],uinyeo:[2,5,10][L],slave:[0,.3,1][L],gwangdae:[1,4,14][L],soldier:[2,6,14][L],hunjang:[0,2,8][L],sword:[0,4,12][L],yein:[1,5,16][L],scholar:[0,3,4][L],prince:[60,90,140][L],princess:[60,90][L],buma:[80][0],lady:[0,0,0,10][L],military:[0,10,18,28,38,55,80][L],jumo:[2,6,14][L],fisher:[2,5,14][L],smith:[1,5,10][L],potter:[1,5,12][L],carpenter:[1,5,14][L],mudang:[1,5,14][L],ajeon:[2,6,14][L],sanwon:[4,10,20][L],monk:[0,1,4][L],herb:[1,4,16][L],nurse:[1,3,6][L],sosil:[20,35][L],naesi:[3,8,16,26,40][L],chongsin:[20,45,90][L],namchong:[4,10,18][L],baekjeong:[2, 6, 14][L],chaekkwae:[1, 5, 14][L],jeongisu:[1, 4, 12][L],hunter:[1, 5, 12][L],sanpa:[1, 4, 10][L],jeomjaeng:[1, 5, 16][L],bangmul:[2, 6, 14][L],dyer:[1, 5, 12][L],gatjang:[1, 5, 12][L],mabu:[1, 3, 8][L],salt:[1, 4, 16][L],haenyeo:[1, 5, 12][L],gwansang:[5, 12, 26][L],yulgwan:[5, 12, 26][L],sajagwan:[3, 10, 22][L],akgong:[2, 6, 16][L],poet:[0, 1, 4][L],cheosa:[0, 2, 8][L],bandit:[2, 8, 18][L]}[J.k]||0);}
 function incomeOf(){
   const J=P.job;let v={royal:150,yangban:22,jungin:12,sangmin:3,cheonmin:.4}[P.cls]||2;
-  if(J)v+=jobPay(J);
+  if(J)v+=jobPay(J)*postPay();
   return v-({royal:120,yangban:18,jungin:9,sangmin:2.6,cheonmin:.3}[P.cls]||2);
 }
 function income(){
   const J=P.job;let v={royal:150,yangban:22,jungin:12,sangmin:3,cheonmin:.4}[P.cls]||2;
-  if(J)v+=jobPay(J);
+  if(J)v+=jobPay(J)*postPay();
   const live={royal:120,yangban:18,jungin:9,sangmin:2.6,cheonmin:.3}[P.cls]||2;
   const kidsCost=P.kids.filter(k=>k.alive&&P.year-k.born<18).length*({royal:10,yangban:2,jungin:1,sangmin:.4,cheonmin:.05}[P.cls]||.4);
   v+=(P.flags.kidSupport||0)*(P.kids.some(k=>k.alive)?1:.5);
@@ -1003,6 +1003,8 @@ function yMajor(){
    if(ex&&P.year-(P.flags.supportY||0)>=6&&y-(ex.exY||y)>=0&&y-(ex.exY||y)<=3){if(mine&&!P.flags.csIn)add(55,()=>supportScene('divorceWithMe',ex));else if(away&&!P.flags.csOut)add(55,()=>supportScene('divorceAway',ex));}
    const dead=Object.values(P.people).filter(x=>x.kind==='spouse'&&!x.alive&&x.dy&&y-x.dy<=2).pop();
    if(!P.married&&dead&&mine&&!dead.supportAsked&&!dead.kingRole){dead.supportAsked=1;add(54,()=>supportScene('widow',dead));}}
+  if(P.job&&POSTS[P.job.k]&&P.job.lv>=POSTS[P.job.k].min&&(P.postK!==P.job.k||P.job.lv>=(P.postLv||0)+POSTS[P.job.k].every)&&P.year-(P.flags.postY||0)>=2)add(71,()=>postScene());
+  if(P.job&&P.post&&P.postK===P.job.k&&POST_EV[P.post]&&P.year-(P.flags.postEvY||0)>=4&&chance(.35))add(30,()=>postEventScene());
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){
