@@ -76,7 +76,7 @@ function highPlace(P){
 
 /* ===== 삶의 시작 ===== */
 function startLife(p,ci){
-  P=p;const c=p.nameCands[ci]||p.nameCands[0];
+  P=p;P.originCls=P.cls;P.originSub=P.sub||'';const c=p.nameCands[ci]||p.nameCands[0];
   P.name=c.n;P.nameMean=c.mean;P.nameKind=c.kind;
   P.gong=/관/.test(P.parents.f.job+P.parents.m.job);
   P.birthWealth=P.wealth;
@@ -99,13 +99,15 @@ function startLife(p,ci){
   Store.saveCur();
 }
 function clsKey(p){return p.sub==='seo'?'seo':p.sub==='gisaeng'?'gisaeng':p.sub==='gwangdae'?'gwangdae':p.sub==='nobi'?'nobi':p.cls;}
+function originCls(){return P.originCls||P.birthCls||(P.cls==='royal'&&P.parents&&P.parents.f&&!/임금|대군|왕자|군$|세자/.test(P.parents.f.job||'')?'yangban':P.cls);}
 function clsWord(){
-  if(P.cls==='royal')return '왕실';
-  if(P.cls==='yangban')return P.sub==='seo'?`${P.bon} ${P.sur}씨 양반가 첩`:`${P.bon} ${P.sur}씨 양반가`;
-  if(P.cls==='jungin')return `${P.parents.f.job} 집안`;
-  if(P.cls==='sangmin')return `${P.parents.f.job} 집안`;
-  if(P.sub==='gisaeng')return '관기';
-  if(P.sub==='gwangdae')return '광대 집안';
+  const C=originCls(),S=P.originSub!=null?P.originSub:P.sub;
+  if(C==='royal')return '왕실';
+  if(C==='yangban')return S==='seo'?`${P.bon} ${P.sur}씨 양반가 첩`:`${P.bon} ${P.sur}씨 양반가`;
+  if(C==='jungin')return `${P.parents.f.job} 집안`;
+  if(C==='sangmin')return `${P.parents.f.job} 집안`;
+  if(S==='gisaeng')return '관기';
+  if(S==='gwangdae')return '광대 집안';
   return '노비 집안';
 }
 function setYearMs(){
@@ -1034,7 +1036,7 @@ function yMajor(){
   // 사화
   {const sp=spouseP();const can=!P.alt&&!P.flags.noThrone&&P.age>=20&&P.age<=55&&P.year-(P.flags.throneY||0)>=4&&((P.female&&P.married&&sp&&sp.cls==='royal'&&!sp.kingRole&&!sp.real)||(!P.female&&P.cls==='royal'&&P.job&&P.job.k==='prince'));
    if(can&&hasKing(y)&&chance(.12))add(70,()=>throneScene());}
-  {const sp=spouseP();if(sp&&sp.seja&&sp.alive&&realKing(y).s===y&&!P.alt){sp.seja=false;sp.kingRole=true;const kn=(sp.name||'새')+R(['종','조']);sp.title=kn;P.alt={year:y,king:kn,from:y,title:'세자빈의 남편이 보위에',line:`세자였던 그대의 남편이 보위에 올라 ${iga(kn)} 되었다.`};setJob('queen',1);P.home='중궁전';say(`선왕이 승하하고 세자였던 남편이 보위에 올랐다. 그대는 중전이 되었다. 이 판의 역사에서 임금은 ${kn}이다.`,'big');ev('branch',`세자였던 남편이 ${iga(kn)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});fx({fame:25});}}
+  {const sp=spouseP();if(sp&&sp.seja&&sp.alive&&realKing(y).s===y&&!P.alt){sp.seja=false;sp.kingRole=true;sp.wasSeja=1;sp.sejaName=sp.sejaName||sp.title;const kn=(sp.name||'새')+R(['종','조']);sp.title=kn;P.alt={year:y,king:kn,from:y,title:'세자빈의 남편이 보위에',line:`세자였던 그대의 남편이 보위에 올라 ${iga(kn)} 되었다.`};setJob('queen',1);P.home='중궁전';say(`선왕이 승하하고 세자였던 남편이 보위에 올랐다. 그대는 중전이 되었다. 이 판의 역사에서 임금은 ${kn}이다.`,'big');ev('branch',`세자였던 남편이 ${iga(kn)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});fx({fame:25});}}
   {const sp=spouseP();if(P.female&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.wifeDead&&chance(.025)){sp.wifeDead=true;say(`${callOf(sp)}의 정실이 병으로 세상을 떠났다.`);}}
   if(hasKing(y)&&P.job&&P.job.k==='concubine'&&P.job.lv>=6&&P.favor>=60&&P.year-(P.flags.qriseY||0)>=5&&chance(.06+royalSons()*.04))add(72,()=>queenRiseScene());
   {const sp=spouseP();if(P.female&&P.married&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.kingRole&&P.year-(P.flags.wriseY||0)>=5){const sons=P.kids.filter(k=>k.alive&&!k.female).length;if(sp.wifeDead||sons>=2&&chance(.08+sons*.04))add(60,()=>wifeRiseScene());}}

@@ -171,8 +171,8 @@ function rollBirth(hist){
   return p;
 }
 function originText(p){
-  const c=CLS[p.cls].n;
-  let s=`${p.region} · ${c}`;
+  const oc=p.originCls||p.birthCls||p.cls;const c=CLS[p.cls].n;
+  let s=oc!==p.cls&&CLS[oc]?`${p.region} · ${CLS[oc].n} 출신 ${c}`:`${p.region} · ${c}`;
   if(p.sub==='seo')s+=' (서얼)';
   if(p.sub==='gisaeng')s+=' (관기의 딸)';
   if(p.sub==='gwangdae')s+=' (광대의 아들)';

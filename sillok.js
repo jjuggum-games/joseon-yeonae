@@ -42,10 +42,10 @@ function buildSillok(){
     const x=P.people[e.t];if(!x)continue;const nm=callOf(x);let t='';
     if(e.bushil)t=`${kAge(e.a)} 살에 ${nm}의 부실이 되었다.`;
     else if(x.real&&!x.kingRole)t=`${kAge(e.a)} 살에 세자빈으로 간택되어 ${x.real}의 배필이 되었다.`;
-    else if(x.kingRole){}
+    else if(x.kingRole)t=royalWedLine(e,x);
     else if(e.mode==='cheop')t=P.female?`${kAge(e.a)} 살에 ${x.fam?x.fam+'의 ':''}${nm}의 부실이 되었다.`:`${kAge(e.a)} 살에 ${eulreul(nm)} 첩으로 들였다.`;
     else t=`${kAge(e.a)} 살에 ${x.fam&&!e.elope?x.fam+'의 ':''}${P.female?nm+'에게 출가하였다':eulreul(nm)+' 아내로 맞았다'}.`;
-    if(!x.kingRole){const h=x.maxH;t+=' '+(h>=70?'부부의 정이 깊었다.':h>=40?'부부 사이가 무난하였다.':'부부 사이가 소원하였다.');}
+    if(!x.kingRole||t){const h=x.maxH;t+=' '+(h>=70?'부부의 정이 깊었다.':h>=40?'부부 사이가 무난하였다.':'부부 사이가 소원하였다.');}
     if(t)at(e.a,t.trim());
   }
   P.ev.filter(e=>e.type==='cheop').forEach(e=>at(e.a,`${kAge(e.a)} 살에 첩 ${eulreul(e.t)} 들였다.`));
@@ -109,7 +109,7 @@ function buildSillok(){
   order.filter(k=>!skip.has(k)).forEach(k=>{const t=jobLine(k,P.jobBest&&P.jobBest[k]!=null?P.jobBest[k]:(P.peak&&P.peak.k===k?P.peak.lv:0));const a=jAge(k);if(t&&!P.ev.some(e=>e.type==='job'&&!e.post&&a!=null&&Math.floor(e.a)===Math.floor(a)&&e.a>=a-0.01&&k!=='official'&&k!=='military'))put(a==null?a:a+.1,AG(a)+t);});
   P.ev.filter(e=>e.type==='job'&&e.post).forEach(e=>put(e.a+.2,`${kAge(e.a)} 살에 ${e.t}.`));
   {const jl=new Set();P.ev.filter(e=>e.type==='job'&&!e.post&&e.t).forEach(e=>{const key=e.a+e.t;if(jl.has(key))return;jl.add(key);put(e.a+.05,`${kAge(e.a)} 살에 ${e.t}.`);});}
-  P.ev.filter(e=>e.type==='marry').forEach(e=>{const x=P.people[e.t];if(!x)return;const nm=callOf(x);put(e.a,`${kAge(e.a)} 살에 ${e.bushil||e.mode==='cheop'?(P.female?nm+'의 부실이 되었다':eulreul(nm)+' 첩으로 들였다'):x.kingRole?'임금의 여인이 되었다':(P.female?nm+'에게 시집갔다':eulreul(nm)+' 아내로 맞았다')}.`);});
+  P.ev.filter(e=>e.type==='marry').forEach(e=>{const x=P.people[e.t];if(!x)return;const nm=callOf(x);if(x.kingRole){put(e.a,royalWedLine(e,x));return;}put(e.a,`${kAge(e.a)} 살에 ${e.bushil||e.mode==='cheop'?(P.female?nm+'의 부실이 되었다':eulreul(nm)+' 첩으로 들였다'):x.kingRole?'임금의 여인이 되었다':(P.female?nm+'에게 시집갔다':eulreul(nm)+' 아내로 맞았다')}.`);});
   P.ev.filter(e=>e.type==='cheop').forEach(e=>put(e.a,`${kAge(e.a)} 살에 첩 ${eulreul(e.t)} 들였다.`));
   P.ev.filter(e=>e.type==='divorce').forEach(e=>put(e.a+.3,`${kAge(e.a)} 살에 ${gwawa(e.t)} 갈라섰다.`));
   P.ev.filter(e=>e.type==='sobak'&&!P.ev.some(d=>d.type==='divorce'&&d.a===e.a)).forEach(e=>put(e.a,`${kAge(e.a)} 살에 소박을 맞았다.`));
@@ -148,6 +148,7 @@ function buildSillok(){
 
   const ep=epithet();
   S.push({h:'사신(史臣)은 논한다',b:verdict(ep,dn),verdict:true});
+  for(let i=S.length-1;i>=0;i--)if(!S[i].b||!String(S[i].b).trim())S.splice(i,1);
   return {title:`${dn} 연애실록`,epithet:ep,sections:S,letter:letter?{from:letter.from,to:letter.to,text:letter.text,poem:letter.poem,y:letter.y}:null,born:P.born,death:P.deathYear,age:P.age,origin:originText(P),name:dn};
 }
 function epithet(){
@@ -244,4 +245,13 @@ function sillokText(sl){
   if(sl.letter)t+=`【남은 서찰】\n${sl.letter.text}\n\n`;
   t+='— 조선 연애실록';
   return t;
+}
+
+/* 임금(또는 훗날 임금이 된 세자)과의 혼인 */
+function royalWedLine(e,x){
+  const A=`${kAge(e.a)} 살에`;
+  const wasSeja=x.wasSeja||(P.titles||[]).includes('세자빈')||(P.job&&P.job.k==='queen');
+  if(P.job&&P.job.k==='concubine'||e.mode==='cheop'||P.titles.includes('후궁'))return `${A} ${x.title||'임금'}의 후궁이 되었다.`;
+  if(wasSeja)return `${A} 세자빈으로 간택되어 ${x.sejaName&&x.sejaName!==x.title?x.sejaName:'세자'}의 배필이 되었다. 훗날 지아비가 보위에 오르니(${x.title}) 중전이 되었다.`;
+  return `${A} 왕비로 간택되어 ${x.title}의 배필이 되었다.`;
 }
