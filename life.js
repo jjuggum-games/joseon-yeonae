@@ -1086,7 +1086,7 @@ function yMajor(){
     const mut=Object.values(P.people).find(x=>x.kind==='love'&&x.alive&&x.status==='mutual'&&!x.asked);
     if(mut&&!P.married&&!P.flags.sujeol&&!(P.job&&['concubine','queen','monk'].includes(P.job.k)))add(58,()=>confessScene(mut));
     if(P.sub==='gisaeng'&&P.job&&P.job.k==='gisaeng'&&!P.married){const pat=Object.values(P.people).find(x=>x.kind==='love'&&x.alive&&!x.female&&x.t>=55&&['yangban','jungin','sangmin'].includes(x.cls)&&!x.offered);if(pat)add(57,()=>bushilScene(pat));}
-    if(marriageable())add(50,()=>matchScene());
+    {const ar=arrangeChance();if(ar>0&&!P.married&&chance(ar))add(66,()=>arrangedScene());else if(marriageable())add(50,()=>matchScene());}
     if(P.married&&P.wantKids===null&&P.year>(P.flags.wedY||0)&&fertile())add(48,()=>kidsScene());
     if(P.flags.askMore&&P.married&&fertile()){P.flags.askMore=0;add(44,()=>kidsScene(true));}
     if(P.wantKids!==false&&P.year-(P.flags.kwishY||0)>=3&&!(P.married&&P.wantKids===null&&P.year<=(P.flags.wedY||0)+1)){const cand=[spouseP(),...peopleOf('cheop')].filter(x=>x&&x.alive&&fertileWith(x)&&!pregOf(x)&&!(P.autoKid&&P.autoKid[x.id]));if(cand.length&&chance(.3))add(43,()=>kidWishScene(R(cand)));}

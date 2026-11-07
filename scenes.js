@@ -1583,7 +1583,7 @@ const SOLO_T={inlawcare:'시어머니의 병',rearkids:'홀로 키우는 자식'
 function bookList(cat){
   if(cat==='post'){const out=[];for(const k in POSTS){if(!POSTS[k]||!JOBS[k])continue;POSTS[k].opts.forEach(o=>out.push([k+':'+o.k,`${JOBS[k].n} · ${o.n}`]));}return out;}
   if(cat==='rise')return RISE.map(r=>[r.k+r.to,`${JOBS[r.k].n} → ${CLS[r.to].n}`]).filter((x,i,a)=>a.findIndex(y=>y[0]===x[0])===i);
-  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['kidsamgan','자식 · 딸의 삼간택 낙선'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
+  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['kidsamgan','자식 · 딸의 삼간택 낙선'],['arranged','혼인 · 집안이 정한 혼처'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
   return [];
 }
 
@@ -1777,3 +1777,45 @@ function freeKidScene(k){
 }
 
 function sisQ(k){return P.kids.find(x=>x!==k&&x.alive&&['중전','대비'].includes(x.royalBride));}
+
+/* ===== 집안이 정한 혼처 (억지 혼인) =====
+   신분이 높을수록, 여자일수록 집안 뜻대로 혼인하는 일이 잦았다. 노비는 주인이 짝을 지어 주었다. */
+function arrangeChance(){
+  if(P.married||P.court||P.flags.sujeol||P.flags.soloVow||P.eunuch)return 0;
+  if(P.job&&['monk','concubine','queen','king','naesi','gisaeng','court'].includes(P.job.k))return 0;
+  if(P.sub==='gisaeng')return 0;
+  const a=P.age,F=P.female;
+  if(P.widowed||P.divorced){if(a>40)return 0;return {royal:.15,yangban:F?0:.12,jungin:.08,sangmin:.06,cheonmin:.12}[P.cls]||0;}
+  if(a<18||a>(F?26:32))return 0;
+  if(P.year-(P.flags.arrY||0)<2)return 0;
+  const base={royal:F?.55:.5,yangban:F?.42:.32,jungin:F?.3:.22,sangmin:F?.16:.12,cheonmin:F?.3:.25}[P.cls]||.15;
+  const era=P.year>=1894?.5:1;
+  return base*era*(a>=(F?21:25)?1.3:1);
+}
+function arrangedScene(){
+  P.flags.arrY=P.year;bookSeen('scene','arranged');
+  const F=P.female,C=P.cls;
+  const ccls=C==='royal'?'yangban':C==='cheonmin'?'cheonmin':C;
+  const age=F?P.age+ri(0,12):clamp(P.age-ri(0,6),18,60);
+  const x=newPerson({kind:'cand',female:!F,cls:ccls,sub:ccls==='cheonmin'?'nobi':'',born:P.year-Math.max(18,age)});
+  x.wealth=ri(0,3);x.fam=famText(x);x.h=ri(5,25);x.t=ri(10,40);
+  const nm=callOf(x);
+  const who=C==='cheonmin'?'주인 댁':P.parents&&P.parents.f&&P.parents.f.alive!==false?'아버지':'집안 어른들';
+  const love=Object.values(P.people).filter(y=>y.kind==='love'&&y.alive&&y.h>=50&&canWed(y)).sort((a,b)=>b.h-a.h)[0];
+  const txt=C==='cheonmin'?`주인 댁에서 같은 집 ${F?'사내종':'계집종'} ${eulreul(nm)} 짝지어 주겠다고 한다. 노비의 혼인은 주인이 정하는 것이었다.`
+    :`${iga(who)} 혼처를 정해 버렸다. ${nm}, ${ageOf(x)}세 · ${x.fam}. 사주단자까지 오갔다고 한다. 그대의 뜻은 묻지 않았다.`;
+  /* 거역이 통할 확률: 신분이 높고 여자일수록 낮다 */
+  const pr=clamp(({royal:.08,yangban:F?.12:.25,jungin:F?.2:.3,sangmin:F?.3:.4,cheonmin:.12}[C]||.25)+P.st.brave/400+(P.parents&&P.parents.f&&P.parents.f.alive===false?.1:0),.05,.7);
+  const forced=(why)=>{x.mode='wife';say(why,'big');fx({worry:10});ev('note',C==='cheonmin'?'주인이 정해 준 짝과 혼인하였다':'집안이 정한 혼처로 혼인하였다');wed(x);};
+  const opts=[
+    {t:C==='cheonmin'?'주인의 뜻을 따른다':'집안의 뜻을 따른다',p:null,tags:['혼인','마음은 아직 없음'],fn:()=>{x.mode='wife';fx({fame:2});say(C==='cheonmin'?`주인이 정해 준 대로 ${gwawa(nm)} 짝을 이루었다.`:`얼굴도 모르던 ${gwawa(nm)} 혼례를 올렸다. 정은 살면서 드는 것이라 하였다.`,'big');ev('note','집안이 정한 혼처로 혼인하였다');wed(x);}},
+    {t:'혼인을 거역한다',sub:'무예(담력)가 중요하다',p:pr,tags:['통하면 혼사가 깨짐','안 통하면 끌려가듯 혼인','평판 ↓'],fn:()=>{
+      if(chance(pr)){fx({fame:-4,worry:6});say(C==='cheonmin'?'주인에게 매달려 겨우 짝짓기를 미루었다.':'단식까지 하며 버틴 끝에 혼사가 깨졌다. 불효라는 말을 들었다.','big');return null;}
+      forced(C==='cheonmin'?'주인의 명을 거스를 수는 없었다. 결국 정해 준 짝과 살게 되었다.':'끝내 뜻을 꺾지 못하고 끌려가듯 혼례를 올렸다.');}}];
+  if(love&&C!=='cheonmin'){const pl=clamp(pr+(love.cls===P.cls?.15:-.05)+love.h/400,.05,.75);
+    opts.splice(1,0,{t:`마음에 둔 ${iga(callOf(love))} 있다고 털어놓는다`,p:pl,tags:['통하면 그 사람과 혼담','안 통하면 정해진 혼인'],fn:()=>{
+      if(chance(pl)){say(`${who==='아버지'?'아버지':'집안 어른들'}께서 한참 말이 없으시더니, ${callOf(love)} 집안에 사람을 보내 보라 하셨다.`,'big');return marryScene(love);}
+      love.h=Math.max(0,love.h-10);forced(`${callOf(love)}의 이야기는 들은 척도 하지 않았다. 정해진 혼처로 혼례를 올렸다.`);}});}
+  if(C==='cheonmin'&&P.wealth>20)opts.push({t:'몸값을 모아 주인과 흥정한다',p:.35,tags:['재산 ↓'],fn:()=>{P.wealth*=.8;if(chance(.35)){say('엽전을 바치고 짝짓기를 면하였다.');return null;}forced('주인은 돈만 받고 뜻을 바꾸지 않았다.');}});
+  return {kind:'major',title:C==='cheonmin'?'혼인 · 주인이 정한 짝':'혼인 · 집안이 정한 혼처',pid:x.id,text:txt,opts};
+}
