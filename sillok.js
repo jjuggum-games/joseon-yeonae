@@ -16,15 +16,16 @@ function buildSillok(){
   const marryEv=P.ev.filter(e=>e.type==='marry');
   const L=[];
   for(const x of loves.slice(0,6)){
-    const nm=callOf(x);const lovedMarry=marryEv.find(e=>e.t===x.id&&(e.love||e.elope||e.bushil));
-    if(x.kind==='spouse'&&!lovedMarry&&x.maxH<50)continue;
-    let s=`${kAge(x.metA)} 살에 ${x.place?x.place+'에서 ':''}${eulreul(nm)} 만났다. `;
+    const nm=callOf(x);const lovedMarry=marryEv.find(e=>e.t===x.id&&!e.forced&&!e.arranged&&(e.love||e.elope||e.bushil));
+    if(x.kind==='spouse'&&!lovedMarry&&x.maxH<50&&!marryEv.some(e=>e.t===x.id&&e.forced))continue;
+    let s=x.place==='어릴 적 벗'?`어릴 적 벗인 ${gwawa(nm)} ${kAge(x.metA)} 살에 다시 가까워졌다. `:`${kAge(x.metA)} 살에 ${x.place?x.place+'에서 ':''}${eulreul(nm)} 만났다. `;
     const late=lovedMarry&&lovedMarry.a-x.metA>=3;
     const between=lovedMarry&&marryEv.some(e=>e!==lovedMarry&&e.a>=x.metA&&e.a<lovedMarry.a);
     const when=lovedMarry?(lovedMarry.a===x.metA?'그해에 ':between?`그때는 맺어지지 못하였다가, 세월이 흘러 ${kAge(lovedMarry.a)} 살에 `:late?`${kAge(lovedMarry.a)} 살에 `:''):'';
     if(lovedMarry&&lovedMarry.elope)s+=between?`${when}함께 고향을 떠났다.`:`서로 연모하여, ${when}끝내 함께 고향을 떠났다.`;
     else if(lovedMarry&&lovedMarry.bushil)s+=`${when}그의 부실이 되어 기방을 떠났다.`;
     else if(lovedMarry)s+=between?`서로 마음이 있었으나 ${when}마침내 백년가약을 맺었다.`:`서로 연모하다 ${when}마침내 백년가약을 맺었다.`;
+    else if(marryEv.some(e=>e.t===x.id&&(e.forced||e.arranged)))s+=marryEv.some(e=>e.t===x.id&&e.forced)?(x.maxH>=60?'원치 않은 혼인이었으나, 함께 살며 차츰 정이 들었다.':x.maxH>=40?'원치 않은 혼인이었고, 끝내 마음을 다 열지는 못하였다.':'억지로 맺어진 사이라 마음을 붙이지 못하였다.'):(x.maxH>=60?'집안이 정해 준 혼인이었으나, 살면서 정이 깊어졌다.':'집안이 정해 준 혼인이었다.');
     else if(x.kind==='spouse')s+='처음에는 낯설었으나 정이 깊어졌다.';
     else if(x.status==='lover')s+='세상 몰래 정을 나누었다.';
     else if(x.status==='mutual'||(x.status==='parted'&&x.h>=55&&x.t>=55))s+='서로 마음을 주고받았으나 끝내 맺어지지 못하였다.';
@@ -43,8 +44,8 @@ function buildSillok(){
     if(e.bushil)t=`${kAge(e.a)} 살에 ${nm}의 부실이 되었다.`;
     else if(x.real&&!x.kingRole)t=`${kAge(e.a)} 살에 세자빈으로 간택되어 ${x.real}의 배필이 되었다.`;
     else if(x.kingRole)t=royalWedLine(e,x);
-    else if(e.mode==='cheop')t=P.female?`${kAge(e.a)} 살에 ${x.fam?x.fam+'의 ':''}${nm}의 부실이 되었다.`:`${kAge(e.a)} 살에 ${eulreul(nm)} 첩으로 들였다.`;
-    else t=`${kAge(e.a)} 살에 ${x.fam&&!e.elope?x.fam+'의 ':''}${P.female?nm+'에게 출가하였다':eulreul(nm)+' 아내로 맞았다'}.`;
+    else if(e.mode==='cheop')t=P.female?`${kAge(e.a)} 살에 ${e.forced?'뜻하지 않게 ':''}${x.fam?x.fam+'의 ':''}${nm}의 부실이 되었다.`:`${kAge(e.a)} 살에 ${eulreul(nm)} 첩으로 들였다.`;
+    else t=`${kAge(e.a)} 살에 ${e.forced?'억지로 ':e.arranged?'집안이 정한 대로 ':''}${x.fam&&!e.elope?x.fam+'의 ':''}${P.female?nm+'에게 출가하였다':eulreul(nm)+' 아내로 맞았다'}.`;
     if(!x.kingRole||t){const h=x.maxH;t+=' '+(h>=70?'부부의 정이 깊었다.':h>=40?'부부 사이가 무난하였다.':'부부 사이가 소원하였다.');}
     if(t)at(e.a,t.trim());
   }

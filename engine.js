@@ -80,6 +80,7 @@ function fullOf(p){
 /* ===== 능력치 합치기: 기품은 매력(용모)에 합친다 ===== */
 function normalizeSt(p){
   try{if(p&&p.kids&&p.people){const roy=x=>x&&(x.cls==='royal'||x.seja||x.kingRole);const used=new Set([...p.kids.map(k=>k.name),...Object.values(p.people).map(x=>x.name)]);for(const k of p.kids){const o=p.people[p.female?k.father:k.mother];if(!k.female&&k.name&&k.name.length!==1&&(k.cls==='royal'||roy(o)&&(p.cls==='royal'||roy(o)))&&!k.renamedRoyal){let n;for(let i=0;i<20;i++){n=R(ROYAL_HWI);if(!used.has(n))break;}used.add(n);k.oldName=k.name;k.name=n;k.renamedRoyal=1;}}}}catch(_){}
+  try{if(p&&p.ev&&p.female)p.ev.forEach(v=>{if(v.type==='marry'&&v.mode==='cheop'&&!v.forced){const x=p.people[v.t];if(x&&x.rich===3&&/(대감|사또|관찰사)$/.test(x.title||'')){v.forced=true;v.love=false;x.forced=1;}}});}catch(_){}
   try{if(p&&p.flags&&p.flags.noMatch)p.flags.noMatch=0;if(p&&p.kids)p.kids.forEach(k=>{if(k.noMatch)k.noMatch=0;});}catch(_){}
   try{if(p&&p.people)for(const x of Object.values(p.people)){if(x.seja&&(x.title==='세자'||x.title==='세자 저하')){x.sur='이';x.bon='전주';x.name=R(ROYAL_HWI);x.title=`세자 이${x.name}`;x.pos='세자';x.live='한양 궁궐 동궁';}if(x.seja&&x.fam==='종친 집안')x.fam='왕실 · 동궁';if(x.kingRole&&x.fam==='종친 집안')x.fam='왕실';}}catch(_){}
   try{if(p&&p.kids&&p.kids.some(k=>k.royalBride)){const _P=P;P=p;updateHonor();P=_P;}}catch(_){}
