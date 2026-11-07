@@ -233,7 +233,28 @@ function yFestival(){
 }
 
 /* ---- 가족 ---- */
+/* ===== 해마다 신분·직함·생업이 서로 맞는지 맞춰 둔다 ===== */
+const CHEON_SUB=['nobi','gisaeng','baekjeong','gwangdae','mudang','gong'];
+const STATE_JOB=['official','military','naesi','court','ajeon','yulgwan','gwansang','sanwon','sajagwan','newarmy'];
+function syncStatus(){
+  const y=P.year,J=P.job;
+  if(P.cls!=='cheonmin'&&CHEON_SUB.includes(P.sub))P.sub='';
+  if(J&&J.k==='slave'&&P.cls!=='cheonmin'){P.job=null;say('노비 문서에서 이름이 지워졌으니, 더는 남의 집 일을 하지 않아도 되었다.');}
+  if(J&&J.k==='gisaeng'&&P.cls!=='cheonmin'&&y<1894){P.job=null;say('기적에서 이름이 지워져 기방을 떠났다.');}
+  if(J&&J.k==='queen'&&P.cls!=='royal')P.cls='royal';
+  if(y>=1910&&!P.alt&&P.job&&STATE_JOB.includes(P.job.k)){say(`나라가 사라지니 ${jobTitle(P.job)}의 자리도 사라졌다.`);P.job=null;P.post=null;}
+  if(y>=1910&&!P.alt&&P.job&&['queen','concubine'].includes(P.job.k))P.flags.iwang=1;
+  if(P.job&&['housewife','royalwife','sosil'].includes(P.job.k)&&!P.married&&!P.widowed&&!P.flags.sujeol){P.job=null;}
+  if(P.job&&P.job.k==='lady'&&P.job.lv>0&&!P.married&&!P.widowed&&!P.flags.sujeol)P.job=null;
+  P.kids.forEach(k=>{if(!k.alive||!k.job)return;
+    if((k.cls||P.cls)!=='cheonmin'&&(k.job.k==='slave'||(k.job.k==='gisaeng'&&y<1894))){k.job=null;kidJob(k);}
+    if(y>=1910&&!P.alt&&['official','scholar','court','naesi','military'].includes(k.job.k)){k.job=k.job.k==='official'&&chance(.4)?{k:'clerk',lv:Math.min(2,k.job.lv>8?2:1)}:{k:k.female?'housewife':'cheosa',lv:0};}
+    if(y>=1894&&!P.alt&&k.job.k==='scholar')k.job={k:'cheosa',lv:0};
+  });
+  if(typeof updateHonor==='function'&&P.kids.some(k=>k.royalBride))updateHonor();
+}
 function yFamily(){
+  syncStatus();
   if(P.lastCls&&P.lastCls!==P.cls)onClassChange(P.lastCls,P.cls);P.lastCls=P.cls;
   if(P.flags.moveSidaek&&P.year>=P.flags.moveSidaek&&P.married){P.flags.moveSidaek=0;const sp=spouseP();P.home=`시댁 (${HOMES[sp&&sp.cls!=='royal'?sp.cls:'yangban']||'초가'})`;say('처가살이하던 남편을 따라 시댁으로 살림을 옮겼다.');}
   if(P.flags.moveBack&&P.year>=P.flags.moveBack&&P.married){P.flags.moveBack=0;P.home=HOMES[P.cls]||'초가';say('처가살이를 마치고 아내와 아이들을 데리고 본가로 돌아왔다.');}
@@ -1032,8 +1053,8 @@ function yMajor(){
   if(y<1894){const fk=P.kids.find(k=>k.alive&&k.cls==='cheonmin'&&!k.estranged&&P.year-k.born>=5&&(!k.freeAsked||(k.freeAgain&&P.year>=k.freeAgain)));
     if(fk){const a=P.year-fk.born;const due=a>=15||(P.cls!=='cheonmin')||(fk.freeAgain&&P.year>=fk.freeAgain);if(due||chance(.25))add(due?86:40,()=>freeKidScene(fk));}}
   if(y===1777&&P.kids.some(k=>k.alive&&k.seo))say('나라에서 서얼허통절목을 내려 서얼에게도 벼슬길을 열어 주었다. 서얼 자식들의 앞날에 빛이 비쳤다.','big');
-  {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=18&&P.year-k.born<=22&&!k.seo&&(k.cls||P.cls)==='yangban'&&!k.away&&!k.estranged);if(d&&isJoseon(y))add(P.year-d.born>=20?97:80,()=>kidRoyalScene(d));}
-  {const qd=P.kids.find(k=>k.alive&&k.royalBride==='중전');if(qd&&realKing(y).s===y&&!P.alt&&qd.queenY!==y){qd.royalBride='대비';updateHonor();say(`임금이 승하하고 새 임금이 서니, 중전이던 딸 ${iga(qd.name)} 대비가 되었다.`,'big');ev('kidfeat',`딸 ${qd.name}`,{feat:'대비가 되었다'});}}
+  {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=18&&P.year-k.born<=22&&!k.seo&&(k.cls||P.cls)==='yangban'&&!k.away&&!k.estranged);if(d&&isJoseon(y)&&!P.kids.some(k=>k.alive&&k.royalBride==='세자빈'))add(P.year-d.born>=20?97:80,()=>kidRoyalScene(d));}
+  {const qd=P.kids.find(k=>k.alive&&k.royalBride==='중전');if(qd&&realKing(y).s===y&&!P.alt&&qd.queenY!==y){qd.royalBride='대비';qd.feat='왕비를 거쳐 대비가 되었다';updateHonor();say(`지아비인 임금이 승하하고 ${realKing(y).n}${bat(realKing(y).n)?'이':'가'} 보위를 이으니, 중전이던 딸 ${iga(qd.name)} 대비가 되었다.`,'big');ev('kidfeat',`딸 ${qd.name}`,{feat:'대비가 되었다'});}}
   {const q=P.kids.find(k=>k.alive&&k.royalBride==='세자빈');if(q&&realKing(y).s===y&&y-(q.wedY||P.year-1)>=0){q.royalBride='중전';q.queenY=y;q.feat='중전이 되었다';updateHonor();say(`세자가 보위에 오르니, 딸 ${iga(q.name)} 중전이 되었다!`,'big');ev('kidfeat',`딸 ${q.name}`,{feat:q.feat});queenParentBoost(true);}}
   {const top=Math.max(P.st.look,P.st.know,P.st.art);if(P.age>=18&&P.age<=35&&top>=70&&!P.married&&!P.flags.sujeol&&!(P.widowed&&!P.flags.widowAsked)&&!P.court&&!(P.job&&['concubine','queen','king','buma'].includes(P.job.k))&&P.cls!=='royal'&&P.year-(P.flags.gazeY||0)>=6&&chance(.12+(top-70)/300))add(68,()=>gazeScene());}
   {const sp=spouseP();if(P.married&&sp&&sp.alive&&!sp.kingRole&&!sp.seja&&P.year-(P.flags.dthemY||0)>=6&&P.year-(P.flags.wedY||P.year)>=2){const bad=(sp.h<30?1:0)+(P.female&&!P.kids.some(k=>k.alive&&!k.female)&&P.year-(P.flags.wedY||P.year)>=7?1:0);if(bad&&chance(.08*bad))add(64,()=>divorceThemScene());}}

@@ -966,6 +966,7 @@ function supportScene(kind,x){
 
 /* ===== 내 신분이 바뀔 때 자식들의 신분 ===== */
 function onClassChange(from,to){
+  if(typeof syncStatus==='function')try{syncStatus();}catch(e){}
   const reason=P.flags.clsReason||(from==='cheonmin'?'freed':'other');P.flags.clsReason=null;
   const up=CRANK.indexOf(to)>CRANK.indexOf(from);
   const home=P.kids.filter(k=>k.alive&&!k.away&&!(k.female&&k.married)&&!k.estranged);
@@ -1704,9 +1705,11 @@ IDEA.push(
 
 /* 왕실에 든 딸들에 따라 부모의 작호를 정한다 (여럿이면 높은 쪽 + 함께 표기) */
 function updateHonor(){
-  const ks=P.kids.filter(k=>k.royalBride&&k.royalBride!=='폐빈');
-  if(!ks.length){if(P.honor&&!P.flags.queenParent)P.honor='';return;}
-  const q=ks.some(k=>['중전','대비'].includes(k.royalBride)||k.queenY);const sj=ks.some(k=>k.royalBride==='세자빈');
+  const all=P.kids.filter(k=>k.royalBride&&k.royalBride!=='폐빈');const ks=all.filter(k=>k.alive);
+  if(!all.length){P.honor=P.kids.some(k=>k.queenY)?`${P.bon||''}${P.female?'부부인':'부원군'}`:'';return;}
+  const q=all.some(k=>['중전','대비'].includes(k.royalBride)||k.queenY);
+  if(!ks.length){P.honor=q?`${P.bon||''}${P.female?'부부인':'부원군'}`:'';return;}
+  const sj=ks.some(k=>k.royalBride==='세자빈');
   const parts=[];
   if(q){const t=`${P.bon||''}${P.female?'부부인':'부원군'}`;parts.push(t);if(!P.titles.includes(P.female?'부부인':'부원군'))P.titles.push(P.female?'부부인':'부원군');}
   const dae=ks.find(k=>k.royalBride==='대비');const jung=ks.find(k=>k.royalBride==='중전');
@@ -1731,7 +1734,7 @@ function freeKidScene(k){
   const W=k.female?'딸':'아들';const nm=k.name;const own=kidOwner(k);const U=UNIT[P.cls]||.5;
   const mo=k.mother&&P.people[k.mother];
   const to=P.cls==='cheonmin'?'sangmin':(P.cls==='yangban'||P.cls==='royal')?'sangmin':P.cls;
-  const free=(why,big=true)=>{k.cls=to;k.freedY=P.year;fx({worry:-10});say(why,big?'big':'');ev('freed',`${W} ${iga(nm)} 노비 문서에서 풀려났다`);if(k.seo&&!P.female&&P.cls==='yangban')say(`${iga(nm)} 이제 양인이 되었으나, 서얼이라는 굴레는 그대로였다.`);};
+  const free=(why,big=true)=>{k.cls=to;k.freedY=P.year;if(k.job&&['slave','gisaeng'].includes(k.job.k)){k.job=null;kidJob(k);}fx({worry:-10});say(why,big?'big':'');ev('freed',`${W} ${iga(nm)} 노비 문서에서 풀려났다`);if(k.seo&&!P.female&&P.cls==='yangban')say(`${iga(nm)} 이제 양인이 되었으나, 서얼이라는 굴레는 그대로였다.`);};
   const retry=()=>{k.freeAsked=P.year;k.freeAgain=P.year+ri(4,7);};
   if(own==='mine'){
     const c=Math.round(U*6);
