@@ -411,7 +411,7 @@ function sideFam(){
       const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?(k.female?' (양녀)':' (양자)'):'')+(k.seo?' (서출)':'')+(k.cls&&k.cls!==P.cls?' · '+CLS[k.cls].n:'')+(k.estranged?' · 의절':'')+(k.away?' · 따로 자람':'')+(k.alive&&P.livesWith===k.id?' · 노년을 함께 삶':k.alive&&k.home==='with'?' · 한집에 삶':k.alive&&k.home==='apart'?' · 분가':''),[k.alive?a+'세':'',otherParent(k),k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
       if(!k.alive)return base;
       const stl=`<div class="kst">${KID_ST.map(([s,n])=>`<span>${n} <b>${st[s]}</b></span>`).join('')}</div>`;
-      const sel=a>=6&&a<18?`<div class="kedu"><span>배움</span><select data-kedu="${k.id}">${Object.entries(EDU).map(([key,[n]])=>`<option value="${key}" ${(k.edu||'play')===key?'selected':''}>${n}</option>`).join('')}</select></div>`:a<6?'<div class="kedu muted">여섯 살이 되면 배울 것을 정할 수 있습니다.</div>':'';
+      const sel=a>=6&&a<18?`<div class="kedu"><span>배움</span><select data-kedu="${k.id}">${eduList().map(([key,[n]])=>`<option value="${key}" ${(k.edu||'play')===key?'selected':''}>${n}</option>`).join('')}</select></div>`:a<6?'<div class="kedu muted">여섯 살이 되면 배울 것을 정할 수 있습니다.</div>':'';
       return base.replace(/<\/div>$/,stl+sel+'</div>');}).join('');
     const alive=P.kids.filter(k=>k.alive).length;
     h+=grp('자식',kd,`${P.kids.length}명${alive<P.kids.length?` · 살아 있는 이 ${alive}명`:''}`);
@@ -742,7 +742,7 @@ document.addEventListener('keydown',e=>{
   G.paused=!G.paused;G.autoHold=false;renderTop();
 });
 
-document.addEventListener('change',e=>{const s=e.target.closest&&e.target.closest('select[data-kedu]');if(!s||!P)return;const k=P.kids.find(x=>x.id===s.dataset.kedu);if(!k)return;k.edu=s.value;Store.saveCur();say(`${k.female?'딸':'아들'} ${k.name}의 배움을 ‘${EDU[k.edu][0]}’ 쪽으로 정하였다.`);V.dirty.feed=1;toast(`${k.name}: ${EDU[k.edu][0]}`);});
+document.addEventListener('change',e=>{const s=e.target.closest&&e.target.closest('select[data-kedu]');if(!s||!P)return;const k=P.kids.find(x=>x.id===s.dataset.kedu);if(!k)return;k.edu=s.value;Store.saveCur();say(`${k.female?'딸':'아들'} ${k.name}의 배움을 ‘${eduName(k.edu)}’ 쪽으로 정하였다.`);V.dirty.feed=1;toast(`${k.name}: ${eduName(k.edu)}`);});
 
 function lifeLog(h){
   const L=h.log;if(!L||!L.length)return '';
