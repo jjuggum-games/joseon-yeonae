@@ -77,7 +77,7 @@ function fullOf(p){
 
 /* ===== 능력치 합치기: 기품은 매력(용모)에 합친다 ===== */
 function normalizeSt(p){
-  try{if(p&&p.kids){const qb=p.kids.find(k=>k.alive&&k.royalBride);if(qb&&!p.honor)p.honor=qb.royalBride==='중전'?`${p.bon||''}${p.female?'부부인':'부원군'}`:(p.female?'세자빈의 어머니':'세자빈의 아버지 (국구 집안)');}}catch(_){}
+  try{if(p&&p.kids&&p.kids.some(k=>k.royalBride)){const _P=P;P=p;updateHonor();P=_P;}}catch(_){}
   const s=p.st;if(!s)return p;
   const d=Object.getOwnPropertyDescriptor(s,'grace');
   if(d&&!d.get){const g=s.grace;delete s.grace;if(!p.stMerged){s.look=Math.round(clamp((s.look+g)/2+6));}}

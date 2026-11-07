@@ -1031,8 +1031,8 @@ function yMajor(){
   if(P.kids.some(k=>k.alive)&&P.year-(P.flags.kidStoryY||0)>=3&&chance(.4))add(27,()=>kidStoryScene());
   if(y===1777&&P.kids.some(k=>k.alive&&k.seo))say('나라에서 서얼허통절목을 내려 서얼에게도 벼슬길을 열어 주었다. 서얼 자식들의 앞날에 빛이 비쳤다.','big');
   {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=18&&P.year-k.born<=22&&!k.seo&&(k.cls||P.cls)==='yangban'&&!k.away&&!k.estranged);if(d&&isJoseon(y))add(P.year-d.born>=20?97:80,()=>kidRoyalScene(d));}
-  {const qd=P.kids.find(k=>k.alive&&k.royalBride==='중전');if(qd&&realKing(y).s===y&&!P.alt&&qd.queenY!==y){qd.royalBride='대비';say(`임금이 승하하고 새 임금이 서니, 중전이던 딸 ${iga(qd.name)} 대비가 되었다.`,'big');ev('kidfeat',`딸 ${qd.name}`,{feat:'대비가 되었다'});}}
-  {const q=P.kids.find(k=>k.alive&&k.royalBride==='세자빈');if(q&&realKing(y).s===y&&y-(q.wedY||P.year-1)>=0){q.royalBride='중전';q.queenY=y;q.feat='중전이 되었다';say(`세자가 보위에 오르니, 딸 ${iga(q.name)} 중전이 되었다!`,'big');ev('kidfeat',`딸 ${q.name}`,{feat:q.feat});queenParentBoost(true);}}
+  {const qd=P.kids.find(k=>k.alive&&k.royalBride==='중전');if(qd&&realKing(y).s===y&&!P.alt&&qd.queenY!==y){qd.royalBride='대비';updateHonor();say(`임금이 승하하고 새 임금이 서니, 중전이던 딸 ${iga(qd.name)} 대비가 되었다.`,'big');ev('kidfeat',`딸 ${qd.name}`,{feat:'대비가 되었다'});}}
+  {const q=P.kids.find(k=>k.alive&&k.royalBride==='세자빈');if(q&&realKing(y).s===y&&y-(q.wedY||P.year-1)>=0){q.royalBride='중전';q.queenY=y;q.feat='중전이 되었다';updateHonor();say(`세자가 보위에 오르니, 딸 ${iga(q.name)} 중전이 되었다!`,'big');ev('kidfeat',`딸 ${q.name}`,{feat:q.feat});queenParentBoost(true);}}
   {const top=Math.max(P.st.look,P.st.know,P.st.art);if(P.age>=18&&P.age<=35&&top>=70&&!P.married&&!P.flags.sujeol&&!(P.widowed&&!P.flags.widowAsked)&&!P.court&&!(P.job&&['concubine','queen','king','buma'].includes(P.job.k))&&P.cls!=='royal'&&P.year-(P.flags.gazeY||0)>=6&&chance(.12+(top-70)/300))add(68,()=>gazeScene());}
   {const sp=spouseP();if(P.married&&sp&&sp.alive&&!sp.kingRole&&!sp.seja&&P.year-(P.flags.dthemY||0)>=6&&P.year-(P.flags.wedY||P.year)>=2){const bad=(sp.h<30?1:0)+(P.female&&!P.kids.some(k=>k.alive&&!k.female)&&P.year-(P.flags.wedY||P.year)>=7?1:0);if(bad&&chance(.08*bad))add(64,()=>divorceThemScene());}}
   {const ex=Object.values(P.people).filter(x=>x.kind==='ex'&&x.alive).pop();const mine=P.kids.some(k=>k.alive&&!k.away&&y-k.born<18);const away=P.kids.some(k=>k.alive&&k.away&&y-k.born<18);
@@ -1243,7 +1243,7 @@ function royalDaughterYear(k,a){
     if(!k.wonson&&a>=19&&chance(.2)){k.wonson=1;k.grand=(k.grand||0)+1;P.grand=(P.grand||0)+1;say(rb==='세자빈'?`세자빈인 딸 ${iga(nm)} 원손을 낳았다! 온 나라가 경사로 들썩였다.`:`중전인 딸 ${iga(nm)} 원자를 낳았다! 외손이 장차 임금이 될 것이다.`,'big');fx({fame:8,worry:-6});ev('kidfeat',`딸 ${nm}`,{feat:rb==='세자빈'?'원손을 낳았다':'원자를 낳았다'});return;}
     if(chance(.08)){say(R([`궁에서 딸 ${nm}의 안부를 전하는 상궁이 다녀갔다.`,`명절을 맞아 딸 ${nm}에게 친정의 음식을 들여보냈다.`,`딸 ${iga(nm)} 궁 안에서 어질다는 칭송을 듣는다고 한다.`]));fx({worry:-2});return;}
     if(rb==='세자빈'&&!k.wonson&&a>=28&&chance(.06)){say(`딸 ${iga(nm)} 아직 원손을 낳지 못해 궁 안에서 말이 많다고 한다.`);fx({worry:6});return;}
-    if(chance(.005)){k.royalBride='폐빈';say(`궁중의 모함에 휘말려 딸 ${iga(nm)} 폐서인이 되어 사가로 쫓겨났다.`,'big');fx({fame:-15,worry:20});P.honor='';ev('note',`딸 ${nm}이 폐서인이 되는 일을 겪었다`);k.home='with';return;}
+    if(chance(.005)){k.royalBride='폐빈';say(`궁중의 모함에 휘말려 딸 ${iga(nm)} 폐서인이 되어 사가로 쫓겨났다.`,'big');fx({fame:-15,worry:20});updateHonor();ev('note',`딸 ${nm}이 폐서인이 되는 일을 겪었다`);k.home='with';return;}
   }
   if(rb==='대비'&&chance(.05))say(`대비가 된 딸 ${iga(nm)} 궁 안의 큰 어른으로 존경받는다.`);
 }

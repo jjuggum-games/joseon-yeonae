@@ -763,9 +763,9 @@ function queenParentBoost(queen){
   raiseParent('yangban','딸이 왕실에 들어 왕실의 외척이 되었다');
   const t=queen?(P.female?'부부인':'부원군'):(P.female?'세자빈의 어머니':'세자빈의 아버지');
   if(!P.titles.includes(t))P.titles.push(t);
-  P.honor=queen?`${(P.bon||'').replace(/^(.).*$/,'$&')}${P.female?'부부인':'부원군'}`:(P.female?'세자빈의 어머니':'세자빈의 아버지 (국구 집안)');if(!queen&&!P.female&&P.job&&P.job.k==='official'&&P.job.lv<14){setJob('official',Math.min(16,P.job.lv+2));}ev('job',queen?`${P.honor}의 작호를 받았다`:`세자빈의 ${P.female?'어머니':'아버지'}가 되었다`);
+  const wasQ=P.flags.queenParent>=2;updateHonor();if(!queen&&wasQ)say('한 집안에서 왕비와 세자빈이 함께 나니, 세상 사람들이 그 가문을 우러러보았다.','big');if(!queen&&!P.female&&P.job&&P.job.k==='official'&&P.job.lv<14){setJob('official',Math.min(16,P.job.lv+2));}ev('job',queen?`${P.honor}의 작호를 받았다`:`세자빈의 ${P.female?'어머니':'아버지'}가 되었다`);
   fx({fame:queen?25:15,wealth:queen?Math.max(400,P.wealth*.5):Math.max(150,P.wealth*.3)});
-  P.flags.kidSupport=(P.flags.kidSupport||0)+(queen?30:12);P.flags.queenParent=queen?2:Math.max(P.flags.queenParent||0,1);
+  P.flags.kidSupport=(P.flags.kidSupport||0)+(queen?30:12);P.flags.queenParent=queen?2:Math.max(P.flags.queenParent||0,1);updateHonor();
   if(queen||!/기와집|궁/.test(P.home||'')){P.home=queen?'솟을대문 달린 큰 기와집':'사랑채 딸린 기와집';}
   say(queen?`딸이 중전이 되니, 그대는 ${t}의 작호를 받았다. 솟을대문 달린 큰 집과 녹봉이 내려졌다.`:`세자빈의 친정이 되어 나라에서 집과 녹봉을 내렸다.`,'big');
   ev('rise',queen?`딸이 중전이 되어 ${t}의 작호를 받았다`:'딸이 세자빈이 되어 왕실의 외척이 되었다');
@@ -1701,3 +1701,17 @@ IDEA.push(
     ['산속으로 숨긴다','',{p:.6,ok:[{worry:8},'아들을 깊은 산속 친척 집에 숨겼다.'],no:[{health:-8,worry:15},'숨긴 것이 들통나 아들은 끌려가고 그대는 매를 맞았다.']}],
     ['눈물로 떠나보낸다','마음고생 크게 ↑',{worry:20},'정거장에서 아들의 손을 놓지 못했다.']])
 );
+
+/* 왕실에 든 딸들에 따라 부모의 작호를 정한다 (여럿이면 높은 쪽 + 함께 표기) */
+function updateHonor(){
+  const ks=P.kids.filter(k=>k.royalBride&&k.royalBride!=='폐빈');
+  if(!ks.length){if(P.honor&&!P.flags.queenParent)P.honor='';return;}
+  const q=ks.some(k=>['중전','대비'].includes(k.royalBride)||k.queenY);const sj=ks.some(k=>k.royalBride==='세자빈');
+  const parts=[];
+  if(q){const t=`${P.bon||''}${P.female?'부부인':'부원군'}`;parts.push(t);if(!P.titles.includes(P.female?'부부인':'부원군'))P.titles.push(P.female?'부부인':'부원군');}
+  const dae=ks.find(k=>k.royalBride==='대비');const jung=ks.find(k=>k.royalBride==='중전');
+  if(dae)parts.push(P.female?'대비의 어머니':'대비의 아버지');else if(jung)parts.push(P.female?'중전의 어머니':'중전의 아버지');
+  if(sj)parts.push(P.female?'세자빈의 어머니':'세자빈의 아버지');
+  if(!q&&sj&&!P.female)parts[parts.length-1]+=' (국구 집안)';
+  P.honor=parts.join(' · ');
+}
