@@ -593,9 +593,8 @@ function widowScene(){
   P.flags.widowAsked=1;const yb=['yangban','royal'].includes(P.cls);const sp=Object.values(P.people).filter(x=>x.kind==='spouse'&&!x.alive).pop();const nm=sp?callOf(sp):'남편';
   note('yeollyeo');
   return {kind:'major',title:'남편을 여의고',pid:sp&&sp.id,text:`${eulreul(nm)} 떠나보낸 뒤, 소복을 입고 삼년상을 치렀다. ${yb?'양반가의 과부에게 세상은 평생 수절을 바란다. 절개를 지킨 여인은 나라에서 열녀로 기리기도 한다.':'이웃들은 아직 젊으니 새 사람을 만나라고도 하고, 절개를 지키라고도 한다.'} 앞으로 어떻게 살 것인가.`,opts:[
-    {t:'평생 수절한다',sub:'정절을 지키며 홀로 산다',p:null,tags:['평판 ↑','다시 혼인하지 않음','열녀문을 받을 수 있음'],fn:()=>{P.flags.sujeol=P.year;P.flags.noRemarry=1;fx({fame:yb?12:6,worry:5});ev('sujeol','');say('흰 소복을 벗지 않고 홀로 집안을 지키기로 하였다.','big');}},
-    {t:'자식을 키우며 살아간다',sub:'혼인은 마음 가는 대로',p:null,safe:true,tags:[],fn:()=>{fx({worry:-3});say('슬픔을 추스르고 남은 식구들을 보살피며 살아가기로 하였다.');}},
-    ...(yb&&P.year>=1485&&!P.alt?[]:[{t:'새 인연을 찾는다',sub:yb?'세상의 눈총을 받는다':'',p:null,tags:yb?['평판 ↓']:[],fn:()=>{P.flags.widowOpen=1;if(yb)fx({fame:-8});say('언젠가 다시 정을 붙일 사람을 만나리라 마음먹었다.');}}])]};
+    {t:'평생 수절한다',sub:'다시는 혼인하지 않고 정절을 지킨다',p:null,tags:['평판 ↑','다시 혼인하지 않음','열녀문을 받을 수 있음'],fn:()=>{P.flags.sujeol=P.year;P.flags.noRemarry=1;fx({fame:yb?12:6,worry:5});ev('sujeol','');say(`흰 소복을 벗지 않고 수절하기로 하였다.${P.kids.some(k=>k.alive)?' 남은 자식들을 홀로 길러 내리라 마음먹었다.':''}`,'big');}},
+    {t:yb&&P.year>=1485&&!P.alt?'수절을 맹세하지는 않는다':'다시 인연이 오면 막지 않는다',sub:yb&&P.year>=1485&&!P.alt?'법도상 재가는 어렵지만, 굳이 맹세로 묶지 않는다':'언젠가 새 사람을 만날 수도 있다',p:null,safe:true,tags:yb&&!(P.year>=1485&&!P.alt)?['평판 조금 ↓']:[],fn:()=>{P.flags.widowOpen=1;if(yb&&!(P.year>=1485&&!P.alt))fx({fame:-4});fx({worry:-3});say(`슬픔을 추스르고 하루하루를 살아가기로 하였다.${P.kids.some(k=>k.alive)?' 남은 자식들이 큰 힘이 되었다.':''}`);}}]};
 }
 function jeongnyeoScene(){
   P.flags.jeongnyeo=1;const y=P.year-P.flags.sujeol;
