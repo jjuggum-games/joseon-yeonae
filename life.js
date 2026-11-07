@@ -435,6 +435,7 @@ function income(){
   if(J)v+=jobPay(J);
   const live={royal:120,yangban:18,jungin:9,sangmin:2.6,cheonmin:.3}[P.cls]||2;
   const kidsCost=P.kids.filter(k=>k.alive&&P.year-k.born<18).length*({royal:10,yangban:2,jungin:1,sangmin:.4,cheonmin:.05}[P.cls]||.4);
+  v+=(P.flags.kidSupport||0)*(P.kids.some(k=>k.alive)?1:.5);
   let net=v-live-kidsCost+ri(-2,3)*(P.cls==='cheonmin'?.1:1);
   if(P.focus==='wealth')net+=Math.max(1,v*.4);
   P.wealth=Math.max(0,P.wealth+net);
@@ -978,6 +979,8 @@ function yMajor(){
   if(P.age>=12&&P.year-(P.flags.fameY||0)>=3&&chance(.55))add(25,()=>fameScene());
   if(P.kids.some(k=>k.alive)&&P.year-(P.flags.kidStoryY||0)>=3&&chance(.4))add(27,()=>kidStoryScene());
   if(y===1777&&P.kids.some(k=>k.alive&&k.seo))say('나라에서 서얼허통절목을 내려 서얼에게도 벼슬길을 열어 주었다. 서얼 자식들의 앞날에 빛이 비쳤다.','big');
+  {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=13&&P.year-k.born<=17&&!k.seo&&k.cls!=='cheonmin');if(d&&P.cls==='yangban'&&chance(.25))add(80,()=>kidRoyalScene(d));}
+  {const q=P.kids.find(k=>k.alive&&k.royalBride==='세자빈');if(q&&realKing(y).s===y&&y-(q.wedY||P.year-1)>=0){q.royalBride='중전';q.feat='중전이 되었다';say(`세자가 보위에 오르니, 딸 ${iga(q.name)} 중전이 되었다!`,'big');ev('kidfeat',`딸 ${q.name}`,{feat:q.feat});queenParentBoost(true);}}
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){
@@ -1071,4 +1074,5 @@ function kidFeat(k){
   else if(top==='look'){t=k.female?'곱기로 소문나 좋은 혼처가 줄을 이었다':'풍채가 좋아 어디서나 눈길을 끌었다';}
   else if(top==='wit'){t='셈이 밝아 장사로 재산을 크게 불렸다';P.wealth+= ({royal:300,yangban:60,jungin:40,sangmin:12,cheonmin:2}[cls]||5);}
   if(!t)return;k.feat=t;say(`${w} ${iga(k.name)} ${t}.`,'big');fx({fame,worry:-4});ev('kidfeat',`${w} ${k.name}`,{feat:t});
+  kidSuccessBoost(k,t);
 }

@@ -307,16 +307,25 @@ function kidsScene(more){
 }
 function kidWedScene(k){
   k.wedAsked=true;
-  const fams=[0,1,2].map(i=>{const s=surname();return {sur:s[0],bon:s[1],kind:i===0?'rich':i===1?'noble':'heart'};});
-  const famName=f=>P.cls==='yangban'||P.cls==='royal'?`${f.bon} ${f.sur}씨 집안`:`${f.sur}씨네`;
-  const word=k.female?'시댁':'처가';
-  const opts=fams.map(f=>({t:`${gwawa(famName(f))} 사돈을 맺는다`,sub:f.kind==='rich'?'넉넉한 집안':f.kind==='noble'?'이름난 집안':`${iga(k.name)} 마음에 둔 집`,p:null,tags:f.kind==='rich'?['재산 ↑']:f.kind==='noble'?['평판 ↑','혼수 부담']:['아이의 행복'],fn:()=>{
-    k.married=true;k.inlaw=famName(f);k.wedY=P.year;
-    const cost={royal:200,yangban:80,jungin:30,sangmin:5,cheonmin:.5}[P.cls]||5;
-    fx({wealth:f.kind==='rich'?cost*.6:f.kind==='noble'?-cost*1.3:-cost*.7},true);
-    if(f.kind==='noble')fx({fame:6},true);
-    k.happy=f.kind==='heart';
-    say(`${k.female?'딸':'아들'} ${eulreul(k.name)} ${gwawa(famName(f))} 혼인시켰다. 그 집과 사돈이 되었다.`,'big');ev('kidwed',k.name,{inlaw:k.inlaw});}}));
+  const RANK=['cheonmin','sangmin','jungin','yangban','royal'];const my=RANK.indexOf(P.cls);
+  const upCls=RANK[Math.min(3,my+1)];const canUp=my<3;
+  const mk=(kind)=>{const s=surname();const cls=kind==='up'?upCls:kind==='heart'&&chance(.4)&&my>0?RANK[my-1]:P.cls;
+    return {sur:s[0],bon:s[1],kind,cls,rich:kind==='rich'?3:kind==='up'?ri(1,3):ri(0,2)};};
+  const fams=[mk('rich'),canUp?mk('up'):mk('noble'),mk('heart')];
+  const famName=f=>(['yangban','royal'].includes(f.cls)?`${f.bon} ${f.sur}씨 집안`:`${f.sur}씨네`);
+  const desc=f=>`${CLS[f.cls].n} · ${RICH[f.rich]}`;
+  const opts=fams.map(f=>{
+    const p=f.kind==='up'?clamp(.3+(k.st?Math.max(k.st.look,k.st.know):30)/250+P.st.fame/400+(P.wealth>UNIT[P.cls]*60?.1:0),.1,.85):null;
+    return {t:`${gwawa(famName(f))} 사돈을 맺는다`,sub:`${desc(f)} · ${f.kind==='rich'?'넉넉한 집안':f.kind==='up'?'우리보다 신분이 높은 집안':f.kind==='noble'?'이름난 집안':`${iga(k.name)} 마음에 둔 집`}`,p,
+      tags:f.kind==='rich'?['재산 ↑','재력 ↑']:f.kind==='up'?['성공하면 평판·재력 ↑','거절당할 수 있음']:f.kind==='noble'?['평판 ↑','혼수 부담']:['아이의 행복'],fn:()=>{
+      if(p!=null&&!chance(p)){say(`${famName(f)}에서 신분이 맞지 않는다며 혼담을 물렸다.`);fx({worry:5});k.wedAsked=false;return null;}
+      k.married=true;k.inlaw=famName(f);k.inlawCls=f.cls;k.inlawRich=f.rich;k.wedY=P.year;
+      const cost={royal:200,yangban:80,jungin:30,sangmin:5,cheonmin:.5}[P.cls]||5;
+      fx({wealth:f.kind==='rich'?cost*.6:f.kind==='noble'||f.kind==='up'?-cost*1.1:-cost*.7},true);
+      if(f.kind==='noble')fx({fame:6},true);
+      k.happy=f.kind==='heart';
+      say(`${k.female?'딸':'아들'} ${eulreul(k.name)} ${gwawa(famName(f))} 혼인시켰다. 그 집과 사돈이 되었다.`,'big');ev('kidwed',k.name,{inlaw:k.inlaw});
+      inlawBoost(k,f.cls,f.rich);}};});
   return {kind:'major',title:'자식의 혼사',text:`${k.female?'딸':'아들'} ${iga(k.name)} 혼기가 되었다. 어느 집과 사돈을 맺을 것인가.`,opts};
 }
 function adoptScene(rand){
@@ -710,4 +719,49 @@ function kidStoryScene(){
      {t:'조촐하게 식구끼리 보낸다',p:null,safe:true,tags:['마음고생 ↓'],fn:()=>{fx({worry:-10});say('식구들끼리 조촐하게 상을 차렸다. 그것으로 족하였다.');}}]};}]);}
   if(!L.length)return null;
   const sc=wpick(L.map((x,i)=>[i,x[0]]));const r=L[sc][1]();r.kind='major';r.title='자식 · '+r.title;return r;
+}
+
+/* ===== 자식 덕에 달라지는 부모의 형편 ===== */
+const CRANK=['cheonmin','sangmin','jungin','yangban','royal'];
+function inlawBoost(k,cls,rich){
+  const U=UNIT[P.cls]||.5;const d=CRANK.indexOf(cls)-CRANK.indexOf(P.cls);
+  P.inlawRich=Math.max(P.inlawRich||0,rich||0);
+  if(d>0){fx({fame:6*d});say(`신분 높은 집안과 사돈을 맺으니, 고을에서 그대 집안을 보는 눈이 달라졌다.`);P.inlawUp=Math.max(P.inlawUp||0,d);}
+  if(rich>=3){const g=U*ri(15,30);fx({wealth:g});say(`부유한 사돈댁에서 넉넉한 예물과 함께 살림을 보태 주었다.`);P.flags.kidSupport=(P.flags.kidSupport||0)+U*1.5;}
+  if(cls==='royal'){fx({fame:12,wealth:U*40});say('왕실과 사돈을 맺었다. 나라에서 사돈댁에 내리는 녹봉과 예물이 이어졌다.','big');P.flags.kidSupport=(P.flags.kidSupport||0)+U*4;raiseParent('sangmin','왕실의 사돈이 되어 천한 신분을 벗었다');}
+}
+function raiseParent(toCls,why){
+  if(CRANK.indexOf(P.cls)>=CRANK.indexOf(toCls))return;
+  const from=CLS[P.cls].n;P.cls=toCls;P.sub='';if(P.job&&['slave'].includes(P.job.k))P.job=null;
+  say(`${why}. ${from}에서 ${CLS[toCls].n}이 되었다.`,'big');ev('rise',why);note('myeoncheon');
+}
+/* 딸의 간택 */
+function kidRoyalScene(k){
+  k.ganTaek=1;note('ganjip');
+  const p=clamp(.2+(k.st?k.st.look:30)/250+P.st.fame/350,.1,.75);
+  return {kind:'major',title:'자식 · 딸의 간택',text:`나라에 금혼령이 내려지고 세자빈을 고른다는 명이 떨어졌다. 딸 ${k.name}의 처녀단자를 올리라는 기별이 왔다.`,opts:[
+    {t:'간택에 내보낸다',sub:'딸의 매력과 집안의 평판이 중요하다',p,tags:['성공하면 딸이 세자빈, 그대는 왕실의 외척','신분·재력 크게 ↑'],fn:()=>{
+      if(!chance(p)){say(`삼간택까지 갔으나 ${iga(k.name)} 끝내 뽑히지 못하였다.`);return null;}
+      k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.royalBride='세자빈';k.feat='세자빈으로 간택되었다';
+      say(`딸 ${iga(k.name)} 세자빈으로 간택되었다! 가문에 큰 경사가 났다.`,'big');ev('kidfeat',`딸 ${k.name}`,{feat:k.feat});
+      queenParentBoost(false);}},
+    {t:'병을 핑계로 피한다',p:.75,safe:true,tags:['평판 조금 ↓'],fn:()=>{if(chance(.75))say(`딸이 병중이라 둘러대어 간택을 피하였다.`);else{fx({fame:-6});say('핑계가 들통나 꾸중을 들었다.');}}}]};
+}
+function queenParentBoost(queen){
+  const U=UNIT[P.cls]||.5;
+  raiseParent('yangban','딸이 왕실에 들어 왕실의 외척이 되었다');
+  const t=queen?(P.female?'부부인':'부원군'):(P.female?'세자빈의 어머니':'세자빈의 아버지');
+  if(!P.titles.includes(t))P.titles.push(t);
+  fx({fame:queen?25:15,wealth:queen?Math.max(400,P.wealth*.5):Math.max(150,P.wealth*.3)});
+  P.flags.kidSupport=(P.flags.kidSupport||0)+(queen?30:12);P.flags.queenParent=queen?2:Math.max(P.flags.queenParent||0,1);
+  if(queen||!/기와집|궁/.test(P.home||'')){P.home=queen?'솟을대문 달린 큰 기와집':'사랑채 딸린 기와집';}
+  say(queen?`딸이 중전이 되니, 그대는 ${t}의 작호를 받았다. 솟을대문 달린 큰 집과 녹봉이 내려졌다.`:`세자빈의 친정이 되어 나라에서 집과 녹봉을 내렸다.`,'big');
+  ev('rise',queen?`딸이 중전이 되어 ${t}의 작호를 받았다`:'딸이 세자빈이 되어 왕실의 외척이 되었다');
+}
+/* 출세한 자식 덕 */
+function kidSuccessBoost(k,t){
+  const U=UNIT[P.cls]||.5;
+  if(/급제|역관|의관|무관|이름|재산/.test(t)){P.flags.kidSupport=(P.flags.kidSupport||0)+U*1.2;}
+  if(P.cls==='cheonmin'&&k.cls!=='cheonmin'&&/급제|역관|의관|무관|재산/.test(t)&&chance(.7)){raiseParent('sangmin',`${k.female?'딸':'아들'} ${iga(k.name)} 값을 치러 그대를 속량하였다`);}
+  else if(P.cls==='sangmin'&&/문과에 급제/.test(t)){fx({fame:6});say('자식이 문과에 급제하니, 집안이 양반 행세를 하게 되었다.');P.inlawUp=Math.max(P.inlawUp||0,1);}
 }

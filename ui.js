@@ -752,7 +752,7 @@ function wealthScore(){
   const m=Math.log10(1+P.wealth)/Math.log10(3001);
   const inc=typeof incomeOf==='function'?incomeOf():0;const i=Math.log10(1+Math.max(0,inc))/Math.log10(301);
   const h=P.home||'';const ht=/궁|전각|중궁|대전|동궁/.test(h)?1:/솟을대문|큰 기와집/.test(h)?.85:/사랑채|기와집|안채/.test(h)?.65:/너른|별채|객주/.test(h)?.45:/초가/.test(h)?.25:.1;
-  const sp=spouseP();const fam=Math.max(P.rich!=null?P.rich/4:0,sp&&sp.rich!=null?sp.rich/4:0,{royal:1,yangban:.55,jungin:.45,sangmin:.2,cheonmin:.05}[P.cls]||.2);
+  const sp=spouseP();const fam=Math.min(1,Math.max(P.rich!=null?P.rich/4:0,sp&&sp.rich!=null?sp.rich/4:0,(P.inlawRich||0)/4,{royal:1,yangban:.55,jungin:.45,sangmin:.2,cheonmin:.05}[P.cls]||.2)+(P.flags.queenParent?.3*P.flags.queenParent:0)+(P.inlawUp||0)*.05);
   return Math.max(0,Math.min(100,Math.round((m*.35+i*.3+ht*.2+fam*.15)*100)));
 }
 function wealthWord(v){return v>=85?'갑부':v>=70?'넉넉함':v>=50?'살 만함':v>=30?'빠듯함':v>=15?'가난함':'끼니가 어려움';}
