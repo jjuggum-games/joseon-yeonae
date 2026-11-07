@@ -1177,7 +1177,19 @@ function kidJob(k,feat){
   }
   if(j&&JOBS[j[0]])k.job={k:j[0],lv:Math.min(j[1],JOBS[j[0]].ladder.length-1)};
 }
-function kidJobTitle(k){if(k.royalBride){const rb=k.royalBride;if(rb==='세자빈')return `세자빈 (${k.sejaOf?k.sejaOf+'의 며느리, ':''}${P.year-(k.wedY||P.year)+1}년째)`;if(rb==='중전')return `중전 (${k.kingOf?k.kingOf+'의 왕비, ':''}${P.year-(k.queenY||k.wedY||P.year)+1}년째)`;if(rb==='대비')return `대비${k.kingOf?' ('+k.kingOf+'의 왕비였음)':''}`;return rb;}if(!k.job&&k.alive&&P.year-k.born>=16)kidJob(k);if(!k.job||!JOBS[k.job.k])return '';if(k.female&&k.married&&['lady','farmer','slave'].includes(k.job.k))return '출가하여 살림';return JOBS[k.job.k].ladder[Math.min(k.job.lv,JOBS[k.job.k].ladder.length-1)];}
+/* 왕실에서 난 자식의 작호: 임금의 자식이면 대군·군·공주·옹주, 세자의 자식이면 원손·군·군주·현주 */
+function royalKidTitle(k){
+  if(!k.alive||k.royalBride)return '';
+  const sp=spouseP();const other=P.people[P.female?k.father:k.mother]||sp;
+  const king=(P.job&&['king'].includes(P.job.k))||(other&&other.kingRole)||(P.job&&P.job.k==='queen'&&P.job.lv>=1)||(P.job&&P.job.k==='concubine');
+  const seja=!king&&((other&&other.seja)||(P.job&&P.job.k==='queen'&&P.job.lv===0));
+  if(!king&&!seja)return '';
+  const legit=!k.seo&&!(P.job&&P.job.k==='concubine')&&!(P.female&&P.sub==='cheop');
+  if(king)return k.female?(legit?'공주':'옹주'):(legit?'대군':'군');
+  const sons=P.kids.filter(x=>!x.female&&!x.seo&&x.alive).sort((a,b)=>a.born-b.born);
+  return k.female?(legit?'군주':'현주'):(legit&&sons[0]===k?'원손':'군');
+}
+function kidJobTitle(k){{const rt=royalKidTitle(k);if(rt&&P.year-k.born<16)return rt;if(rt&&!k.job)return rt;}if(k.royalBride){const rb=k.royalBride;if(rb==='세자빈')return `세자빈 (${k.sejaOf?k.sejaOf+'의 며느리, ':''}${P.year-(k.wedY||P.year)+1}년째)`;if(rb==='중전')return `중전 (${k.kingOf?k.kingOf+'의 왕비, ':''}${P.year-(k.queenY||k.wedY||P.year)+1}년째)`;if(rb==='대비')return `대비${k.kingOf?' ('+k.kingOf+'의 왕비였음)':''}`;return rb;}if(!k.job&&k.alive&&P.year-k.born>=16)kidJob(k);if(!k.job||!JOBS[k.job.k])return '';if(k.female&&k.married&&['lady','farmer','slave'].includes(k.job.k))return '출가하여 살림';return JOBS[k.job.k].ladder[Math.min(k.job.lv,JOBS[k.job.k].ladder.length-1)];}
 function kidFeat(k){
   const st=kidSt(k);const top=KID_ST.map(x=>x[0]).sort((x,y)=>st[y]-st[x])[0];const v=st[top];if(v<55)return;
   const w=k.female?'딸':'아들';const cls=P.cls;let t=null,fame=4;
@@ -1204,7 +1216,7 @@ function kidNameCls(cm,pr){
   const R5=['cheonmin','sangmin','jungin','yangban','royal'];
   const par=cm||(pr&&P.people[pr.father])||spouseP();
   const a=R5.indexOf(P.cls),b=par?R5.indexOf(par.cls):-1;
-  const c=R5[Math.max(a,b)];return c==='royal'?'yangban':c;
+  const c=R5[Math.max(a,b)];return c;
 }
 
 /* ===== 아이 갖기: 해마다 자동 / 한 번 / 사건 ===== */

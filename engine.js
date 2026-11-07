@@ -80,6 +80,7 @@ function fullOf(p){
 
 /* ===== 능력치 합치기: 기품은 매력(용모)에 합친다 ===== */
 function normalizeSt(p){
+  try{if(p&&p.kids&&p.people){const roy=x=>x&&(x.cls==='royal'||x.seja||x.kingRole);const used=new Set(p.kids.map(k=>k.name));for(const k of p.kids){const o=p.people[p.female?k.father:k.mother];if(!k.female&&k.name&&k.name.length!==1&&(k.cls==='royal'||roy(o)&&(p.cls==='royal'||roy(o)))&&!k.renamedRoyal){let n;for(let i=0;i<20;i++){n=R(ROYAL_HWI);if(!used.has(n))break;}used.add(n);k.oldName=k.name;k.name=n;k.renamedRoyal=1;}}}}catch(_){}
   try{if(p&&p.people)for(const x of Object.values(p.people)){if(x.seja&&(x.title==='세자'||x.title==='세자 저하')){x.sur='이';x.bon='전주';x.name=R(ROYAL_HWI);x.title=`세자 이${x.name}`;x.pos='세자';x.live='한양 궁궐 동궁';}}}catch(_){}
   try{if(p&&p.kids&&p.kids.some(k=>k.royalBride)){const _P=P;P=p;updateHonor();P=_P;}}catch(_){}
   const s=p.st;if(!s)return p;
