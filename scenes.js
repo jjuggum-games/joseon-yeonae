@@ -802,7 +802,7 @@ function kidRoyalScene(k){
         const kn=realKing(P.year).n;
         return {kind:'major',title:'자식 · 딸의 삼간택 낙선',text:`삼간택에서 떨어졌다. 궐에서 딸 ${eulreul(k.name)} 후궁으로 들이겠다는 말이 전해졌다. 사양하면 금혼령이 풀리는 대로 다른 혼처를 찾을 수 있다.`,opts:[
           {t:'후궁으로 들여보낸다',p:null,tags:['딸이 후궁(숙의)이 됨','평판·재력 ↑','딸을 궐에 보냄'],fn:()=>{k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='숙의';k.wedY=P.year;k.kingOf=kn;k.feat='후궁이 되었다';
-            fx({fame:6,wealth:Math.max(60,P.wealth*.1),worry:4});P.flags.kidSupport=(P.flags.kidSupport||0)+6;say(`딸 ${iga(k.name)} 숙의의 첩지를 받고 ${kn}의 후궁으로 입궐하였다. 다시는 사가에서 함께 살 수 없게 되었다.`,'big');ev('kidfeat',`딸 ${k.name}`,{feat:'후궁이 되었다'});}},
+            fx({fame:6,wealth:Math.max(60,P.wealth*.1),worry:4});P.flags.kidSupport=(P.flags.kidSupport||0)+6;updateHonor();say(`딸 ${iga(k.name)} 숙의의 첩지를 받고 ${kn}의 후궁으로 입궐하였다. 다시는 사가에서 함께 살 수 없게 되었다.`,'big');ev('kidfeat',`딸 ${k.name}`,{feat:'후궁이 되었다'});}},
           {t:'사양하고 다른 혼처를 찾는다',p:null,safe:true,tags:['평판 ↑','혼담은 그대로 이어짐'],fn:()=>{fx({fame:4});say(`궐의 부름을 정중히 사양하였다. 금혼령이 풀리자 ${k.name}에게도 다시 혼담이 들어왔다.`);}}]};}
       k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='세자빈';k.wedY=P.year;k.sejaOf=realKing(P.year).n;k.feat='세자빈으로 간택되었다';
       say(`딸 ${iga(k.name)} 세자빈으로 간택되었다! 가문에 큰 경사가 났다.`,'big');
