@@ -28,7 +28,10 @@ function applySettings(){
 function saveSet(){Store.saveSettings(SET);applySettings();}
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200);}
 function modal(html,cls){closeModal();const m=document.createElement('div');m.className='modal';m.id='modal';m.innerHTML=`<div class="box ${cls||''}">${html}</div>`;m.addEventListener('click',e=>{if(e.target===m)closeModal();});document.body.appendChild(m);return m;}
-function closeModal(){const m=$('#modal');if(m)m.remove();}
+function closeModal(){const m=$('#modal');if(m){m.remove();holdOff();}}
+/* 설명을 보는 동안 잠깐 멈춤 */
+function holdOn(){if(typeof G!=='undefined'&&V.screen==='play'&&!G.paused&&!G.scene){G.paused=true;G.autoHold=true;renderTop();}}
+function holdOff(){if(G&&G.autoHold&&!$('#modal')&&!document.querySelector('.pop')&&!document.querySelector('details.ln.note[open]')){G.autoHold=false;G.paused=false;renderTop();}}
 function confirmBox(text,ok,fn){modal(`<h3>확인</h3><p class="serif">${text}</p><div class="rowbtns"><button class="btn" data-a="close">그만둔다</button><button class="btn pri" id="cfok">${ok}</button></div>`);$('#cfok').onclick=()=>{closeModal();fn();};}
 const inApp=/KAKAOTALK|Instagram|FBAN|FBAV|Line\/|NAVER\(inapp|DaumApps/i.test(navigator.userAgent);
 
@@ -643,8 +646,8 @@ document.addEventListener('visibilitychange',()=>{
 
 /* ===== 클릭 ===== */
 document.addEventListener('click',async e=>{
-  const t=e.target.closest('.term');if(t){e.stopPropagation();showTerm(t);return;}
-  document.querySelectorAll('.pop').forEach(x=>x.remove());
+  const t=e.target.closest('.term');if(t){e.stopPropagation();showTerm(t);holdOn();return;}
+  const hadPop=document.querySelector('.pop');document.querySelectorAll('.pop').forEach(x=>x.remove());if(hadPop)holdOff();
   const a=e.target.closest('[data-a]');if(!a)return;
   const act=a.dataset.a,v=a.dataset.v;
   switch(act){
@@ -657,7 +660,7 @@ document.addEventListener('click',async e=>{
     case 'resume':{const c=Store.loadCur();if(!c)return;Music.unlock();V.codexBefore=JSON.parse(JSON.stringify(Store.codex()));P=normalizeSt(c);G.plan=[];G.pi=0;G.acc=0;G.scene=null;G.paused=false;G.cur=P.feed[P.feed.length-1];setYearMs();enterPlay();break;}
     case 'home':confirmBox('처음 화면으로 돌아갈까요? 지금 삶은 해가 바뀔 때마다 저장되어 있어 이어서 할 수 있습니다.','돌아간다',()=>{Store.saveCur();G.scene=null;P=null;renderTitle();});break;
     case 'title':P=null;renderTitle();break;
-    case 'pause':G.paused=!G.paused;renderTop();break;
+    case 'pause':G.paused=!G.paused;G.autoHold=false;renderTop();break;
     case 'speed':G.speed=+v;SET.speed=+v;Store.saveSettings(SET);renderTop();break;
     case 'auto':G.auto=!G.auto;SET.auto=G.auto;Store.saveSettings(SET);if(G.auto&&G.scene)G.autoAt=performance.now()+800;renderTop();break;
     case 'music':SET.music=!SET.music;saveSet();if(SET.music){Music.unlock();Music.mode=Music.mode||'calm';Music.play();}else Music.pause();
@@ -704,7 +707,7 @@ document.addEventListener('click',async e=>{
     case 'mnav':V.mob=v;mobShow();if(['love','fam','tl','let'].includes(v))renderSide();break;
     case 'codex':renderCodex();break;
     case 'cxtab':V.codexTab=v;renderCodex();break;
-    case 'readnote':{const n=NOTES[v];modal(`<h3>📜 ${esc(n[0])}</h3><p class="serif">${esc(n[1])}</p><div class="rowbtns"><button class="btn" data-a="close">닫기</button></div>`);break;}
+    case 'readnote':{const n=NOTES[v];modal(`<h3>📜 ${esc(n[0])}</h3><p class="serif">${esc(n[1])}</p><div class="rowbtns"><button class="btn" data-a="close">닫기</button></div>`);holdOn();break;}
     case 'past':renderPast();break;
     case 'openpast':{const h=Store.hist().find(x=>x.id===a.dataset.id);if(!h)return;if(!h.sillok){toast('이 삶의 실록은 다른 기기에 있습니다.');return;}renderSillok(h,false);break;}
     case 'transfer':renderTransfer();break;
@@ -733,7 +736,7 @@ document.addEventListener('keydown',e=>{
   const t=e.target,tag=t&&t.tagName;
   if(tag==='INPUT'||tag==='TEXTAREA'||(t&&t.isContentEditable))return;
   e.preventDefault();
-  G.paused=!G.paused;renderTop();
+  G.paused=!G.paused;G.autoHold=false;renderTop();
 });
 
 document.addEventListener('change',e=>{const s=e.target.closest&&e.target.closest('select[data-kedu]');if(!s||!P)return;const k=P.kids.find(x=>x.id===s.dataset.kedu);if(!k)return;k.edu=s.value;Store.saveCur();say(`${k.female?'딸':'아들'} ${k.name}의 배움을 ‘${EDU[k.edu][0]}’ 쪽으로 정하였다.`);V.dirty.feed=1;toast(`${k.name}: ${EDU[k.edu][0]}`);});
@@ -767,3 +770,8 @@ function otherParent(k){
   const rel=x.kind==='cheop'?'첩':x.kind==='ex'?'헤어진 배우자':x.kind==='spouse'?(x.id===P.spouse?(P.female?'남편':'아내'):(x.alive?'배우자':'세상을 떠난 배우자')):x.kind==='love'?'정인':'';
   return `${w}: ${x.title||callOf(x)}${rel?` (${rel})`:''}${x.alive?'':' · 故'}`;
 }
+/* 역사 노트를 펼치면 잠깐 멈추고, 접으면 이어 간다 */
+document.addEventListener('toggle',e=>{
+  const d=e.target;if(!d.classList||!d.classList.contains('note'))return;
+  if(d.open)holdOn();else if(!document.querySelector('details.ln.note[open]'))holdOff();
+},true);

@@ -329,6 +329,7 @@ function conceive(){
     note('taemong');
   }
 }
+function kidUniqName(c,f,also){for(let i=0;i<10;i++){const n=personName(c,f);if(n!==also&&!P.kids.some(k=>k.name===n))return n;}return personName(c,f);}
 function birth(given){
   const pr=given||P.preg;if(!given)P.preg=null;
   if(pr.unwed&&!P.female&&!(P.married&&P.spouse===pr.father)&&!pr.keep){const x=P.people[pr.father];if(x)say(`${iga(callOf(x))} 아이를 낳았다는 소식을 들었다.`);return;}
@@ -345,7 +346,7 @@ function birth(given){
     else if(cm){cm.alive=false;say(`${iga(callOf(cm))} 해산 끝에 세상을 떠났다.`,'big');}
     else{const sp=spouseP();spouseDies(sp,'해산 끝에');}
   }
-  const nm=royalKid?(R(['영','화','덕','은','숙','정','명','경','의','순'])+R(['창','원','안','성','양','천','평','춘'])+(female?' 옹주':'군')):personName(kidNameCls(cm,pr),female);
+  const nm=royalKid?(R(['영','화','덕','은','숙','정','명','경','의','순'])+R(['창','원','안','성','양','천','평','춘'])+(female?' 옹주':'군')):kidUniqName(kidNameCls(cm,pr),female);
   const seo=!!cm||P.sub==='cheop'||(spouseP()&&(spouseP().kind==='cheop'||spouseP().mode==='cheop'))||(pr.unwed&&!(P.married&&P.spouse===pr.father));
   if(P.alive===false)return;
   const twins=chance(.03);
@@ -354,7 +355,7 @@ function birth(given){
   const kcls=P.female?kidClass(partner,meP):kidClass(meP,partner);
   const mk=(fem,name)=>{const kid={id:uid(),name,female:fem,born:P.year,alive:true,adopted:false,married:false,grand:0,seo,cls:kcls,father:P.female?(pr.father||P.spouse):undefined,away:exPar&&!P.female?1:undefined,mother:cm?cm.id:(P.female?undefined:(partner&&partner.id)),st:kidStats(cm)};P.kids.push(kid);ev('child',kid.name,{female:fem});return kid;};
   const k1=mk(female,nm);
-  if(twins){const f2=chance(.5)?female:!female;const k2=mk(f2,personName(kidNameCls(cm,pr),f2));
+  if(twins){const f2=chance(.5)?female:!female;const k2=mk(f2,kidUniqName(kidNameCls(cm,pr),f2,k1.name));
     const who=P.female?'':cm?iga(callOf(cm))+' ':'아내가 ';
     say(`${P.female?'쌍둥이를 낳았다!':who+'쌍둥이를 낳았다!'} ${f2===female?(female?'딸':'아들')+' 둘':'아들딸'}, ${gwawa(k1.name)} ${k2.name}${bat(k2.name)?'이었다':'였다'}.`,'big');ev('twins',k1.name+'·'+k2.name);}
   else if(exPar)say(P.female?`${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다. 헤어진 ${callOf(exPar)}의 아이였다.`:`헤어진 ${iga(callOf(exPar))} ${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다는 소식이 왔다. 아이는 어미 곁에서 자라게 되었다.`,'big');
@@ -369,6 +370,7 @@ function birth(given){
 
 /* ---- 직업 ---- */
 function yJob(){
+  {const r=riseRule();if(r&&!r.ask)riseScene(r);}
   const a=P.age,J=P.job;
   // 시작
   if(!J){
@@ -1003,8 +1005,9 @@ function yMajor(){
    if(ex&&P.year-(P.flags.supportY||0)>=6&&y-(ex.exY||y)>=0&&y-(ex.exY||y)<=3){if(mine&&!P.flags.csIn)add(55,()=>supportScene('divorceWithMe',ex));else if(away&&!P.flags.csOut)add(55,()=>supportScene('divorceAway',ex));}
    const dead=Object.values(P.people).filter(x=>x.kind==='spouse'&&!x.alive&&x.dy&&y-x.dy<=2).pop();
    if(!P.married&&dead&&mine&&!dead.supportAsked&&!dead.kingRole){dead.supportAsked=1;add(54,()=>supportScene('widow',dead));}}
+  {const r=riseRule();if(r&&r.ask)add(72,()=>riseScene(r));}
   if(P.job&&POSTS[P.job.k]&&P.job.lv>=POSTS[P.job.k].min&&(P.postK!==P.job.k||P.job.lv>=(P.postLv||0)+POSTS[P.job.k].every)&&P.year-(P.flags.postY||0)>=2)add(71,()=>postScene());
-  if(P.job&&P.post&&P.postK===P.job.k&&POST_EV[P.post]&&P.year-(P.flags.postEvY||0)>=4&&chance(.35))add(30,()=>postEventScene());
+  if(P.job&&P.post&&P.postK===P.job.k&&(POST_EV[P.post]||(curPost()&&curPost().ev))&&P.year-(P.flags.postEvY||0)>=4&&chance(.35))add(30,()=>postEventScene());
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){

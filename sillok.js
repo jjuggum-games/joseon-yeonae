@@ -134,6 +134,7 @@ function epithet(){
   const crush=Object.values(P.people).some(x=>x.kind==='love'&&x.h>=55&&x.t<40);
   if(P.alt)return '역사를 바꾼 사람';
   if(P.flags.rare_namjang)return '이름 없는 급제자';
+  if(P.flags.jeongnyeo)return '정려문을 받은 열녀';
   if(P.flags.rare_gisaeng2lady)return '기녀에서 정경부인에 오른 사람';
   if(P.peak&&P.peak.k==='queen'&&P.peak.lv>=1)return '중전에 오른 사람';
   if(P.peak&&P.peak.k==='concubine'&&P.peak.lv>=7)return '임금의 총애를 받은 여인';

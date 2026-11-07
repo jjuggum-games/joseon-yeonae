@@ -277,5 +277,5 @@ function setJob(k,lv){
 function statusLine(){
   const c=CLS[P.cls].n;
   const t=P.job?jobTitle(P.job):(P.age<10?'아이':'');
-  return [c,t].filter(Boolean).join(' · ');
+  return [c,t,P.flags&&P.flags.jeongnyeo?'열녀':''].filter(Boolean).join(' · ');
 }
