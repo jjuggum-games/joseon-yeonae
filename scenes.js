@@ -643,7 +643,7 @@ function wifeRiseScene(){
   const p=clamp(.12+sons*.1+kids*.03+(sp.h||50)/400+(noWife?.25:0),.08,.85);
   return {kind:'major',title:'정실의 자리',pid:sp.id,text:`${noWife?(H&&!H.wife?`${nm}에게는 정실이 없다.`:`${nm}의 정실이 세상을 떠났다.`):`${nm}의 정실과의 사이가 멀어진 지 오래다.`} ${kids?`자식 ${kids}명을 낳아 기른 그대를 정실로 올리자는 말이 집안에서 나온다.`:'그대를 정실로 올리자는 말이 조심스레 나온다.'}${yb?' 다만 양반가에서 첩을 정실로 올리는 것은 법도에 어긋나는 일이다.':''}`,opts:[
     {t:'정실의 자리에 오른다',sub:'자식이 많을수록(특히 아들), 남편의 정이 깊을수록, 정실 자리가 비어 있을수록 쉽다',p,tags:['신분 변화: 정실',...(yb?['평판 ↓ (법도에 어긋남)']:[])],fn:()=>{
-      if(chance(p)){P.sub='';sp.mode='wife';if(CRANK.indexOf(sp.cls)>CRANK.indexOf(P.cls)){P.birthCls=P.birthCls||P.cls;P.cls=sp.cls;P.flags.clsReason='marriage';}if(sp.cls==='royal')setJob('royalwife',/대군/.test(sp.title||'')?1:0);else if(P.job&&P.job.k==='sosil')setJob(['yangban','jungin'].includes(sp.cls)?'lady':'housewife',['yangban','jungin'].includes(sp.cls)?2:1);fx({fame:yb?-6:4,worry:-10});if(!yb)P.kids.forEach(k=>{if(k.father===sp.id)k.seo=false;});if(P.job&&P.job.k==='housewife')setJob('housewife',2);P.home=P.home.replace('의 별채','의 안채');say(`첩의 몸에서 벗어나 ${nm}의 정실이 되었다.${yb?' 다만 자식들의 서얼 신분은 그대로 남았다.':''}`,'big');ev('rise','첩에서 정실이 되었다');}
+      if(chance(p)){husbandDecidesWife(sp);P.sub='';sp.mode='wife';if(CRANK.indexOf(sp.cls)>CRANK.indexOf(P.cls)){P.birthCls=P.birthCls||P.cls;P.cls=sp.cls;P.flags.clsReason='marriage';}if(sp.cls==='royal')setJob('royalwife',/대군/.test(sp.title||'')?1:0);else if(P.job&&P.job.k==='sosil')setJob(['yangban','jungin'].includes(sp.cls)?'lady':'housewife',['yangban','jungin'].includes(sp.cls)?2:1);fx({fame:yb?-6:4,worry:-10});if(!yb)P.kids.forEach(k=>{if(k.father===sp.id)k.seo=false;});if(P.job&&P.job.k==='housewife')setJob('housewife',2);P.home=P.home.replace('의 별채','의 안채');say(`첩의 몸에서 벗어나 ${nm}의 정실이 되었다.${yb?' 다만 자식들의 서얼 신분은 그대로 남았다.':''}`,'big');ev('rise','첩에서 정실이 되었다');}
       else{fx({worry:10});say('집안 어른들의 반대로 뜻을 이루지 못하였다.');}}},
     {t:'지금 자리에 만족한다',p:null,safe:true,tags:[],fn:()=>{say('첩의 자리에서 조용히 살기로 하였다.');}}]};
 }
@@ -1624,7 +1624,7 @@ function bookList(cat){
   if(cat==='spec'){const out=[];for(const k in SPECS)if(JOBS[k])SPECS[k].forEach(([n])=>out.push([k+':'+n,`${JOBS[k].n} · ${n}`]));return out;}
   if(cat==='title2')return TITLE2.map(t=>[t,t]);
   if(cat==='rise')return RISE.map(r=>[r.k+r.to,`${JOBS[r.k].n} → ${CLS[r.to].n}`]).filter((x,i,a)=>a.findIndex(y=>y[0]===x[0])===i);
-  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['kidsamgan','자식 · 딸의 삼간택 낙선'],['arranged','혼인 · 집안이 정한 혼처'],['namjang','남장 · 남장이 들통나다'],['bonchoe','부실살이 · 본처'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
+  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['kidsamgan','자식 · 딸의 삼간택 낙선'],['arranged','혼인 · 집안이 정한 혼처'],['namjang','남장 · 남장이 들통나다'],['bonchoe','부실살이 · 본처'],['raisecheop','혼인 · 처와 첩을 바꾸다'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
   return [];
 }
 
@@ -1928,12 +1928,13 @@ function ensureHousehold(x){
   }
   x.household=H;return H;
 }
+function sp0(x){return x.mode==='cheop';}
 function householdLine(x){
   const H=ensureHousehold(x);if(!H)return '';
   const KS=H.kids.filter(k=>k.alive);
   const kt=KS.length?KS.map(k=>`${k.sur||''}${k.name}(${P.year-k.born}세, ${k.female?'딸':'아들'})`).join(', '):'';
   if(H.role==='bonchoe'){
-    const w=H.wife?`본처 ${H.wife.sur}씨 ${H.wife.status==='alive'?'(살아 있음)':'(세상을 떠남)'}`:'본처 없음';
+    const w=H.wife?`${P.sub==='cheop'||sp0(x)?'본처':'전 본처'} ${H.wife.sur}씨 ${({alive:'(살아 있음)',dead:'(세상을 떠남)',expelled:'(친정으로 내쳐짐)',demoted:'(별채로 물러남)'})[H.wife.status]||''}`:'본처 없음';
     return `${w}${kt?` · 본처 소생: ${kt}`:''}`;
   }
   const lab=H.role==='jeoncheo'?'세상을 떠난 전처':'세상을 떠난 전남편';
@@ -1946,4 +1947,37 @@ function bonchoeScene(){
     {t:'공손히 따른다',p:null,safe:true,tags:['평판 ↑','마음고생 ↑'],fn:()=>{fx({fame:3,worry:6});say('고개를 숙이고 묵묵히 따랐다. 집안 사람들이 그대를 조금은 달리 보게 되었다.');}},
     {t:'남편에게 하소연한다',p:clamp(.3+sp.h/200),tags:['남편 마음에 달림'],fn:()=>{if(chance(.3+sp.h/200)){fx({worry:-5});say('남편이 본처를 타일러 한동안 조용해졌다.');}else{sp.h=Math.max(0,sp.h-6);fx({worry:6});say('남편은 집안일에 끼어들기 싫다며 외면하였다.');}}},
     {t:'맞선다',sub:'무예(담력)가 중요하다',p:clamp(.25+P.st.brave/250),tags:['통하면 마음고생 ↓','안 되면 쫓겨날 수도'],fn:()=>{if(chance(.25+P.st.brave/250)){fx({worry:-6,fame:-2});say('할 말은 하고 살겠다고 버텼다. 본처도 더는 함부로 하지 못하였다.');}else{fx({worry:10,fame:-5});say('본처의 노여움을 사 한동안 별채에 갇혀 지냈다.','big');}}}]};
+}
+
+/* ===== 첩을 정실로: 내가 남자일 때, 지금의 아내를 어떻게 할 것인가 ===== */
+function raiseCheopScene(c){
+  const nm=callOf(c);const sp=spouseP();const yb=['yangban','royal'].includes(P.cls);bookSeen('scene','raisecheop');
+  const promote=(extra)=>{c.kind='spouse';c.status='married';c.mode='wife';P.spouse=c.id;P.married=true;P.widowed=false;P.cheopN=Math.max(0,(P.cheopN||1)-1);
+    if(CRANK.indexOf(c.cls)<CRANK.indexOf(P.cls)&&c.cls==='cheonmin'){c.cls='sangmin';c.sub='';}
+    P.kids.forEach(k=>{if(k.mother===c.id&&k.seo){k.seo=false;}});
+    say(`첩 ${eulreul(nm)} 정실로 올렸다.${extra||''}`,'big');ev('marry',c.id,{love:true,mode:'wife',raised:true});};
+  if(!sp||!sp.alive||!P.married)return {kind:'major',title:'첩을 정실로',pid:c.id,text:`안주인 자리가 비어 있다. 곁을 지켜 온 첩 ${eulreul(nm)} 정실로 올릴 것인가.${yb?' 양반가에서 첩을 정실로 올리는 것은 법도에 어긋나는 일이다.':''}`,opts:[
+    {t:'정실로 올린다',p:null,tags:['배우자가 생김','첩의 자식이 적자가 됨',...(yb?['평판 ↓ (법도에 어긋남)']:[])],fn:()=>{fx({fame:yb?-6:2});promote();}},
+    {t:'그만둔다',p:null,safe:true,tags:[],fn:()=>{say('마음을 접었다.');}}]};
+  const wn=callOf(sp);
+  return {kind:'major',title:'처와 첩을 바꾸다',pid:c.id,text:`첩 ${eulreul(nm)} 정실로 올리려면 지금의 아내 ${wn}의 자리를 정해야 한다. 처를 첩으로 바꾸는 것은 국법(경국대전)이 엄히 금하는 일이라, 들키면 큰 허물이 된다.`,opts:[
+    {t:`아내 ${eulreul(wn)} 내친다`,sub:'칠거지악을 들어 소박을 놓는다',p:clamp(.5+P.st.fame/400),tags:['아내와 갈라섬','처가의 원망','평판 ↓'],fn:()=>{
+      if(!chance(.5+P.st.fame/400)){fx({fame:-8,worry:8});say(`처가에서 크게 반발하여 일이 틀어졌다. ${wn}${bat(wn)?'은':'는'} 그대로 정실로 남았다.`,'big');return null;}
+      doDivorce(sp,'소박',true);fx({fame:yb?-10:-4});promote(` 내쳐진 ${iga(wn)} 눈물을 흘리며 친정으로 돌아갔다.`);}},
+    {t:`아내 ${eulreul(wn)} 첩의 자리로 물린다`,sub:'처와 첩을 맞바꾼다',p:.75,tags:['법도에 크게 어긋남','평판 크게 ↓','들키면 벌을 받음'],fn:()=>{
+      sp.kind='cheop';sp.mode='cheop';sp.status='married';fx({fame:yb?-15:-6,worry:6});promote(` 본래의 아내 ${iga(wn)} 첩의 자리로 밀려났다.`);
+      if(yb&&!chance(.75)){say('처첩을 뒤바꾼 일이 사헌부에 알려져 탄핵을 받았다. 처를 원래 자리로 되돌리라는 명이 내려졌다.','big');fx({fame:-8});if(P.job&&P.job.k==='official'){P.job.lv=Math.max(0,P.job.lv-2);}
+        c.kind='cheop';c.mode='cheop';sp.kind='spouse';sp.mode='wife';P.spouse=sp.id;}}},
+    {t:'둘 다 정실로 대접한다',sub:'두 아내를 두는 일',p:.4,tags:['법도에 어긋남','집안이 시끄러움'],fn:()=>{
+      if(chance(.4)){c.mode='cheop';c.wifeLike=1;fx({fame:yb?-5:-2,worry:4});say(`${iga(nm)} 첩이지만 정실과 다름없이 대접받게 되었다. 집안에 두 안주인이 생긴 셈이었다.`,'big');}
+      else{fx({fame:-4,worry:10});say('두 여인 사이에 다툼이 끊이지 않아 결국 없던 일로 하였다.');}}},
+    {t:'그만둔다',p:null,safe:true,tags:[],fn:()=>{say('처는 처의 자리에, 첩은 첩의 자리에 두기로 하였다.');}}]};
+}
+/* 내가 첩에서 정실로 오를 때, 남편이 본처를 어떻게 하는가 (내 뜻으로 고를 수 없다) */
+function husbandDecidesWife(sp){
+  const H=typeof ensureHousehold==='function'?ensureHousehold(sp):null;if(!H||!H.wife||H.wife.status!=='alive')return;
+  const nm=callOf(sp);const r=Math.random();const h=sp.h||50;
+  if(r<.25+h/400){H.wife.status='expelled';say(`${iga(nm)} 칠거지악을 들어 본처 ${H.wife.sur}씨를 친정으로 내쳤다. 본처 소생 자식들의 원망이 그대에게 쏠렸다.`,'big');fx({fame:-6,worry:6});}
+  else if(r<.75){H.wife.status='demoted';say(`${iga(nm)} 본처 ${H.wife.sur}씨를 별채로 물리고 그대를 안채에 들였다. 처첩이 뒤바뀌었다는 손가락질이 돌았다.`,'big');fx({fame:-8,worry:4});}
+  else{H.wife.status='alive';say(`${iga(nm)} 본처 ${H.wife.sur}씨도 그대로 두었다. 한집에 안주인이 둘이 된 셈이라, 본처와의 사이가 더욱 차가워졌다.`,'big');fx({worry:8});}
 }
