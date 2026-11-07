@@ -1622,7 +1622,7 @@ function bookList(cat){
   if(cat==='spec'){const out=[];for(const k in SPECS)if(JOBS[k])SPECS[k].forEach(([n])=>out.push([k+':'+n,`${JOBS[k].n} · ${n}`]));return out;}
   if(cat==='title2')return TITLE2.map(t=>[t,t]);
   if(cat==='rise')return RISE.map(r=>[r.k+r.to,`${JOBS[r.k].n} → ${CLS[r.to].n}`]).filter((x,i,a)=>a.findIndex(y=>y[0]===x[0])===i);
-  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['kidsamgan','자식 · 딸의 삼간택 낙선'],['arranged','혼인 · 집안이 정한 혼처'],['namjang','남장 · 남장이 들통나다'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
+  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['kidsamgan','자식 · 딸의 삼간택 낙선'],['arranged','혼인 · 집안이 정한 혼처'],['namjang','남장 · 남장이 들통나다'],['bonchoe','부실살이 · 본처'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
   return [];
 }
 
@@ -1904,3 +1904,44 @@ function specScene(){
 
 /* 직책 밖에서 얻는 칭호들 */
 const TITLE2=['부원군','부부인','세자빈의 아버지','세자빈의 어머니','중전의 아버지','중전의 어머니','대비의 아버지','대비의 어머니','숙의의 아버지','숙의의 어머니','정1품 판중추부사','정1품 우의정','정1품 좌의정','정1품 영의정','봉조하(치사)','열녀','데릴사위','속량된 몸'];
+
+/* ===== 배우자의 다른 식구들: 본처·전처·전남편, 그 자식들 (보기만 할 뿐 간섭할 수 없다) ===== */
+function ensureHousehold(x){
+  if(!x||x.household!==undefined||x.kingRole||x.seja)return x&&x.household;
+  const wy=(P.ev.find(e=>e.type==='marry'&&e.t===x.id)||{}).y||P.year;const age=wy-x.born;const hcls=x.cls==='royal'?'yangban':x.cls;
+  const mkKids=(from,n,sur,until)=>{const L=[];for(let i=0;i<n;i++){const f=chance(.5);const b=from+ri(1,3)+i*ri(2,3);if(b>=(until||P.year))break;L.push({name:personName(hcls,f),female:f,born:b,alive:chance(.85),sur:sur||x.sur||''});}return L;};
+  let H=null;
+  const iAmCheop=P.female&&(P.sub==='cheop'||x.mode==='cheop');
+  if(iAmCheop&&!x.female){
+    const r=Math.random();const st=age<22?'none':r<.7?'alive':r<.95?'dead':'none';
+    const wf=st==='none'?null:{name:personName(hcls,true),sur:surname?surname()[0]:'',status:st};
+    if(wf&&!wf.sur){wf.sur=R(['김','이','박','최','정','조','윤','한','신','권','홍'])}
+    const n=st==='none'?0:Math.max(0,Math.min(6,Math.round((ageOf(x)-20)/5)+ri(-1,1)));
+    H={role:'bonchoe',wife:wf,kids:mkKids(x.born+18,n)};
+    if(st==='dead')x.wifeDead=true;
+  } else if(age>=28&&chance(P.female?.3:.2)){
+    const prevF=!x.female;const pr={name:personName(hcls,prevF),sur:R(['김','이','박','최','정','조','윤','한','신','권','홍','오','서','강']),status:'dead'};
+    H={role:x.female?'jeonnampyeon':'jeoncheo',prev:pr,kids:mkKids(x.born+19,ri(0,3),x.female?pr.sur:x.sur,wy)};
+    if(!H.kids.length&&chance(.5))H=null;
+  }
+  x.household=H;return H;
+}
+function householdLine(x){
+  const H=ensureHousehold(x);if(!H)return '';
+  const KS=H.kids.filter(k=>k.alive);
+  const kt=KS.length?KS.map(k=>`${k.sur||''}${k.name}(${P.year-k.born}세, ${k.female?'딸':'아들'})`).join(', '):'';
+  if(H.role==='bonchoe'){
+    const w=H.wife?`본처 ${H.wife.sur}씨 ${H.wife.status==='alive'?'(살아 있음)':'(세상을 떠남)'}`:'본처 없음';
+    return `${w}${kt?` · 본처 소생: ${kt}`:''}`;
+  }
+  const lab=H.role==='jeoncheo'?'세상을 떠난 전처':'세상을 떠난 전남편';
+  return `${lab} ${H.prev.sur}씨${kt?` · 그 소생: ${kt}`:''}`;
+}
+/* 본처가 살아 있는 집의 부실살이 */
+function bonchoeScene(){
+  const sp=spouseP();const H=ensureHousehold(sp);P.flags.bonY=P.year;bookSeen('scene','bonchoe');
+  return {kind:'major',title:'부실살이 · 본처',text:R([`본처 ${H.wife.sur}씨가 그대를 안채로 불러 법도를 가르치겠다며 차갑게 앉혀 두었다.`,`본처의 자식들이 그대를 "작은어미"라 부르며 깔본다.`,`명절에 본처가 그대의 자리를 부엌으로 정해 두었다.`]),opts:[
+    {t:'공손히 따른다',p:null,safe:true,tags:['평판 ↑','마음고생 ↑'],fn:()=>{fx({fame:3,worry:6});say('고개를 숙이고 묵묵히 따랐다. 집안 사람들이 그대를 조금은 달리 보게 되었다.');}},
+    {t:'남편에게 하소연한다',p:clamp(.3+sp.h/200),tags:['남편 마음에 달림'],fn:()=>{if(chance(.3+sp.h/200)){fx({worry:-5});say('남편이 본처를 타일러 한동안 조용해졌다.');}else{sp.h=Math.max(0,sp.h-6);fx({worry:6});say('남편은 집안일에 끼어들기 싫다며 외면하였다.');}}},
+    {t:'맞선다',sub:'무예(담력)가 중요하다',p:clamp(.25+P.st.brave/250),tags:['통하면 마음고생 ↓','안 되면 쫓겨날 수도'],fn:()=>{if(chance(.25+P.st.brave/250)){fx({worry:-6,fame:-2});say('할 말은 하고 살겠다고 버텼다. 본처도 더는 함부로 하지 못하였다.');}else{fx({worry:10,fame:-5});say('본처의 노여움을 사 한동안 별채에 갇혀 지냈다.','big');}}}]};
+}

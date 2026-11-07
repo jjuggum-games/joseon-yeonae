@@ -256,6 +256,8 @@ function syncStatus(){
     if(y>=1894&&!P.alt&&k.job.k==='scholar')k.job={k:'cheosa',lv:0};
   });
   if(typeof updateHonor==='function'&&P.kids.some(k=>k.royalBride))updateHonor();
+  {const sp=spouseP();if(sp&&sp.alive&&sp.household&&sp.household.wife&&sp.household.wife.status==='alive'&&chance(.025)){sp.household.wife.status='dead';sp.wifeDead=true;say(`남편의 본처 ${sp.household.wife.sur}씨가 세상을 떠났다.`,'big');}
+   if(sp&&sp.household)sp.household.kids.forEach(k=>{if(k.alive&&chance(.006))k.alive=false;});}
 }
 function yFamily(){
   syncStatus();
@@ -1054,6 +1056,7 @@ function yMajor(){
   if(P.age>=12&&P.year-(P.flags.fameY||0)>=3&&chance(.55))add(25,()=>fameScene());
   if(P.age>=14&&P.year-(P.flags.famY||0)>=2&&chance(.5))add(28,()=>famScene());
   if(P.year-(P.flags.ideaY||0)>=3&&chance(.4))add(32,()=>ideaScene());
+  {const sp=spouseP();if(P.female&&P.married&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&typeof ensureHousehold==='function'){const H=ensureHousehold(sp);if(H&&H.wife&&H.wife.status==='alive'&&P.year-(P.flags.bonY||0)>=4&&chance(.35))add(30,()=>bonchoeScene());}}
   if(!P.alt){if(y===1910&&P.age>=15)add(96,()=>gukchiScene());if(y===1919&&P.age>=10)add(94,()=>samilScene());if(y===1940&&P.age>=10)add(90,()=>changssiScene());if(y===1945)add(96,()=>gwangbokScene());if(y===1950)add(96,()=>yugioScene());}
   if(P.flags.catholic&&[1801,1839,1846,1866].includes(y)&&P.flags.persY!==y)add(92,()=>persecutionScene());
   if(y===1894&&!P.flags.dhWar&&P.age>=15&&(P.flags.donghak||(['sangmin','cheonmin'].includes(P.cls)&&chance(.4))))add(93,()=>donghakWarScene());

@@ -398,7 +398,8 @@ function sideFam(){
     if(x.mode==='cheop')return '첩';
     return P.female?'남편':'아내';};
   const spMeta=x=>[x.alive?ageOf(x)+'세':'',x.kind==='spouse'&&x.alive&&x.h!=null?'정 '+hLvWord(x):'',x.kind==='rival'?'악연':'',x.fam&&!x.real?x.fam:''].filter(Boolean).join(' · ');
-  h+=grp(P.female?'배우자':'배우자와 첩',sp.map(x=>row(x.title&&x.kind!=='rival'?x.title:callOf(x),ded(x)+spRel(x),spMeta(x),dead(x))).join(''));
+  const spHH=x=>x.kind==='spouse'&&typeof householdLine==='function'?householdLine(x):'';
+  h+=grp(P.female?'배우자':'배우자와 첩',sp.map(x=>{const r=row(x.title&&x.kind!=='rival'?x.title:callOf(x),ded(x)+spRel(x),spMeta(x),dead(x));const hh=x.alive?spHH(x):'';return hh?r.replace(/<\/div>$/,`<div class="fx" style="margin-top:4px">${esc(hh)}</div></div>`):r;}).join(''));
   /* 자식 */
   if(P.kids.length){
     const kd=P.kids.map(k=>{const a=P.year-k.born;const st=kidSt(k);
