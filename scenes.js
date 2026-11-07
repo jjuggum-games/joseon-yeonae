@@ -692,7 +692,7 @@ function kidStoryScene(){
        ...(P.year>=1695?[{t:'서얼허통 상소에 이름을 올리게 한다',sub:'서얼들이 함께 벼슬길을 열어 달라 청한다',p:null,tags:['평판 조금 ↑','조정에 밉보일 수 있음'],fn:()=>{fx({fame:3});k.feat=k.feat||'서얼허통 상소에 앞장섰다';say(`${iga(k.name)} 서얼들과 함께 허통을 청하는 상소에 이름을 올렸다.`);}}]:[]),
        {t:'분수를 받아들이라 타이른다',p:null,safe:true,tags:[],fn:()=>{fx({worry:5});say(`${eulreul(k.name)} 다독였으나, 그 눈빛은 쉽게 풀리지 않았다.`);}}]};}]);}
   /* 천인으로 태어난 자식 */
-  {const k=pick(k=>k.cls==='cheonmin'&&!k.freeTried&&age(k)>=3&&age(k)<=30);
+  {const k=pick(k=>false&&k.cls==='cheonmin');
    if(k)L.push([6,()=>{k.freeTried=1;const cost=Math.max(U*25,{royal:300,yangban:40,jungin:30,sangmin:15,cheonmin:8}[P.cls]||15);const can=P.wealth>=cost;note('nobilaw');
      return {title:'천인의 자식',text:`${W(k)} ${k.name}의 이름은 아직 노비 문서에 올라 있다. 언제 팔려 갈지 모르고, 그 자식도 또 그 자식도 노비가 된다. 속량하려면 ${money(cost)}쯤이 든다고 한다.`,opts:[
        ...(can?[{t:'재산을 털어 속량한다',p:null,tags:['재산 크게 ↓','자식이 양인이 됨'],fn:()=>{fx({wealth:-cost});k.cls=P.cls==='cheonmin'?'sangmin':P.cls;fx({worry:-10});say(`값을 치르고 노비 문서에서 ${W(k)} ${k.name}의 이름을 지웠다. ${iga(k.name)} 양인이 되었다.`,'big');ev('freed',`${W(k)} ${k.name}을 속량하였다`);}}]:[]),
@@ -1564,7 +1564,7 @@ const SOLO_T={inlawcare:'시어머니의 병',rearkids:'홀로 키우는 자식'
 function bookList(cat){
   if(cat==='post'){const out=[];for(const k in POSTS){if(!POSTS[k]||!JOBS[k])continue;POSTS[k].opts.forEach(o=>out.push([k+':'+o.k,`${JOBS[k].n} · ${o.n}`]));}return out;}
   if(cat==='rise')return RISE.map(r=>[r.k+r.to,`${JOBS[r.k].n} → ${CLS[r.to].n}`]).filter((x,i,a)=>a.findIndex(y=>y[0]===x[0])===i);
-  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
+  if(cat==='scene')return [...IDEA.map(s=>[s.id,'시대 · '+s.t]),...SOLO.map(s=>[s.id,'홀로 · '+(s.t||SOLO_T[s.id]||s.id)]),...FAM.map(s=>[s.id,(s.id[0]==='f'?'벗 · ':'자식 · ')+s.title]),['live','자식 · 노년의 거처'],['freekid','자식 · 노비 문서에서 이름 지우기'],['pers','시대 · 천주교 박해'],['dhwar','시대 · 동학 농민군'],['gukchi','시대 · 경술국치'],['samil','시대 · 3·1 운동'],['changssi','시대 · 창씨개명'],['gwangbok','시대 · 광복'],['yugio','시대 · 6·25 전쟁']];
   return [];
 }
 
@@ -1714,4 +1714,43 @@ function updateHonor(){
   if(sj)parts.push(P.female?'세자빈의 어머니':'세자빈의 아버지');
   if(!q&&sj&&!P.female)parts[parts.length-1]+=' (국구 집안)';
   P.honor=parts.join(' · ');
+}
+
+/* ===== 천인 자식의 속량 ===== */
+/* 아이의 주인은 누구인가: 내 집 노비(비첩 소생) / 관아(관기·관노 소생) / 남의 집 */
+function kidOwner(k){
+  const mo=k.mother&&P.people[k.mother], fa=k.father&&P.people[k.father];
+  if(!P.female&&mo&&mo.kind==='cheop'&&['yangban','jungin','royal'].includes(P.cls))return mo.sub==='gisaeng'?'gwan':'mine';
+  if(P.female&&P.cls==='cheonmin')return P.sub==='gisaeng'||P.gong?'gwan':'other';
+  if(!P.female&&P.cls==='cheonmin')return mo&&mo.sub==='gisaeng'?'gwan':P.gong?'gwan':'other';
+  if(mo&&mo.sub==='gisaeng')return 'gwan';
+  return 'other';
+}
+function freeKidScene(k){
+  k.freeAsked=P.year;bookSeen('scene','freekid');note('nobilaw');
+  const W=k.female?'딸':'아들';const nm=k.name;const own=kidOwner(k);const U=UNIT[P.cls]||.5;
+  const mo=k.mother&&P.people[k.mother];
+  const to=P.cls==='cheonmin'?'sangmin':(P.cls==='yangban'||P.cls==='royal')?'sangmin':P.cls;
+  const free=(why,big=true)=>{k.cls=to;k.freedY=P.year;fx({worry:-10});say(why,big?'big':'');ev('freed',`${W} ${iga(nm)} 노비 문서에서 풀려났다`);if(k.seo&&!P.female&&P.cls==='yangban')say(`${iga(nm)} 이제 양인이 되었으나, 서얼이라는 굴레는 그대로였다.`);};
+  const retry=()=>{k.freeAsked=P.year;k.freeAgain=P.year+ri(4,7);};
+  if(own==='mine'){
+    const c=Math.round(U*6);
+    return {kind:'major',title:'자식 · 내 집 노비 문서',text:`${W} ${nm}의 이름이 우리 집 노비 문서에 올라 있다. 어미가 이 집의 비(婢)였기 때문이다. 문서의 주인은 바로 그대이니, 그대가 놓아주면 그만이다. 다만 관아에 신고하고 대신할 노비를 들이는 것이 법도라 한다.`,opts:[
+      {t:'방량 문서를 써 주고 관아에 신고한다',p:null,tags:['자식이 양인이 됨',`재산 조금 ↓ (${money(c)})`],fn:()=>{P.wealth=Math.max(0,P.wealth-c);free(`손수 방량 문서를 써서 ${W} ${nm}의 이름을 노비 문서에서 지웠다. 관아에서도 양인으로 올려 주었다.`);}},
+      ...(mo&&mo.alive&&mo.cls==='cheonmin'?[{t:`어미 ${callOf(mo)}까지 함께 놓아준다`,p:null,tags:['자식과 어미가 양인이 됨','재산 ↓','문중의 눈총'],fn:()=>{P.wealth=Math.max(0,P.wealth-c*2);mo.cls='sangmin';mo.sub='';fx({fame:-2});free(`${W} ${gwawa(nm)} 어미 ${callOf(mo)}의 이름을 노비 문서에서 함께 지웠다.`);}}]:[]),
+      {t:'문중이 반대하니 미룬다',p:null,safe:true,tags:['몇 해 뒤 다시 생각함'],fn:()=>{retry();fx({worry:4});say(`문중 어른들의 눈치를 보느라 ${nm}의 일은 훗날로 미루었다.`);}}]};
+  }
+  if(own==='gwan'){
+    const c=Math.round(Math.max(12,Math.min(P.wealth*.12,100)));
+    return {kind:'major',title:'자식 · 관아의 노비 문서',text:`${W} ${nm}${bat(nm)?'은':'는'} 어미를 따라 관아의 노비 문서에 올라 있다. 관노비를 빼내려면 관아에 속전을 바치거나, 대신 일할 사람을 바치는 대구속신을 해야 한다.`,opts:[
+      {t:`속전을 바친다 (${money(c)})`,p:P.wealth>=c?.9:.0,tags:['재산 ↓','아전이 값을 더 부를 수 있음'],fn:()=>{if(P.wealth<c){say('모아 둔 돈이 모자랐다.');retry();return;}P.wealth-=c;if(chance(.9))free(`관아에 속전을 바치고 ${W} ${nm}의 이름을 관노비 문서에서 지웠다.`);else{P.wealth=Math.max(0,P.wealth-c*.3);free(`아전이 웃돈을 요구해 더 치르고서야 ${W} ${iga(nm)} 풀려났다.`);}}},
+      {t:'사또에게 청을 넣는다',sub:'평판이 중요하다',p:clamp(.2+P.st.fame/200),tags:['성공하면 값이 덜 듦'],fn:()=>{if(chance(.2+P.st.fame/200)){P.wealth=Math.max(0,P.wealth-c*.3);free(`사또가 사정을 헤아려 적은 값만 받고 ${W} ${nm}을 풀어 주었다.`.replace(nm+'을',eulreul(nm)));}else{retry();fx({worry:6});say('사또는 법대로 하라며 청을 물리쳤다.');}}},
+      {t:'훗날을 기약한다',p:null,safe:true,tags:[],fn:()=>{retry();say(`언젠가 ${eulreul(nm)} 반드시 풀어 주리라 다짐하였다.`);}}]};
+  }
+  const c=Math.round(Math.max(15,Math.min(P.wealth*.15,120)));
+  return {kind:'major',title:'자식 · 주인집의 노비 문서',text:`${W} ${nm}의 이름은 주인집 노비 문서에 올라 있다. 이대로면 언제 팔려 갈지 모르고, 그 자식도 노비가 된다. 주인에게 몸값을 치러야 풀려난다.`,opts:[
+    {t:`몸값을 치른다 (${money(c)})`,p:P.wealth>=c?.85:0,tags:['재산 ↓','주인이 값을 올릴 수 있음'],fn:()=>{if(P.wealth<c){say('모아 둔 돈이 모자랐다.');retry();return;}P.wealth-=c;if(chance(.85))free(`주인에게 몸값을 치르고 ${W} ${nm}의 이름을 노비 문서에서 지웠다.`);else{say('주인이 돈만 받고 값을 더 올렸다. 몇 해 더 모아야 한다.');retry();}}},
+    {t:'주인에게 엎드려 사정한다',sub:'평판이 중요하다',p:clamp(.15+P.st.fame/250),tags:['성공하면 값 없이 풀려남'],fn:()=>{if(chance(.15+P.st.fame/250))free(`주인이 마음을 움직여 ${W} ${eulreul(nm)} 풀어 주었다.`);else{retry();fx({worry:6});say('주인은 고개를 저었다.');}}},
+    {t:'멀리 도망시킨다',sub:'추쇄꾼에게 잡힐 수 있다',p:.5,tags:['성공하면 양인으로 숨어 삶','실패하면 자식이 매를 맞음'],fn:()=>{if(chance(.5)){k.cls='sangmin';k.away=true;k.freedY=P.year;say(`${eulreul(nm)} 몰래 먼 고을로 떠나보냈다. 이름을 바꾸고 양인으로 살아갈 것이다.`,'big');ev('freed',`${W} ${eulreul(nm)} 도망시켜 양인으로 살게 하였다`);}else{retry();fx({worry:12,fame:-3});say(`추쇄꾼에게 붙잡혀 ${iga(nm)} 모진 매를 맞고 끌려 돌아왔다.`,'big');}}},
+    {t:'훗날을 기약한다',p:null,safe:true,tags:[],fn:()=>{retry();say(`언젠가 ${eulreul(nm)} 반드시 풀어 주리라 다짐하였다.`);}}]};
 }

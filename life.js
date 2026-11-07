@@ -1029,6 +1029,8 @@ function yMajor(){
   if(P.age>=55&&!P.flags.liveDone&&P.kids.some(k=>k.alive&&!k.estranged&&P.year-k.born>=18)&&chance(.5))add(45,()=>liveScene());
   if(!P.married&&P.age>=(P.widowed||P.divorced?18:22)&&!P.court&&!P.exile&&!(P.job&&['monk','king','concubine','naesi'].includes(P.job.k))&&P.year-(P.flags.soloY||0)>=1&&chance(P.flags.sujeol?.7:.5))add(34,()=>soloScene());
   if(P.kids.some(k=>k.alive)&&P.year-(P.flags.kidStoryY||0)>=3&&chance(.4))add(27,()=>kidStoryScene());
+  if(y<1894){const fk=P.kids.find(k=>k.alive&&k.cls==='cheonmin'&&!k.estranged&&P.year-k.born>=5&&(!k.freeAsked||(k.freeAgain&&P.year>=k.freeAgain)));
+    if(fk){const a=P.year-fk.born;const due=a>=15||(P.cls!=='cheonmin')||(fk.freeAgain&&P.year>=fk.freeAgain);if(due||chance(.25))add(due?86:40,()=>freeKidScene(fk));}}
   if(y===1777&&P.kids.some(k=>k.alive&&k.seo))say('나라에서 서얼허통절목을 내려 서얼에게도 벼슬길을 열어 주었다. 서얼 자식들의 앞날에 빛이 비쳤다.','big');
   {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=18&&P.year-k.born<=22&&!k.seo&&(k.cls||P.cls)==='yangban'&&!k.away&&!k.estranged);if(d&&isJoseon(y))add(P.year-d.born>=20?97:80,()=>kidRoyalScene(d));}
   {const qd=P.kids.find(k=>k.alive&&k.royalBride==='중전');if(qd&&realKing(y).s===y&&!P.alt&&qd.queenY!==y){qd.royalBride='대비';updateHonor();say(`임금이 승하하고 새 임금이 서니, 중전이던 딸 ${iga(qd.name)} 대비가 되었다.`,'big');ev('kidfeat',`딸 ${qd.name}`,{feat:'대비가 되었다'});}}
