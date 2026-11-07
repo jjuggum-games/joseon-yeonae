@@ -1788,7 +1788,7 @@ function arrangeChance(){
   if(P.widowed||P.divorced){if(a>40)return 0;return {royal:.15,yangban:F?0:.12,jungin:.08,sangmin:.06,cheonmin:.12}[P.cls]||0;}
   if(a<18||a>(F?26:32))return 0;
   if(P.year-(P.flags.arrY||0)<2)return 0;
-  const base={royal:F?.55:.5,yangban:F?.42:.32,jungin:F?.3:.22,sangmin:F?.16:.12,cheonmin:F?.3:.25}[P.cls]||.15;
+  const base={royal:F?.2:.19,yangban:F?.22:.18,jungin:F?.15:.12,sangmin:F?.08:.06,cheonmin:F?.12:.1}[P.cls]||.08;
   const era=P.year>=1894?.5:1;
   return base*era*(a>=(F?21:25)?1.3:1);
 }
