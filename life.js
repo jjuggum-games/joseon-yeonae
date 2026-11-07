@@ -433,7 +433,7 @@ function yJob(){
     if(J.lv===0){if(chance(.12+P.st.know/220)){const lv=chance(.5)?1:2;setJob('scholar',lv);say(`${exn} 소과에 붙어 ${iga(JOBS.scholar.ladder[lv])} 되었다.`,'big');fx({fame:8});ev('job',`${iga(JOBS.scholar.ladder[lv])} 되었다`);}else say('과거를 보았으나 이름이 방에 오르지 않았다.');}
     else{if(chance(.06+Math.max(0,P.st.know-30)/180)){const lv=P.st.know>80?4:P.st.know>65?2:0;setJob('official',lv);say(`문과에 급제하였다! ${RANKS[lv]} 벼슬을 받았다.`,'big');fx({fame:15});ev('job','문과에 급제하였다');P.home=P.cls==='yangban'?'사랑채 딸린 기와집':P.home;}else say('대과에 나아갔으나 낙방하였다.');}
   } else if(k==='scholar'&&P.sub==='seo'&&examY&&a>=18&&!P.seen.seoNo){P.seen.seoNo=1;say('서얼이라 문과에 나아갈 수 없었다. 붓을 쥔 손이 떨렸다.');fx({worry:10},true);}
-  if(k==='official'&&J.lv<16&&chance(postMul()*(.05+Math.max(0,P.st.know+P.st.wit-110)/650+P.st.fame/1600-(J.lv>=12?.03:0)))){const up=chance(.25)?2:1;setJob('official',Math.min(16,J.lv+up));say(`${euro(RANKS[P.job.lv])} 승진하였다.`,P.job.lv>=12?'big':'n');if(P.job.lv>=12)ev('job',`${RANKS[P.job.lv]}에 올랐다`);}
+  if(k==='official')officialYear(J,a);
   if(k==='military'){
     if(J.lv===0&&examY&&a>=17&&a<=50){note('mugwa');if(chance(.1+Math.max(0,P.st.brave-30)/170+P.st.art/1000)){setJob('military',1);say(`${isGwageoYear(P.year)?'식년시':'별시'} 무과에 급제하였다! ${jobTitle(P.job)} 자리를 받았다.`,'big');fx({fame:12});ev('job','무과에 급제하였다');}else say('무과를 보았으나 활이 과녁을 비껴갔다.');}
     else if(J.lv>=1&&J.lv<6&&(J.lv<3||chance(.45))&&(J.lv<5||P.flags.warYear||chance(.15))&&chance(postMul()*(.03+Math.max(0,P.st.brave+P.st.wit-120)/900+P.st.fame/2500+(P.flags.warYear?.12:0)+(P.post==='border'&&P.flags.warYear?.1:0)))){setJob('military',J.lv+1);say(`${euro(jobTitle(P.job))} 올랐다.`,J.lv+1>=4?'big':'n');if(P.job.lv>=4)ev('job',`${jobTitle(P.job)}에 올랐다`);}
@@ -1271,4 +1271,32 @@ function royalDaughterYear(k,a){
     if(chance(.005)){k.royalBride='폐빈';say(`궁중의 모함에 휘말려 딸 ${iga(nm)} 폐서인이 되어 사가로 쫓겨났다.`,'big');fx({fame:-15,worry:20});updateHonor();ev('note',`딸 ${nm}이 폐서인이 되는 일을 겪었다`);k.home='with';return;}
   }
   if(rb==='대비'&&chance(.05))say(`대비가 된 딸 ${iga(nm)} 궁 안의 큰 어른으로 존경받는다.`);
+}
+
+/* ===== 벼슬살이: 근무 일수(사만법)와 임금의 특지에 따른 승진 ===== */
+function officialYear(J,a){
+  if(J.since==null)J.since=P.year-2;
+  const ten=P.year-J.since;const kn=P.st.know,fm=P.st.fame,M=postMul();
+  if(J.chisa)return;
+  /* 일흔이 넘으면 벼슬을 내려놓는다 (치사) */
+  if(a>=70&&!J.chisa&&chance(.5)){J.chisa=1;say(J.lv>=14?'일흔이 넘어 벼슬을 내려놓고 기로소에 들었다. 임금이 궤장을 내려 원로로 예우하였다.':'일흔이 넘어 벼슬을 내려놓고 물러났다(치사).','big');ev('job',J.lv>=14?'치사하고 기로소에 들었다':'벼슬에서 물러났다');if(J.lv>=14)fx({fame:5});return;}
+  /* 정1품: 판중추부사 → 우의정 → 좌의정 → 영의정 */
+  if(J.lv>=16){
+    if(J.seat==null)J.seat=0;
+    if(J.seat<3&&ten>=2&&chance(M*(.08+fm/1200+kn/2000))){J.seat++;J.since=P.year;const t=jobTitle(J);say(J.seat===3?`마침내 백관의 으뜸인 영의정에 올랐다!`:`${euro(t)} 제수되었다.`,'big');ev('job',`${t}에 올랐다`);fx({fame:J.seat===3?12:6});}
+    return;
+  }
+  let need,p;
+  if(J.lv<=4){need=1;p=.5+(kn-50)/250;}          /* 참하관: 450일 근무를 채우면 */
+  else if(J.lv<=11){need=2;p=.42+(kn-50)/250;}    /* 참상관: 900일 근무를 채우면 */
+  else if(J.lv===12){need=2;p=.07+fm/800+kn/1400;} /* 당상관으로: 임금의 특지 */
+  else if(J.lv<=14){need=3;p=.06+fm/900+kn/1600;}
+  else {need=3;p=a>=45?.035+fm/1400+kn/2500:0;}     /* 종1품 → 정1품 */
+  if(ten<need||!chance(clamp(M*p,0,.9)))return;
+  const up=J.lv<11&&chance(.12)?2:1;const nl=Math.min(16,J.lv+up);
+  setJob('official',nl);
+  if(nl===12)say(`정3품 통정대부, 당상관의 반열에 올랐다. 이제 임금 앞에서 정사를 논하는 자리다.`,'big');
+  else if(nl===16){P.job.seat=chance(.5)?1:0;say(P.job.seat?'정1품에 올라 우의정에 제수되었다! 삼정승의 한 자리다.':'정1품 판중추부사에 올랐다. 정승 자리가 비기를 기다린다.','big');}
+  else say(`${up===2?'특지로 품계를 뛰어넘어 ':''}${euro(RANKS[nl])} 승진하였다.`,nl>=12?'big':'n');
+  if(nl>=12)ev('job',`${jobTitle(P.job)}에 올랐다`);
 }

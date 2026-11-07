@@ -266,10 +266,13 @@ function note(k){
 const COURT_DEPT={jimil:['지밀','wit'],chim:['침방','art'],su:['수방','art'],soju:['소주방','health'],saeng:['생과방','art'],sedap:['세답방','health']};
 function jobTitle(j){if(!j)return '';const d=JOBS[j.k];
   if(j.k==='court'&&typeof P!=='undefined'&&P&&P.courtDept&&j.lv>=1){const n=COURT_DEPT[P.courtDept][0];return j.lv===1?n+' 나인':j.lv===2?n+' 상궁':P.courtDept==='jimil'?'제조상궁':'부제조상궁';}
+  if(j.k==='official'&&j.lv>=16&&j.seat!=null)return `정1품 ${['판중추부사','우의정','좌의정','영의정'][j.seat]}`;
+  if(j.k==='official'&&j.chisa)return `${RANKS[Math.min(j.lv,16)]} 봉조하(치사)`;
   return d.ladder[Math.min(j.lv,d.ladder.length-1)];}
 function setJob(k,lv){
   const prev=P.job;
-  P.job={k,lv};
+  P.job={k,lv,since:typeof P!=='undefined'&&P?P.year:0};
+  if(prev&&prev.k===k&&k==='official'&&prev.seat!=null&&lv>=16)P.job.seat=prev.seat;
   /* 승진하거나 급제하면 평판이 크게 오른다 */
   if(prev&&k!=='bandit'&&typeof fx==='function'&&((prev.k===k&&lv>prev.lv)||(prev.k!==k&&['official','military'].includes(k))||(prev.k==='scholar'&&k==='scholar'&&lv>prev.lv)))fx({fame:ri(6,12)+Math.min(8,lv)});const t=jobTitle(P.job);
   if(!P.titles.includes(t))P.titles.push(t);
