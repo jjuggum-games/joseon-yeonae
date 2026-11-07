@@ -827,12 +827,13 @@ function seekLove(kind){
     o.cls='royal';o.sur='이';o.bon='전주';
     const gh=R(['영','화','덕','은','숙','정','명','경','의','순','익','양'])+R(['창','원','안','성','양','천','평','춘','릉','산']);
     const r=rnd();
-    if(fem){o.title=r<.45?gh+'공주':gh+'옹주';o.pos=o.title.endsWith('공주')?'공주':'옹주';o.born=P.year-ri(16,24);}
+    if(fem){o.title=r<.45?gh+'공주':gh+'옹주';o.pos=o.title.endsWith('공주')?'공주':'옹주';o.born=P.year-ri(18,24);}
     else if(r<.12&&hasKing(P.year)&&P.age<=35&&!Object.values(P.people).some(y=>y.isKing&&y.alive)){const k=realKing(P.year);o.title=k.n;o.isKing=true;o.pos='임금';o.born=k.s-ri(12,22);}
-    else if(r<.35&&!Object.values(P.people).some(y=>y.seja&&y.alive)){o.title='세자 저하';o.seja=true;o.pos='세자';o.born=P.year-ri(15,26);}
+    else if(r<.35&&!Object.values(P.people).some(y=>y.seja&&y.alive)){o.title='세자 저하';o.seja=true;o.pos='세자';o.born=P.year-ri(18,26);}
     else if(r<.65){o.title=gh+'대군';o.pos='대군';}
     else {o.title=gh+'군';o.pos='왕자군';}
     place=o.isKing?R(['궁궐 연회','어가 행렬','궁궐 후원']):R(['궁궐 후원','종묘 제례를 마친 길','왕실 사냥터','궐내 잔치']);
+  } else if(kind==='young'){o.born=P.year-ri(18,25);o.cls=wpick([['sangmin',5],['cheonmin',3],['jungin',2]]);if(o.cls==='cheonmin')o.sub=chance(.4)?'gisaeng':'nobi';place=R(['매파 할멈의 소개','먼 친척의 주선','장터 어귀','이웃 마을 잔칫집']);o.h=40;o.t=45;
   } else if(kind==='yangban'){o.cls='yangban';place=R(PLACES.yangban);}
   else if(kind==='cheonmin'){o.cls='cheonmin';o.sub=R(['nobi','nobi','gisaeng','gwangdae']);if(o.sub==='gisaeng'&&!fem)o.sub='gwangdae';place=R(PLACES.cheonmin);}
   else {o.cls=R(['sangmin','sangmin','jungin']);place=R(PLACES[o.cls]);}
@@ -1206,7 +1207,8 @@ function kidNameCls(cm,pr){
 }
 
 /* ===== 아이 갖기: 해마다 자동 / 한 번 / 사건 ===== */
-function fertileWith(x){
+function fertileWith(x){const r=fertileWith0(x);return r*(!P.female&&P.age>70?.35:!P.female&&P.age>60?.6:1);}
+function fertileWith0(x){
   if(!x||!x.alive||P.eunuch)return 0;
   if(x.kind==='spouse')return x.id===P.spouse?fertile():0;
   if(x.kind!=='cheop'||x.female===P.female)return 0;
