@@ -90,6 +90,7 @@ function buildSillok(){
     if(k==='chongsin')return lv>=2?'임금의 총애를 등에 업고 권신이 되어 조정을 흔들었다.':'임금의 총애를 받는 총신이 되었다.';
     if(k==='namchong')return '권세가 대감의 총애를 받으며 그 댁에 머물렀다.';
     if(k==='royalwife')return `${P.cls==='royal'?'':'신분의 벽을 넘어 '}왕실에 시집가 ${iga(t)} 되었다.`;
+    if(k==='sosil')return '권세가의 소실(부실)이 되어 살았다.';
     if(k==='buma')return '공주(옹주)와 혼인하여 부마가 되었다.';
     if(k==='court')return `궁녀로서 ${t}에 이르렀다.`;
     if(k==='lady')return lv>=3?'종가의 종부로 집안을 이끌었다.':`${euro(t)}서 집안 살림을 맡았다.`;

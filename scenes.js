@@ -257,7 +257,8 @@ function wed(x,silent,elope){
   else if(!P.female&&x.cls==='royal'&&x.female&&!(P.job&&P.job.k==='buma')){setJob('buma',0);}
   /* 혼인한 여인은 무엇이든 자리가 생긴다 */
   else if(P.female&&!x.kingRole){
-    if(x.cls==='royal'&&!(P.job&&['queen','concubine'].includes(P.job.k)))setJob('royalwife',/대군/.test(x.title||'')?1:0);
+    if((P.sub==='cheop'||x.mode==='cheop')&&['royal','yangban'].includes(x.cls))setJob('sosil',0);
+    else if(x.cls==='royal'&&!(P.job&&['queen','concubine'].includes(P.job.k)))setJob('royalwife',/대군/.test(x.title||'')?1:0);
     else if(['yangban','jungin','royal'].includes(P.cls)&&(!P.job||!JOB_KEEP.includes(P.job.k)||P.job.k==='lady'))setJob('lady',1);
     else if(!P.job||!JOB_KEEP.includes(P.job.k))setJob('housewife',0);
   }
@@ -588,7 +589,7 @@ function wifeRiseScene(){
   const p=clamp(.15+sons*.12+(sp.h||50)/400+(sp.wifeDead?.25:0),.08,.85);
   return {kind:'major',title:'정실의 자리',pid:sp.id,text:`${sp.wifeDead?`${nm}의 정실이 세상을 떠났다.`:`${nm}의 정실은 끝내 아들을 얻지 못하였다.`} ${sons?`아들 ${sons}명을 낳은 그대를 정실로 올리자는 말이 집안에서 나온다.`:'그대를 정실로 올리자는 말이 조심스레 나온다.'}${yb?' 다만 양반가에서 첩을 정실로 올리는 것은 법도에 어긋나는 일이다.':''}`,opts:[
     {t:'정실의 자리에 오른다',sub:'아들이 많을수록, 남편의 정이 깊을수록 쉽다',p,tags:['신분 변화: 정실',...(yb?['평판 ↓ (법도에 어긋남)']:[])],fn:()=>{
-      if(chance(p)){P.sub='';sp.mode='wife';fx({fame:yb?-6:4,worry:-10});if(!yb)P.kids.forEach(k=>{if(k.father===sp.id)k.seo=false;});if(P.job&&P.job.k==='housewife')setJob('housewife',2);P.home=P.home.replace('의 별채','의 안채');say(`첩의 몸에서 벗어나 ${nm}의 정실이 되었다.${yb?' 다만 자식들의 서얼 신분은 그대로 남았다.':''}`,'big');ev('rise','첩에서 정실이 되었다');}
+      if(chance(p)){P.sub='';sp.mode='wife';if(CRANK.indexOf(sp.cls)>CRANK.indexOf(P.cls)){P.birthCls=P.birthCls||P.cls;P.cls=sp.cls;P.flags.clsReason='marriage';}if(sp.cls==='royal')setJob('royalwife',/대군/.test(sp.title||'')?1:0);else if(P.job&&P.job.k==='sosil')setJob(['yangban','jungin'].includes(sp.cls)?'lady':'housewife',['yangban','jungin'].includes(sp.cls)?2:1);fx({fame:yb?-6:4,worry:-10});if(!yb)P.kids.forEach(k=>{if(k.father===sp.id)k.seo=false;});if(P.job&&P.job.k==='housewife')setJob('housewife',2);P.home=P.home.replace('의 별채','의 안채');say(`첩의 몸에서 벗어나 ${nm}의 정실이 되었다.${yb?' 다만 자식들의 서얼 신분은 그대로 남았다.':''}`,'big');ev('rise','첩에서 정실이 되었다');}
       else{fx({worry:10});say('집안 어른들의 반대로 뜻을 이루지 못하였다.');}}},
     {t:'지금 자리에 만족한다',p:null,safe:true,tags:[],fn:()=>{say('첩의 자리에서 조용히 살기로 하였다.');}}]};
 }

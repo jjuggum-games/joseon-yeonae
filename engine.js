@@ -86,6 +86,7 @@ function normalizeSt(p){
     for(const x of Object.values(p.people)){const r=x.title&&ROLE[x.title];if(r&&x.name&&x.sur){x.title=`${x.sur}${x.name} ${r[0]}`;x.pos=r[1];}}}
   if(p.people&&p.female&&p.married&&p.spouse&&p.people[p.spouse]){const sp=p.people[p.spouse];const R5=['cheonmin','sangmin','jungin','yangban','royal'];
     if(sp.mode!=='cheop'&&p.sub!=='cheop'&&!sp.kingRole&&R5.indexOf(sp.cls)>R5.indexOf(p.cls)){p.birthCls=p.birthCls||p.cls;p.cls=sp.cls;p.lastCls=p.cls;}}
+  if(p.sub==='cheop'&&p.job&&p.job.k==='royalwife'){p.job={k:'sosil',lv:0};p.peak=p.peak&&p.peak.k==='royalwife'?{k:'sosil',lv:0}:p.peak;}
   p.stMerged=1;p.witMerged=1;return p;
 }
 

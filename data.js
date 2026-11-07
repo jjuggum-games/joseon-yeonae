@@ -244,6 +244,7 @@ const JOBS = {
   chongsin:{n:'총신',ladder:['곁을 지키는 이','총신','권신'],stat:'look'},
   namchong:{n:'남총',ladder:['대감 댁 식객','대감의 총애를 받는 이','대감 댁 집사'],stat:'look'},
   royalwife:{n:'왕실',ladder:['군부인','부부인'],stat:'grace'},
+  sosil:{n:'소실',ladder:['소실','총애받는 소실'],stat:'look'},
   housewife:{n:'살림',ladder:['새댁','안사람','안주인'],stat:'wit'},
   gisaeng:{n:'기녀',ladder:['동기','기녀','행수기생','명기'],stat:'art'},
   gwangdae:{n:'광대',ladder:['떠돌이 광대','놀이패 광대','이름난 명창'],stat:'art'},
