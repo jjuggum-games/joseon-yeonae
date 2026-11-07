@@ -657,3 +657,57 @@ function fameScene(){
   if(P.age<16)L.splice(4,4);
   const sc=R(L)();sc.kind='major';sc.title='세상의 눈 · '+sc.title;return sc;
 }
+
+/* ===== 자식들의 이야기 ===== */
+function kidStoryScene(){
+  P.flags.kidStoryY=P.year;const U=UNIT[P.cls]||.5;const amt=f=>Math.max(U*f*10,P.wealth*f);
+  const age=k=>P.year-k.born;const W=k=>k.female?'딸':'아들';
+  const K=P.kids.filter(k=>k.alive);const L=[];
+  const pick=(f)=>{const c=K.filter(f);return c.length?R(c):null;};
+  /* 서얼 아들 */
+  {const k=pick(k=>k.seo&&!k.female&&!k.seoDone&&age(k)>=14&&age(k)<=28&&P.year<1777&&['yangban','royal'].includes(k.cls||P.cls));
+   if(k)L.push([9,()=>{k.seoDone=1;const legit=K.some(x=>!x.female&&!x.seo&&x!==k);note('seoeol');
+     return {title:'서얼의 설움',text:`아들 ${iga(k.name)} 글을 읽다 말고 책을 덮었다. "서얼은 문과를 볼 수 없다 하니, 글을 읽어 무엇 합니까." 아비를 아비라 부르지 못하고 형을 형이라 부르지 못하는 설움이 그 얼굴에 서려 있다.`,opts:[
+       {t:'잡과나 무과의 길을 권한다',sub:'역관·의원·무관은 서얼에게도 열려 있다',p:.55,tags:['자식의 앞날 ↑'],fn:()=>{if(chance(.55)){k.feat=R(['잡과에 붙어 역관이 되었다','잡과에 붙어 의관이 되었다','무과에 급제하여 무관이 되었다']);fx({fame:4});say(`${iga(k.name)} 마음을 다잡고 다른 길을 걸어, 마침내 ${k.feat}.`,'big');ev('kidfeat',`아들 ${k.name}`,{feat:k.feat});}else say(`${iga(k.name)} 한동안 방황하였다.`);}},
+       ...(!legit?[{t:'적자로 세운다',sub:'적자가 없으니 대를 잇게 한다',p:.6,tags:['자식의 서얼 신분이 풀림','평판 ↓ (법도에 어긋남)'],fn:()=>{if(chance(.6)){k.seo=false;fx({fame:-6});say(`문중을 설득해 ${eulreul(k.name)} 적자로 세웠다. 대를 이을 아들이 되었다.`,'big');ev('rise',`서자 ${eulreul(k.name)} 적자로 세웠다`);}else{fx({fame:-3});say('문중 어른들이 거세게 반대하여 뜻을 이루지 못하였다.');}}}]:[]),
+       ...(P.year>=1695?[{t:'서얼허통 상소에 이름을 올리게 한다',sub:'서얼들이 함께 벼슬길을 열어 달라 청한다',p:null,tags:['평판 조금 ↑','조정에 밉보일 수 있음'],fn:()=>{fx({fame:3});k.feat=k.feat||'서얼허통 상소에 앞장섰다';say(`${iga(k.name)} 서얼들과 함께 허통을 청하는 상소에 이름을 올렸다.`);}}]:[]),
+       {t:'분수를 받아들이라 타이른다',p:null,safe:true,tags:[],fn:()=>{fx({worry:5});say(`${eulreul(k.name)} 다독였으나, 그 눈빛은 쉽게 풀리지 않았다.`);}}]};}]);}
+  /* 천인으로 태어난 자식 */
+  {const k=pick(k=>k.cls==='cheonmin'&&!k.freeTried&&age(k)>=3&&age(k)<=30);
+   if(k)L.push([6,()=>{k.freeTried=1;const cost=Math.max(U*25,{royal:300,yangban:40,jungin:30,sangmin:15,cheonmin:8}[P.cls]||15);const can=P.wealth>=cost;note('nobilaw');
+     return {title:'천인의 자식',text:`${W(k)} ${k.name}의 이름은 아직 노비 문서에 올라 있다. 언제 팔려 갈지 모르고, 그 자식도 또 그 자식도 노비가 된다. 속량하려면 ${money(cost)}쯤이 든다고 한다.`,opts:[
+       ...(can?[{t:'재산을 털어 속량한다',p:null,tags:['재산 크게 ↓','자식이 양인이 됨'],fn:()=>{fx({wealth:-cost});k.cls=P.cls==='cheonmin'?'sangmin':P.cls;fx({worry:-10});say(`값을 치르고 노비 문서에서 ${W(k)} ${k.name}의 이름을 지웠다. ${iga(k.name)} 양인이 되었다.`,'big');ev('freed',`${W(k)} ${k.name}을 속량하였다`);}}]:[]),
+       {t:'주인집에 엎드려 사정한다',sub:'평판이 높으면 들어줄지도 모른다',p:clamp(.15+P.st.fame/300),tags:['성공하면 자식이 양인이 됨'],fn:()=>{if(chance(.15+P.st.fame/300)){k.cls='sangmin';say(`주인이 마음을 움직여 ${W(k)} ${k.name}을 풀어 주었다.`,'big');ev('freed',`${W(k)} ${k.name}이 면천되었다`);}else{fx({worry:6});say('주인은 고개를 저었다.');}}},
+       {t:'훗날을 기약한다',p:null,safe:true,tags:[],fn:()=>{say('언젠가 이 아이만은 풀어 주리라 다짐하였다.');k.freeTried=0;}}]};}]);}
+  /* 도박 빚 */
+  {const k=pick(k=>!k.female&&age(k)>=17&&age(k)<=40&&!k.gamble);
+   if(k)L.push([2,()=>{k.gamble=1;const c=amt(.15);return {title:'자식의 노름빚',text:`아들 ${iga(k.name)} 투전판에 빠져 ${money(c)}의 빚을 졌다. 빚쟁이들이 집 앞까지 찾아왔다.`,opts:[
+     {t:'빚을 갚아 준다',p:null,tags:['재산 ↓'],fn:()=>{fx({wealth:-c});say(`빚을 대신 갚아 주었다. ${iga(k.name)} 고개를 들지 못하였다.`);if(chance(.5)){fx({brave:0});say(`${iga(k.name)} 다시는 투전판에 가지 않겠다고 맹세하였다.`);}}},
+     {t:'호되게 꾸짖고 스스로 갚게 한다',p:null,tags:['평판 조금 ↓'],fn:()=>{fx({fame:-2});say(`${iga(k.name)} 몇 해에 걸쳐 품을 팔아 빚을 갚았다.`);if(k.st)k.st.know=Math.min(100,k.st.know+3);}},
+     {t:'의절한다',p:null,tags:['마음고생 ↑'],fn:()=>{fx({worry:12});k.estranged=1;say(`${eulreul(k.name)} 내쫓았다. 대문 밖에서 울며 비는 소리가 오래 들렸다.`,'big');}}]};}]);}
+  /* 딸의 시집살이 */
+  {const k=pick(k=>k.female&&k.married&&age(k)>=16&&age(k)<=35&&!k.sijib);
+   if(k)L.push([3,()=>{k.sijib=1;return {title:'딸의 시집살이',text:`시집간 딸 ${iga(k.name)} 친정에 다니러 와서 소매로 눈물을 훔친다. 시어머니의 구박이 심하다고 한다.`,opts:[
+     {t:'사돈댁에 찾아가 따진다',sub:'평판과 무예(배짱)가 도움이 된다',p:clamp(.3+P.st.fame/300+P.st.brave/400),tags:['성공하면 딸의 처지가 나아짐','실패하면 딸이 더 힘들어짐'],fn:()=>{if(chance(.3+P.st.fame/300+P.st.brave/400)){say(`사돈댁에 찾아가 담판을 지었다. 그 뒤로 ${k.name}의 시집살이가 한결 나아졌다.`);fx({worry:-4});}else{say(`괜히 찾아갔다가 ${k.name}의 시집살이만 더 고되어졌다.`);fx({worry:8});}}},
+     {t:'친정으로 데려온다',p:null,tags:['평판 ↓','딸이 친정에서 지냄'],fn:()=>{fx({fame:-5});k.home=1;say(`${eulreul(k.name)} 친정으로 데려왔다. 수군거림이 따랐지만 딸의 얼굴에 웃음이 돌아왔다.`);}},
+     {t:'참고 견디라 타이른다',p:null,safe:true,tags:['마음고생 ↑'],fn:()=>{fx({worry:6});say(`"출가외인이니 참고 견디거라." 돌아서는 딸의 뒷모습이 오래 눈에 밟혔다.`);}}]};}]);}
+  /* 혼인을 두고 */
+  {const k=pick(k=>!k.married&&age(k)>=16&&age(k)<=26&&!k.loveAsk);
+   if(k)L.push([3,()=>{k.loveAsk=1;const low=R(['장터 엿장수의','이웃 마을 소작인의','주막집','관아 노비의']);const lowCls=/노비/.test(low)?'cheonmin':'sangmin';
+     return {title:'자식의 혼사',text:`${W(k)} ${iga(k.name)} 무릎을 꿇었다. ${low} ${k.female?'아들':'딸'}과 서로 마음을 주었으니 혼인을 허락해 달라고 한다.${['yangban','royal','jungin'].includes(P.cls)?' 집안 어른들은 신분이 맞지 않는다며 펄쩍 뛴다.':''}`,opts:[
+       {t:'혼인을 허락한다',p:null,tags:['평판 ↓','자식의 정 ↑'],fn:()=>{k.married=true;k.inlaw=low.replace(/의$/,'')+' 집안';fx({fame:['yangban','royal','jungin'].includes(P.cls)?-6:0,worry:-4});say(`${W(k)} ${k.name}의 혼인을 허락하였다. 소박한 혼례에서 ${iga(k.name)} 환하게 웃었다.`,'big');}},
+       {t:'반대한다',p:.7,tags:['자식이 달아날 수 있음'],fn:()=>{if(chance(.7)){say(`혼인을 허락하지 않았다. ${iga(k.name)} 한동안 방에서 나오지 않았다.`);fx({worry:4});}else{k.married=true;k.inlaw=low.replace(/의$/,'')+' 집안';k.estranged=1;fx({fame:-8,worry:12});say(`${iga(k.name)} 그 사람과 함께 야반도주하였다.`,'big');}}}]};}]);}
+  /* 어린 자식의 병 */
+  {const k=pick(k=>age(k)>=1&&age(k)<=12&&!k.sick);
+   if(k&&chance(.35))L.push([1,()=>{k.sick=1;const c=amt(.05);return {title:'자식의 병',text:`${W(k)} ${iga(k.name)} 열이 펄펄 끓고 사흘째 깨어나지 못한다.`,opts:[
+     {t:'용하다는 의원을 모셔 온다',p:.88,tags:['재산 ↓'],fn:()=>{fx({wealth:-c});if(chance(.88))say(`의원의 탕약을 먹고 ${iga(k.name)} 털고 일어났다.`);else{k.alive=false;k.dy=P.year;fx({worry:25});say(`정성을 다했으나 ${iga(k.name)} 끝내 숨을 거두었다.`,'big');ev('kidDeath',k.name);}}},
+     {t:'무당을 불러 굿을 한다',p:.7,tags:['재산 조금 ↓'],fn:()=>{fx({wealth:-c*.5});if(chance(.7))say(`굿을 한 뒤 ${iga(k.name)} 기운을 차렸다.`);else{k.alive=false;k.dy=P.year;fx({worry:25});say(`${iga(k.name)} 끝내 숨을 거두었다.`,'big');ev('kidDeath',k.name);}}},
+     {t:'밤새 곁에서 간호한다',p:.75,safe:true,tags:['건강 조금 ↓'],fn:()=>{fx({health:-3});if(chance(.75))say(`밤낮으로 곁을 지킨 끝에 ${iga(k.name)} 눈을 떴다.`);else{k.alive=false;k.dy=P.year;fx({worry:25});say(`${iga(k.name)} 끝내 숨을 거두었다.`,'big');ev('kidDeath',k.name);}}}]};}]);}
+  /* 효도 */
+  {const k=P.age>=60&&P.age<=63?pick(k=>age(k)>=25&&!k.estranged&&!k.hyo):null;
+   if(k)L.push([2,()=>{k.hyo=1;return {title:'자식의 효도',text:`${W(k)} ${iga(k.name)} 그대의 회갑을 맞아 잔치를 열겠다고 한다. 온 고을 사람들을 부르겠다고 한다.`,opts:[
+     {t:'크게 잔치를 연다',p:null,tags:['평판 ↑','재산 조금 ↓'],fn:()=>{fx({fame:5,worry:-8,wealth:-amt(.05)});say(`회갑 잔치에 고을 사람들이 모여들었다. 자식들이 차례로 술잔을 올렸다.`,'big');}},
+     {t:'조촐하게 식구끼리 보낸다',p:null,safe:true,tags:['마음고생 ↓'],fn:()=>{fx({worry:-10});say('식구들끼리 조촐하게 상을 차렸다. 그것으로 족하였다.');}}]};}]);}
+  if(!L.length)return null;
+  const sc=wpick(L.map((x,i)=>[i,x[0]]));const r=L[sc][1]();r.kind='major';r.title='자식 · '+r.title;return r;
+}

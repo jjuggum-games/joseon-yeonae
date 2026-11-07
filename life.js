@@ -647,7 +647,7 @@ function yGrowth(){
     const ks=GROW_K.filter(k=>!used.includes(k)&&!(k==='health'&&P.age>=50&&chance(.5)));
     const k=R(ks);used.push(k);
     const pool=GROW[k][P.age<18?'young':'adult'];
-    const o={};o[k]=ri(2,5);
+    const o={};o[k]=k==='fame'?ri(1,2):ri(2,5);
     say(R(pool));fx(o);
   }
 }
@@ -976,6 +976,8 @@ function yMajor(){
   if(P.female&&P.widowed&&!P.married&&!P.flags.widowAsked&&P.age>=18)add(62,()=>widowScene());
   if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10)add(90,()=>jeongnyeoScene());
   if(P.age>=12&&P.year-(P.flags.fameY||0)>=3&&chance(.55))add(25,()=>fameScene());
+  if(P.kids.some(k=>k.alive)&&P.year-(P.flags.kidStoryY||0)>=3&&chance(.4))add(27,()=>kidStoryScene());
+  if(y===1777&&P.kids.some(k=>k.alive&&k.seo))say('나라에서 서얼허통절목을 내려 서얼에게도 벼슬길을 열어 주었다. 서얼 자식들의 앞날에 빛이 비쳤다.','big');
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){
@@ -1060,10 +1062,10 @@ function kidGrow(k,a){
 function kidFeat(k){
   const st=kidSt(k);const top=KID_ST.map(x=>x[0]).sort((x,y)=>st[y]-st[x])[0];const v=st[top];if(v<55)return;
   const w=k.female?'딸':'아들';const cls=P.cls;let t=null,fame=4;
-  if(top==='know'&&!k.female&&!k.seo&&['yangban','royal'].includes(cls)){t='문과에 급제하였다';fame=10;}
+  if(top==='know'&&!k.female&&(!k.seo||P.year>=1777)&&k.cls!=='cheonmin'&&['yangban','royal'].includes(cls)){t=k.seo?'서얼허통으로 열린 길을 따라 문과에 급제하였다':'문과에 급제하였다';fame=10;}
   else if(top==='know'&&!k.female&&['jungin','yangban'].includes(cls)){t='잡과에 붙어 역관이 되었다';}
   else if(top==='know'){t='글을 잘하여 그 이름이 고을에 알려졌다';}
-  else if(top==='brave'&&!k.female&&cls!=='cheonmin'){t='무과에 급제하였다';fame=8;}
+  else if(top==='brave'&&!k.female&&k.cls!=='cheonmin'){t='무과에 급제하였다';fame=8;}
   else if(top==='brave'){t='담대하기로 이름이 났다';}
   else if(top==='art'){t=k.female?'솜씨가 빼어나 궁에서까지 찾았다':'솜씨가 빼어나 이름을 떨쳤다';}
   else if(top==='look'){t=k.female?'곱기로 소문나 좋은 혼처가 줄을 이었다':'풍채가 좋아 어디서나 눈길을 끌었다';}

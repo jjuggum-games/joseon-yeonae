@@ -404,7 +404,7 @@ function sideFam(){
   /* 자식 */
   if(P.kids.length){
     const kd=P.kids.map(k=>{const a=P.year-k.born;const st=kidSt(k);
-      const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?' (양자)':'')+(k.seo?' (서출)':'')+(k.cls&&k.cls!==P.cls?' · '+CLS[k.cls].n:''),[k.alive?a+'세':'',k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
+      const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?' (양자)':'')+(k.seo?' (서출)':'')+(k.cls&&k.cls!==P.cls?' · '+CLS[k.cls].n:'')+(k.estranged?' · 의절':''),[k.alive?a+'세':'',k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
       if(!k.alive)return base;
       const stl=`<div class="kst">${KID_ST.map(([s,n])=>`<span>${n} <b>${st[s]}</b></span>`).join('')}</div>`;
       const sel=a>=6&&a<18?`<div class="kedu"><span>배움</span><select data-kedu="${k.id}">${Object.entries(EDU).map(([key,[n]])=>`<option value="${key}" ${(k.edu||'play')===key?'selected':''}>${n}</option>`).join('')}</select></div>`:a<6?'<div class="kedu muted">여섯 살이 되면 배울 것을 정할 수 있습니다.</div>':'';
