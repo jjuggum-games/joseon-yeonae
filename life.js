@@ -284,7 +284,7 @@ function yFamily(){
   if(P.cpreg)for(const id of Object.keys(P.cpreg)){const pr=P.cpreg[id];if(pr.due<=P.year){delete P.cpreg[id];birth(pr);}}
   if(P.preg&&P.preg.due<=P.year){return birth();}
   const up=unwedConceive();if(up)return up;
-  conceive();
+  autoKids();
 }
 function spouseDies(sp,why){
   sp.alive=false;sp.dy=P.year;
@@ -1055,6 +1055,7 @@ function yMajor(){
     if(marriageable())add(50,()=>matchScene());
     if(P.married&&P.wantKids===null&&P.year>(P.flags.wedY||0)&&fertile())add(48,()=>kidsScene());
     if(P.flags.askMore&&P.married&&fertile()){P.flags.askMore=0;add(44,()=>kidsScene(true));}
+    if(P.wantKids!==false&&P.year-(P.flags.kwishY||0)>=3&&!(P.married&&P.wantKids===null&&P.year<=(P.flags.wedY||0)+1)){const cand=[spouseP(),...peopleOf('cheop')].filter(x=>x&&x.alive&&fertileWith(x)&&!pregOf(x)&&!(P.autoKid&&P.autoKid[x.id]));if(cand.length&&chance(.3))add(43,()=>kidWishScene(R(cand)));}
     const kw=P.kids.find(k=>k.alive&&!k.married&&P.year-k.born>=18&&P.year-k.born<=25&&!k.wedAsked);
     if(kw)add(42,()=>kidWedScene(kw));
     if(P.married&&P.age>=(P.eunuch?26:33)&&!P.kids.some(k=>k.alive)&&!P.flags.adoptAsked)add(38,()=>adoptScene());
@@ -1144,4 +1145,38 @@ function kidNameCls(cm,pr){
   const par=cm||(pr&&P.people[pr.father])||spouseP();
   const a=R5.indexOf(P.cls),b=par?R5.indexOf(par.cls):-1;
   const c=R5[Math.max(a,b)];return c==='royal'?'yangban':c;
+}
+
+/* ===== 아이 갖기: 해마다 자동 / 한 번 / 사건 ===== */
+function fertileWith(x){
+  if(!x||!x.alive||P.eunuch)return 0;
+  if(x.kind==='spouse')return x.id===P.spouse?fertile():0;
+  if(x.kind!=='cheop'||x.female===P.female)return 0;
+  const fa=P.female?P.age:ageOf(x);if(fa<18||fa>44)return 0;
+  return fa<30?.42:fa<36?.3:.16;
+}
+function pregOf(x){return x.kind==='cheop'?(P.cpreg&&P.cpreg[x.id]):P.preg&&!P.preg.unwed?P.preg:null;}
+
+function tryKid(x,auto){
+  if(!fertileWith(x)||pregOf(x))return false;
+  P.kidTryY=P.kidTryY||{};if(P.kidTryY[x.id]===P.year)return false;P.kidTryY[x.id]=P.year;
+  if(P.kids.filter(k=>!k.adopted).length>=9)return false;
+  const isC=x.kind==='cheop';if(!isC)P.wantKids=true;
+  const f=Math.min(.85,fertileWith(x)*(auto?1.3:1.6));
+  if(chance(f)){const d=R(TAEMONG);const pr={due:P.year+1,sex:chance(.5)?'아들':'딸',dream:d[0],guess:d[1],cheop:isC?x.id:undefined,father:P.female?x.id:undefined,mother:!P.female&&!isC?x.id:undefined};if(isC){P.cpreg=P.cpreg||{};P.cpreg[x.id]=pr;}else P.preg=pr;
+    say(`${auto?'':gwawa(callOf(x))+' 아이를 바라며 정성을 들였다. '}${P.female?'몸에 태기가 있었다':`${callOf(x)}에게 태기가 있었다`}. 그날 밤 ${d[0]}을 꾸었다.`,'big');note('taemong');if(typeof toast==='function'&&!auto)toast('태기가 있습니다!');return true;}
+  if(!auto){say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였으나, 올해는 태기가 없었다.`);if(typeof toast==='function')toast('올해는 태기가 없었습니다.');}
+  return false;
+}
+function autoKids(){
+  P.autoKid=P.autoKid||{};
+  if(!P.autoKidInit){P.autoKidInit=1;if(P.wantKids&&P.spouse&&P.autoKid[P.spouse]==null)P.autoKid[P.spouse]=true;}
+  for(const id of Object.keys(P.autoKid)){if(!P.autoKid[id])continue;const x=P.people[id];if(!x||!x.alive){delete P.autoKid[id];continue;}tryKid(x,true);}
+}
+function kidWishScene(x){
+  P.flags.kwishY=P.year;const nm=callOf(x);
+  return {kind:'major',title:'자식 · 아이를 바라는 마음',pid:x.id,text:R([`${nm}${bat(nm)?'과':'와'} 마주 앉은 저녁, 이웃집 아이 웃음소리가 담을 넘어왔다.`,`집안 어른들이 손주 소식은 언제 들리느냐며 넌지시 묻는다.`,`삼신할미께 비는 이웃을 보니 마음이 일렁인다.`]),opts:[
+    {t:'올해 아이를 바란다',p:null,tags:['태기는 운에 달림'],fn:()=>{if(!tryKid(x,false))say('올해는 태기가 없었다.');}},
+    {t:'해마다 아이를 바라기로 한다',p:null,tags:['해마다 저절로 애씀'],fn:()=>{P.autoKid=P.autoKid||{};P.autoKid[x.id]=true;if(x.kind!=='cheop')P.wantKids=true;say('아이가 생길 때까지 해마다 애쓰기로 하였다.');tryKid(x,true);}},
+    {t:'아직은 아니다',p:null,safe:true,tags:[],fn:()=>{say('아직은 때가 아니라고 여겼다.');}}]};
 }

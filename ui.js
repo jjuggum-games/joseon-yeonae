@@ -322,19 +322,13 @@ function renderSide(){
   if(V.tab==='love')body=sideLove();else if(V.tab==='fam')body=sideFam();else if(V.tab==='tl')body=sideTl();else body=sideLet();
   el.innerHTML=`<div class="tabs">${tabs.map(([k,n])=>`<button class="btn ${V.tab===k?'on':''}" data-a="tab" data-v="${k}">${n}</button>`).join('')}</div>${body}`;
 }
-function fertileWith(x){
-  if(!x||!x.alive||P.eunuch)return 0;
-  if(x.kind==='spouse')return x.id===P.spouse?fertile():0;
-  if(x.kind!=='cheop'||x.female===P.female)return 0;
-  const fa=P.female?P.age:ageOf(x);if(fa<18||fa>44)return 0;
-  return fa<30?.42:fa<36?.3:.16;
-}
-function pregOf(x){return x.kind==='cheop'?(P.cpreg&&P.cpreg[x.id]):P.preg&&!P.preg.unwed?P.preg:null;}
 function kidBtns(x){
   if(!fertileWith(x))return '';
-  if(pregOf(x))return `<div class="fnote" style="margin-top:6px">뱃속에 아이가 있습니다.</div>`;
+  const on=!!(P.autoKid&&P.autoKid[x.id]);
+  const auto=`<button class="btn sm ${on?'on':''}" data-a="autokid" data-id="${x.id}">${on?'해마다 아이 갖기 ✓':'해마다 아이 갖기'}</button>`;
+  if(pregOf(x))return `<div class="fnote" style="margin-top:6px">뱃속에 아이가 있습니다.</div><div style="margin-top:4px">${auto}</div>`;
   const tried=(P.kidTryY||{})[x.id]===P.year;
-  return `<div style="margin-top:6px"><button class="btn sm" data-a="trykid" data-id="${x.id}" ${tried?'disabled':''}>${tried?'올해는 이미 애썼습니다':'아이 갖기'}</button>${P.wantKids&&x.kind==='spouse'?' <button class="btn sm ghost" data-a="stopkid">그만 낳기</button>':''}</div>`;
+  return `<div style="margin-top:6px">${auto} <button class="btn sm ghost" data-a="trykid" data-id="${x.id}" ${tried?'disabled':''}>${tried?'올해는 이미 애썼습니다':'올해 한 번 애쓰기'}</button>${(P.wantKids||on)&&x.kind==='spouse'?' <button class="btn sm ghost" data-a="stopkid">그만 낳기</button>':''}</div>${on?'<div class="fnote" style="margin-top:4px">끄기 전까지 해마다 저절로 아이를 바랍니다. 끄면 가끔 사건으로 묻습니다.</div>':''}`;
 }
 function sideLove(){
   const F=[['love','인연'],['rival','악연'],['helper','조력자'],['elder','집안 어른']];
@@ -686,15 +680,10 @@ document.addEventListener('click',async e=>{
     case 'gunghap':{const x=P.people[a.dataset.id];if(x){const g=gunghap(x);const el=document.getElementById('gh-'+x.id);if(el)el.textContent=g;}break;}
     case 'tab':V.tab=v;renderSide();break;
     case 'filter':V.filter=v;V.openCard=null;renderSide();break;
-    case 'trykid':{const x=P&&P.people[a.dataset.id];if(!P||!x||G.scene||!fertileWith(x)||pregOf(x))return;P.kidTryY=P.kidTryY||{};if(P.kidTryY[x.id]===P.year)return;P.kidTryY[x.id]=P.year;
-      const isC=x.kind==='cheop';if(!isC)P.wantKids=true;
-      const f=Math.min(.85,fertileWith(x)*1.6);
-      if(chance(f)){const d=R(TAEMONG);const pr={due:P.year+1,sex:chance(.5)?'아들':'딸',dream:d[0],guess:d[1],cheop:isC?x.id:undefined,father:P.female?x.id:undefined,mother:!P.female&&!isC?x.id:undefined};if(isC){P.cpreg=P.cpreg||{};P.cpreg[x.id]=pr;}else P.preg=pr;
-        say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였다. ${P.female?'곧 몸에 태기가 있었다':`곧 ${callOf(x)}에게 태기가 있었다`}. 그날 밤 ${d[0]}을 꾸었다.`,'big');note('taemong');toast('태기가 있습니다!');}
-      else{say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였으나, 올해는 태기가 없었다.`);toast('올해는 태기가 없었습니다.');}
-      Store.saveCur();V.dirty.feed=1;renderSide();break;}
+    case 'trykid':{const x=P&&P.people[a.dataset.id];if(!P||!x||G.scene)return;tryKid(x,false);Store.saveCur();V.dirty.feed=1;renderSide();break;}
+    case 'autokid':{const x=P&&P.people[a.dataset.id];if(!P||!x)return;P.autoKid=P.autoKid||{};P.autoKid[x.id]=!P.autoKid[x.id];if(P.autoKid[x.id]){if(x.kind!=='cheop')P.wantKids=true;toast('해마다 아이를 바랍니다.');}else toast('자동으로 애쓰지 않습니다. 가끔 사건으로 묻습니다.');Store.saveCur();renderSide();break;}
     case 'divorce':{if(!P||G.scene||P.flags.divorceAsk===P.year)return;P.flags.divorceAsk=P.year;const sc=divorceMeScene();if(sc)showScene(sc);break;}
-    case 'stopkid':{if(!P)return;P.wantKids=false;say('이제 자식은 이만하면 되었다고 여겼다.');Store.saveCur();V.dirty.feed=1;renderSide();toast('더는 아이를 기다리지 않습니다.');break;}
+    case 'stopkid':{if(!P)return;P.wantKids=false;P.autoKid={};say('이제 자식은 이만하면 되었다고 여겼다.');Store.saveCur();V.dirty.feed=1;renderSide();toast('더는 아이를 기다리지 않습니다.');break;}
     case 'propose':{if(!P||G.scene)return;const x=P.people[a.dataset.id];if(!x)return;showScene(marryScene(x));V.mob='feed';mobShow();break;}
     case 'target':e.stopPropagation();{const id=a.dataset.id;P.target=P.target===id?null:id;if(P.target){const x=P.people[id];say(`${callOf(x)}에게 마음을 두기로 하였다.`);}Store.saveCur();renderSide();}break;
     case 'seek':{if(!P||P.lastSeek===P.year)return;const x=seekLove(v);V.openCard=x.id;Store.saveCur();renderSide();V.dirty.feed=1;toast(`${x.title||callOf(x)}을(를) 만났습니다.`.replace('을(를)',bat(x.title||callOf(x))?'을':'를'));break;}

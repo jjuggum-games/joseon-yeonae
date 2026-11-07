@@ -306,9 +306,9 @@ function unwedPregScene(x){
 /* ---- 자식 ---- */
 function kidsScene(more){
   return {kind:'major',title:more?'자식 더 두기':'자식',text:more?'어느덧 아이가 셋이 되었다. 아이를 더 둘 것인가.':'혼인한 지 한 해가 지났다. 아이를 가질 것인가.',opts:[
-    {t:more?'더 낳는다':'아이를 가진다',p:null,tags:['태기는 운에 달림',P.female?'해산의 위험':'아내의 해산 위험'],fn:()=>{P.wantKids=true;say(more?'아이를 더 두기로 하였다.':'아이를 기다리기로 하였다.');}},
-    {t:more?'이만하면 되었다':'아직은 아니다',p:null,safe:true,tags:['집안의 눈총'],fn:()=>{P.wantKids=more?false:null;if(!more){P.flags.wedY=P.year+1;}fx({worry:3},true);}},
-    ...(more?[]:[{t:'아이를 두지 않는다',p:null,tags:['집안의 눈총 ↑','양자를 들일 수 있음'],fn:()=>{P.wantKids=false;say('아이를 두지 않기로 하였다.');fx({fame:-3,worry:5});}}])]};
+    {t:more?'더 낳는다':'아이를 가진다',p:null,tags:['태기는 운에 달림',P.female?'해산의 위험':'아내의 해산 위험'],fn:()=>{P.wantKids=true;P.autoKid=P.autoKid||{};if(P.spouse)P.autoKid[P.spouse]=true;say(more?'아이를 더 두기로 하였다.':'아이를 기다리기로 하였다. (해마다 아이 갖기가 켜졌다)');}},
+    {t:more?'이만하면 되었다':'아직은 아니다',p:null,safe:true,tags:['집안의 눈총'],fn:()=>{P.wantKids=more?false:null;if(more)P.autoKid={};if(!more){P.flags.wedY=P.year+1;}fx({worry:3},true);}},
+    ...(more?[]:[{t:'아이를 두지 않는다',p:null,tags:['집안의 눈총 ↑','양자를 들일 수 있음'],fn:()=>{P.wantKids=false;P.autoKid={};say('아이를 두지 않기로 하였다.');fx({fame:-3,worry:5});}}])]};
 }
 function kidWedScene(k){
   k.wedAsked=true;
