@@ -1193,8 +1193,15 @@ function royalKidTitle(k){
 }
 const BONG1=['영','화','덕','은','숙','정','명','경','의','순','익','양','인','봉','능','안','효','숭','창','금'],BONG2=['창','원','안','성','양','천','평','춘','릉','산','림','선','신','혜','온','명','휘','숙'];
 /* 가족 탭에 보일 왕실 자식의 이름: 원손 이장 / 인평대군 이요 / 숙안공주 (명화) */
+/* 자식의 성: 아버지의 성을 따른다 (조선 시대 노비는 성이 없었다) */
+function kidSur(k){
+  if((k.cls||P.cls)==='cheonmin'&&P.year<1894)return '';
+  if(!P.female)return P.sur||'';
+  const fa=P.people[k.father]||(!k.adopted?spouseP():null);
+  return (fa&&fa.sur)||P.sur||'';
+}
 function kidDisplayName(k){
-  const rt=royalKidTitle(k);if(!rt)return k.name;
+  const rt=royalKidTitle(k);if(!rt)return (k.name&&k.name.length<=3?kidSur(k):'')+k.name;
   if(rt==='원손'||rt==='원자')return `${rt} 이${k.name}`;
   if(!k.bongho){let b;for(let i=0;i<20;i++){b=R(BONG1)+R(BONG2);if(!P.kids.some(x=>x.bongho===b))break;}k.bongho=b;}
   if(k.female)return `${k.bongho}${rt} (이${k.name})`;
