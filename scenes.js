@@ -80,7 +80,7 @@ function crownScene(who,bornY){
         say(`삼간택 끝에 세자빈으로 뽑혔다. ${P.realSpouse==='양녕대군'?'정사에서 이 자리에 있던 이는 숙빈 김씨였으나, 이 판에서는 그대였다.':'정사에서 이 자리에 있던 이는 혜경궁 홍씨였으나, 이 판에서는 그대였다.'}`,'big');
         ev('crown',who);
       } else say('재간택에서 떨어졌다. 금혼령이 풀렸다.');}},
-    {t:'병을 핑계로 피한다',sub:'담력이 필요하다',p:clamp(.4+P.st.brave/200),safe:true,tags:['평판 조금 ↓'],fn:()=>{if(chance(.4+P.st.brave/200))say('병을 핑계로 간택에서 빠졌다.');else{say('핑계가 들통나 집안이 꾸중을 들었다.');fx({fame:-8});}}}]};
+    {t:'병을 핑계로 피한다',sub:'무예(배짱)가 필요하다',p:clamp(.4+P.st.brave/200),safe:true,tags:['평판 조금 ↓'],fn:()=>{if(chance(.4+P.st.brave/200))say('병을 핑계로 간택에서 빠졌다.');else{say('핑계가 들통나 집안이 꾸중을 들었다.');fx({fame:-8});}}}]};
 }
 function haremScene(){
   note('ganjip');
@@ -108,7 +108,7 @@ function seungeunScene(gi){
   return {kind:'major',title:'승은',text:gi?`궁에서 연회가 열려 기녀들이 불려 갔다. [[${k.n}]]이 그대를 눈여겨보았다.`:`어느 밤, [[${k.n}]]이 그대를 불렀다. 궁녀에게 임금의 부름은 거스를 수 없는 일이었다.`,opts:[
     {t:'받아들인다',sub:'임금의 여인이 된다',p:.85,tags:['신분 변화: 후궁','다른 인연은 끊어짐'],fn:()=>{kingSpouse(k);setJob('concubine',0);P.favor=50;say('[[승은]]을 입어 [[특별상궁]]이 되었다.','big');ev('seungeun',k.n);note('naemyeong');if(gi){P.flags.wasGisaeng=1;P.cls='sangmin';P.sub='';say('기적에서 이름이 지워졌다.');}
       Object.values(P.people).forEach(x=>{if(x.kind==='love'&&x.status!=='parted'){x.status='parted';}});}},
-    {t:'몸이 아프다 핑계를 댄다',sub:'담력이 필요하다',p:clamp(.3+P.st.brave/200),tags:['임금의 노여움을 살 수 있음'],fn:()=>{if(chance(.3+P.st.brave/200))say('간신히 자리를 피하였다.');else{say('임금의 노여움을 샀다.','big');fx({fame:-12,worry:15});if(gi)fx({fame:-5});}}}]};
+    {t:'몸이 아프다 핑계를 댄다',sub:'무예(배짱)가 필요하다',p:clamp(.3+P.st.brave/200),tags:['임금의 노여움을 살 수 있음'],fn:()=>{if(chance(.3+P.st.brave/200))say('간신히 자리를 피하였다.');else{say('임금의 노여움을 샀다.','big');fx({fame:-12,worry:15});if(gi)fx({fame:-5});}}}]};
 }
 function bumaScene(){
   note('buma');
@@ -235,7 +235,7 @@ function matchScene(re){
       wed(x);}};
   });
   const forced=P.female&&['yangban','royal'].includes(P.cls)&&P.rejects>=2;
-  opts.push({t:forced?'(부모의 뜻을 더는 거스를 수 없다)':'모두 물리친다',sub:forced?'':'집안의 눈총을 받는다',p:forced?null:.9,dis:forced,tags:['평판 조금 ↓','근심 ↑'],fn:()=>{P.rejects++;fx({fame:-3,worry:8});say('혼담을 모두 물리쳤다. 집안에 한숨 소리가 들렸다.');Object.values(P.people).forEach(x=>{if(x.kind==='cand')delete P.people[x.id];});}});
+  opts.push({t:forced?'(부모의 뜻을 더는 거스를 수 없다)':'모두 물리친다',sub:forced?'':'집안의 눈총을 받는다',p:forced?null:.9,dis:forced,tags:['평판 조금 ↓','마음고생 ↑'],fn:()=>{P.rejects++;fx({fame:-3,worry:8});say('혼담을 모두 물리쳤다. 집안에 한숨 소리가 들렸다.');Object.values(P.people).forEach(x=>{if(x.kind==='cand')delete P.people[x.id];});}});
   return {kind:'major',title:'혼담',text:`${intro} 사주단자를 받고 궁합을 볼 수 있다.`,opts,cards:cands.map(x=>x.id),match:true};
 }
 function gunghap(x){
@@ -287,7 +287,7 @@ function unwedPregScene(x){
   const nm=callOf(x);const me=P.female;
   const opts=[{t:'혼인을 청한다',sub:'아이를 위해 서둘러 혼인한다',p:null,tags:['혼인','집안의 반대가 있을 수 있음'],fn:()=>{x.t=clamp(x.t+12);return marryScene(x);}}];
   if(me){
-    opts.push({t:'홀로 아이를 낳기로 한다',sub:'세상의 손가락질을 견딘다',p:null,tags:['평판 ↓','근심 ↑'],fn:()=>{fx({fame:-15,worry:15});say('혼인하지 않고 아이를 낳기로 하였다. 고을에 말이 돌았다.','big');ev('unwed','혼인하지 않은 채 아이를 가졌다');}});
+    opts.push({t:'홀로 아이를 낳기로 한다',sub:'세상의 손가락질을 견딘다',p:null,tags:['평판 ↓','마음고생 ↑'],fn:()=>{fx({fame:-15,worry:15});say('혼인하지 않고 아이를 낳기로 하였다. 고을에 말이 돌았다.','big');ev('unwed','혼인하지 않은 채 아이를 가졌다');}});
     opts.push({t:'그와 함께 달아난다',sub:'아무도 모르는 곳에서 새로 시작한다',p:clamp(.35+P.st.brave/180),tags:['신분·재산이 바뀜','평판 ↓'],fn:()=>{
       if(chance(.35+P.st.brave/180)){say(`달 없는 밤, ${gwawa(nm)} 손을 잡고 고향을 떠났다.`,'big');P.flags.elope=1;P.wealth*=.2;P.home='먼 산골 초가';if(['yangban','royal'].includes(P.cls)){P.cls='sangmin';P.sub='';P.job=null;}x.mode='wife';wed(x,true,true);}
       else{say('붙잡혀 끌려왔다. 온 고을에 소문이 났다.','big');fx({fame:-25,worry:20});}}});
@@ -336,14 +336,14 @@ function husbandCheop(){
   P.flags.hubCheop=1;note('cheop');
   const r=newPerson({kind:'rival',female:true,cls:chance(.5)?'sangmin':'cheonmin',born:P.year-ri(17,23),grudge:30});r.title=`남편의 첩 ${r.name}`;r.note='남편의 첩';
   return {kind:'major',title:'남편의 첩',text:`남편이 ${eulreul(r.name)} 첩으로 들였다.`,opts:[
-    {t:'참고 견딘다',p:.8,safe:true,tags:['근심 ↑'],fn:()=>{fx({worry:12,grace:3});say('속으로 삭이며 안살림을 지켰다.');}},
+    {t:'참고 견딘다',p:.8,safe:true,tags:['마음고생 ↑'],fn:()=>{fx({worry:12,grace:3});say('속으로 삭이며 안살림을 지켰다.');}},
     {t:'투기한다',sub:'칠거지악의 하나다',p:.4,tags:['소박맞을 수 있음'],fn:()=>{note('chilgeo');if(chance(.4)){say('남편이 첩을 멀리하였다.');r.grudge=clamp(r.grudge+20);}else{say('투기한다는 말이 돌아 시댁의 눈총을 받았다.');fx({fame:-10});if(chance(.25)){caughtAffair();}}}}]};
 }
 function affairScene(x){
   P.flags.affairAsked=1;const nm=callOf(x);
   const tags=P.female?['소박맞을 수 있음','이혼당할 수 있음','평판이 무너질 수 있음']:['평판이 무너질 수 있음','아내의 정 ↓'];
   return {kind:'major',title:'혼인 뒤의 연정',pid:x.id,text:`혼인한 몸이건만 ${eulreul(nm)} 향한 마음이 사그라지지 않는다.`,opts:[
-    {t:'마음을 접는다',p:.9,safe:true,tags:['근심 ↑'],fn:()=>{x.status='parted';fx({worry:10});say('그 마음을 가슴 깊이 묻었다.');}},
+    {t:'마음을 접는다',p:.9,safe:true,tags:['마음고생 ↑'],fn:()=>{x.status='parted';fx({worry:10});say('그 마음을 가슴 깊이 묻었다.');}},
     {t:'몰래 만난다',p:.65,tags,fn:()=>{P.affair=x.id;x.status='lover';x.h=clamp(x.h+10);say(`남몰래 ${gwawa(nm)} 만나기 시작하였다.`,'big');ev('affair',x.id);}}]};
 }
 function rivalScene(r){
@@ -356,7 +356,7 @@ function rivalScene(r){
         if(r.power<=0){r.crushed=1;r.grudge=0;r.note=(r.note?r.note+' · ':'')+'꺾인 악연';say(`${nm}의 거짓이 낱낱이 드러났다. 사람들이 등을 돌려, ${nm}${bat(nm)?'은':'는'} 다시는 고개를 들지 못하였다.`,'big');ev('rivalwin',nm);}
         else{r.quietUntil=P.year+ri(3,6);say(`${nm}의 거짓이 드러났다. 한동안은 잠잠할 것이다.`,'big');}}
       else{r.power=clamp(r.power+10);r.quietUntil=P.year+2;say('맞섰으나 오히려 그대가 몰리고 말았다.');fx({fame:-12,worry:10});}}},
-    {t:'참고 견딘다',p:.8,safe:true,tags:['근심 ↑','평판 조금 ↓'],fn:()=>{fx({fame:-5,worry:10});r.grudge=clamp(r.grudge-8);r.quietUntil=P.year+ri(2,4);say('입을 다물고 견디었다. 소문은 차츰 잦아들었다.');}},
+    {t:'참고 견딘다',p:.8,safe:true,tags:['마음고생 ↑','평판 조금 ↓'],fn:()=>{fx({fame:-5,worry:10});r.grudge=clamp(r.grudge-8);r.quietUntil=P.year+ri(2,4);say('입을 다물고 견디었다. 소문은 차츰 잦아들었다.');}},
     {t:'화해를 청한다',p:pr,tags:['악연이 풀릴 수 있음'],fn:()=>{if(chance(pr)){r.grudge=clamp(r.grudge-45);r.quietUntil=P.year+ri(4,7);if(r.grudge<25){r.crushed=1;r.note=(r.note?r.note+' · ':'')+'화해한 사이';}say(`${gwawa(nm)} 묵은 감정을 풀었다.`,'big');}else{say('화해의 손길이 뿌리쳐졌다.');r.grudge=clamp(r.grudge+5);r.quietUntil=P.year+2;}}}]};
 }
 function napsokScene(){
@@ -494,7 +494,7 @@ function homeScene(){
       {t:'문을 걸어 잠근다',p:null,safe:true,tags:['평판 ↓'],fn:()=>{fx({fame:-5});say('문을 걸어 잠갔다. 담 너머로 원망하는 소리가 들렸다.');}}]};});
   if(free&&W>=U*25&&!P.flags.bigHome)L.push(()=>{const c=amt(.3);
     return {kind:'major',title:'살림 · 집',text:`살림이 늘어 집이 비좁아졌다. 집을 넓혀 짓자는 말이 나왔다. 비용은 ${money(c)}쯤 든다.`,opts:[
-      {t:'집을 넓혀 짓는다',p:null,tags:['재산 ↓','평판 ↑','근심 ↓'],fn:()=>{P.flags.bigHome=1;const up={'초가삼간':'너른 초가','기와집':'큰 기와집','사랑채 딸린 기와집':'솟을대문 달린 기와집'};P.home=up[P.home]||P.home;fx({wealth:-c,fame:4,worry:-6});say(`집을 넓혀 지었다. 이제 ${P.home}에서 산다.`,'big');}},
+      {t:'집을 넓혀 짓는다',p:null,tags:['재산 ↓','평판 ↑','마음고생 ↓'],fn:()=>{P.flags.bigHome=1;const up={'초가삼간':'너른 초가','기와집':'큰 기와집','사랑채 딸린 기와집':'솟을대문 달린 기와집'};P.home=up[P.home]||P.home;fx({wealth:-c,fame:4,worry:-6});say(`집을 넓혀 지었다. 이제 ${P.home}에서 산다.`,'big');}},
       {t:'아껴 둔다',p:null,safe:true,tags:[],fn:()=>{say('집은 그대로 두고 재물을 아껴 두었다.');}}]};});
   if(kid&&W>=U*3)L.push(()=>{const c=amt(.1);const kn=kid.name;
     return {kind:'major',title:'집안 · 자식 교육',text:`${kid.female?'딸':'아들'} ${iga(kn)} 제법 컸다. 글을 가르칠지, 집안일을 거들게 할지 정할 때가 되었다.`,opts:[
@@ -522,7 +522,7 @@ function takeCheopScene(x){
 /* 궁녀의 처소 정하기 */
 function courtStat(){return P.courtDept?COURT_DEPT[P.courtDept][1]:'wit';}
 function courtDeptScene(){
-  const D=[['jimil','지밀','임금과 왕비의 침전에서 곁을 모신다. 가장 높은 처소라 출세가 빠르고, 임금의 눈에 들 일도 많다.','통찰'],
+  const D=[['jimil','지밀','임금과 왕비의 침전에서 곁을 모신다. 가장 높은 처소라 출세가 빠르고, 임금의 눈에 들 일도 많다.','학식'],
     ['chim','침방','궁중의 옷을 짓는다.','재주'],['su','수방','옷과 장식에 수를 놓는다.','재주'],
     ['soju','소주방','수라와 잔칫상을 차린다.','건강'],['saeng','생과방','다과와 음료를 만든다.','재주'],['sedap','세답방','빨래와 다듬이를 맡는다. 고되지만 무난하다.','건강']];
   const opts=D.map(([k,n,sub,st])=>{const v=P.st[COURT_DEPT[k][1]]||0;const hard=k==='jimil';const p=hard?clamp(.25+P.st.wit/200+P.st.look/400):null;
@@ -542,7 +542,7 @@ function throneScene(){
   const p=clamp(.06+(P.st.wit+P.st.fame)/650+(P.focus==='power'?.1:0)+(P.flags.throneWait||0)*.06,.05,.6);
   const base=tt.replace(/(대군|군|왕자|세자)$/,'').trim();const kingName=(base||(self?P.name:(x&&x.name))||'새')+'왕';
   return {kind:'major',title:'보위를 넘보다',pid:x?x.id:undefined,text:`${self?'그대의 몸에 흐르는 것은 왕실의 피다.':`${eunneun(nm)} 왕실의 핏줄이다.`} 요사이 임금의 자리가 흔들린다는 말이 궐 안팎에 돈다. ${self?'스스로 보위에 오를':`${eulreul(nm)} 보위에 올릴`} 수 있다면, 그대는 ${self?'임금':'중전'}이 될 것이다. 그러나 실패하면 역모다.`,opts:[
-    {t:'세력을 모아 거사를 꾀한다',sub:'통찰과 평판, 세력 모으기가 도움이 된다',p,tags:['역사의 갈림길','실패하면 유배나 사약'],fn:()=>{
+    {t:'세력을 모아 거사를 꾀한다',sub:'학식과 평판, 세력 모으기가 도움이 된다',p,tags:['역사의 갈림길','실패하면 유배나 사약'],fn:()=>{
       note('branch');
       if(chance(p)){
         const from=P.year+1;P.alt={year:P.year,king:kingName,from};ev('branch',`${self?'그대':nm}${self?'가':bat(nm)?'이':'가'} 보위에 올라 ${iga(kingName)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});
@@ -555,7 +555,7 @@ function throneScene(){
         punish({});
       }}},
     {t:'때를 기다린다',sub:'세력을 더 모은 뒤 다시 노린다',p:null,safe:true,tags:['다음 기회에 성공 가능성 ↑'],fn:()=>{P.flags.throneWait=(P.flags.throneWait||0)+1;say('은밀히 사람을 모으며 때를 기다렸다.');}},
-    {t:'욕심을 버린다',p:null,safe:true,tags:['근심 ↓'],fn:()=>{P.flags.noThrone=1;fx({worry:-6});say(self?'보위에 대한 마음을 접고 조용히 살기로 하였다.':`${eulreul(nm)} 말려, 보위에 대한 마음을 접게 하였다.`);}}]};
+    {t:'욕심을 버린다',p:null,safe:true,tags:['마음고생 ↓'],fn:()=>{P.flags.noThrone=1;fx({worry:-6});say(self?'보위에 대한 마음을 접고 조용히 살기로 하였다.':`${eulreul(nm)} 말려, 보위에 대한 마음을 접게 하였다.`);}}]};
 }
 
 /* 후궁에서 중전으로 */
@@ -564,7 +564,7 @@ function queenRiseScene(){
   P.flags.qriseY=P.year;const k=realKing(P.year);const sons=royalSons();
   const p=clamp(.15+P.favor/300+sons*.1+P.st.wit/500+P.st.fame/600,.08,.8);
   return {kind:'major',title:'중궁의 자리',text:`중궁전이 흔들린다는 말이 궐 안에 돈다. ${sons?`왕자를 ${sons}명이나 낳은 그대를 두고, 다음 중전은 그대라는 수군거림이 들린다.`:'임금의 총애를 받는 그대를 두고 사람들이 수군거린다.'} 중전의 자리에 오를 수 있다면…`,opts:[
-    {t:'중전의 자리를 노린다',sub:'총애와 왕자, 통찰이 힘이 된다',p,tags:['신분 변화: 중전','실패하면 큰 화를 입음'],fn:()=>{
+    {t:'중전의 자리를 노린다',sub:'총애와 왕자, 학식이 힘이 된다',p,tags:['신분 변화: 중전','실패하면 큰 화를 입음'],fn:()=>{
       if(chance(p)){setJob('queen',1);P.home='중궁전';fx({fame:25,worry:-5});P.favor=clamp(P.favor+10);say(`[[${k.n}]]이 그대를 왕비로 책봉하였다. 후궁에서 중전의 자리에 올랐다.${sons?' 그대가 낳은 왕자가 세자로 책봉될 것이라는 말이 돌았다.':''}`,'big');ev('job','후궁에서 중전으로 책봉되었다');note('naemyeong');}
       else{P.favor=clamp(P.favor-25);fx({fame:-15,worry:20});if(chance(.15)){say('중전을 모해하려 했다는 죄를 뒤집어썼다.','big');punish({});}else say('일이 틀어져 오히려 임금의 눈 밖에 났다.','big');}}},
     {t:'분수를 지킨다',p:null,safe:true,tags:['총애 조금 ↑'],fn:()=>{P.favor=clamp(P.favor+5);say('욕심을 드러내지 않고 조용히 처소를 지켰다.');}}]};
@@ -599,7 +599,7 @@ function widowScene(){
 function jeongnyeoScene(){
   P.flags.jeongnyeo=1;const y=P.year-P.flags.sujeol;
   return {kind:'major',title:'열녀문',text:`${kAge(y)} 해 동안 절개를 지킨 일이 고을을 넘어 조정에까지 알려졌다. 나라에서 그대의 집 앞에 붉은 정려문을 세우고 '열녀'라는 이름을 내렸다. 고을 사람들이 문 앞을 지날 때마다 걸음을 멈추고 고개를 숙였다.`,opts:[
-    {t:'삼가 받든다',p:null,safe:true,tags:['평판 크게 ↑','근심 ↓'],fn:()=>{fx({fame:30,worry:-10});ev('jeongnyeo','열녀문');note('yeollyeo');say('나라에서 열녀문을 내렸다. 집 앞에 붉은 정려문이 섰다.','big');}}]};
+    {t:'삼가 받든다',p:null,safe:true,tags:['평판 크게 ↑','마음고생 ↓'],fn:()=>{fx({fame:30,worry:-10});ev('jeongnyeo','열녀문');note('yeollyeo');say('나라에서 열녀문을 내렸다. 집 앞에 붉은 정려문이 섰다.','big');}}]};
 }
 /* 자식의 신분: 시대마다 달랐던 법 */
 function kidClass(fa,mo){
@@ -615,3 +615,44 @@ function kidClass(fa,mo){
   return mc==='cheonmin'?'cheonmin':(fc==='cheonmin'?'sangmin':fc);
 }
 const KID_RULE={both:'부모 가운데 한쪽이라도 천인이면 자식도 천인이 된다는 법(일천즉천)',father:'아버지의 신분을 따른다는 법(노비종부법)',mother:'어머니의 신분을 따른다는 법(노비종모법)'};
+
+/* ===== 평판을 가르는 일들: 고르는 대로 오르고 내린다 ===== */
+function fameScene(){
+  P.flags.fameY=P.year;const U=UNIT[P.cls]||.5;const amt=f=>Math.max(U*f*10,P.wealth*f);const adult=P.age>=18;
+  const ok=(p)=>chance(p);
+  const L=[
+  ()=>({title:'길가의 행려병자',text:'장에 다녀오는 길, 길가에 낯선 이가 앓아누워 신음하고 있다. 사람들은 못 본 척 지나간다.',opts:[
+    {t:'집으로 데려가 돌본다',p:null,tags:['평판 ↑','재산 조금 ↓','병이 옮을 수 있음'],fn:()=>{fx({fame:ri(6,10),wealth:-amt(.03)});if(chance(.15)){fx({health:-8});say('돌보던 이의 병이 옮아 한동안 앓았다.');}say('행려병자를 거두어 돌보았다. 고을에 칭찬이 돌았다.');}},
+    {t:'약값만 쥐여 준다',p:null,tags:['평판 조금 ↑'],fn:()=>{fx({fame:ri(2,4),wealth:-amt(.01)});say('약값을 쥐여 주고 걸음을 옮겼다.');}},
+    {t:'못 본 척 지나간다',p:null,safe:true,tags:['평판 조금 ↓'],fn:()=>{fx({fame:-ri(2,4)});say('못 본 척 지나쳤다. 누군가 그 모습을 보았다.');}}]}),
+  ()=>({title:'주운 돈주머니',text:'길에서 묵직한 돈주머니를 주웠다. 주위에 아무도 없다.',opts:[
+    {t:'주인을 찾아 돌려준다',p:null,tags:['평판 ↑'],fn:()=>{fx({fame:ri(6,9)});say('수소문 끝에 주인을 찾아 돌려주었다. 주인이 거듭 절을 하였다.');}},
+    {t:'몰래 챙긴다',p:.7,tags:['재산 ↑','들키면 평판 크게 ↓'],fn:()=>{fx({wealth:amt(.08)+U*3});if(!ok(.7)){fx({fame:-ri(12,18)});say('돈주머니를 챙긴 일이 들통나 도둑 소리를 들었다.','big');}else say('돈주머니를 슬쩍 챙겼다.');}}]}),
+  ()=>({title:'장터의 다툼',text:'장터에서 두 사람이 멱살을 잡고 싸운다. 구경꾼만 늘어날 뿐 말리는 이가 없다.',opts:[
+    {t:'나서서 시비를 가린다',sub:'학식이 도움이 된다',p:clamp(.35+P.st.know/200),tags:['성공하면 평판 ↑','실패하면 평판 ↓'],fn:()=>{if(ok(.35+P.st.know/200)){fx({fame:ri(5,9)});say('조리 있게 시비를 가려 주어 양쪽 모두 수긍하였다.');}else{fx({fame:-ri(3,6)});say('끼어들었다가 오히려 욕만 먹었다.');}}},
+    {t:'힘으로 떼어 놓는다',sub:'무예가 도움이 된다',p:clamp(.35+P.st.brave/200),tags:['성공하면 평판 ↑','다칠 수 있음'],fn:()=>{if(ok(.35+P.st.brave/200)){fx({fame:ri(4,8)});say('두 사람을 단숨에 떼어 놓았다. 구경꾼들이 혀를 찼다.');}else{fx({health:-6});say('말리다가 주먹을 맞았다.');}}},
+    {t:'모른 척한다',p:null,safe:true,tags:[],fn:()=>{say('괜한 일에 휘말리지 않기로 하였다.');}}]}),
+  ()=>({title:'다리 놓기 추렴',text:'장마에 개울 다리가 떠내려갔다. 마을에서 다리를 새로 놓으려 집집마다 추렴을 걷는다.',opts:[
+    {t:'앞장서서 넉넉히 낸다',p:null,tags:['평판 ↑','재산 ↓'],fn:()=>{fx({fame:ri(6,10),wealth:-amt(.08)});say('추렴에 앞장섰다. 새 다리 머릿돌에 그대의 이름이 새겨졌다.');}},
+    {t:'남들만큼 낸다',p:null,tags:['재산 조금 ↓'],fn:()=>{fx({wealth:-amt(.03)});say('남들만큼 추렴을 냈다.');}},
+    {t:'형편이 어렵다며 빠진다',p:null,safe:true,tags:['평판 ↓'],fn:()=>{fx({fame:-ri(4,7)});say('추렴에서 빠졌다. 뒤에서 수군대는 소리가 들렸다.');}}]}),
+  ()=>({title:'이웃의 누명',text:'이웃이 도둑으로 몰려 관아에 끌려갈 처지다. 그대는 그가 그날 다른 곳에 있었다는 것을 안다.',opts:[
+    {t:'관아에 나가 증언한다',sub:'무예(배짱)가 도움이 된다',p:clamp(.45+P.st.brave/250),tags:['성공하면 평판 크게 ↑','관아에 밉보일 수 있음'],fn:()=>{if(ok(.45+P.st.brave/250)){fx({fame:ri(9,14)});say('관아에 나가 증언하여 이웃의 누명을 벗겼다.','big');}else{fx({fame:-3,worry:8});say('증언하였으나 받아들여지지 않았고, 관아에 밉보였다.');}}},
+    {t:'모른 척한다',p:null,safe:true,tags:['평판 조금 ↓'],fn:()=>{fx({fame:-ri(2,5),worry:5});say('입을 다물었다. 마음 한구석이 무거웠다.');}}]}),
+  ()=>({title:'고을의 험담',text:'우물가에서 이웃 아낙들이 한 집안을 두고 험담을 늘어놓는다. 그대에게도 한마디 거들라고 한다.',opts:[
+    {t:'험담을 말린다',p:null,tags:['평판 ↑'],fn:()=>{fx({fame:ri(3,6)});say('남의 말은 함부로 하는 것이 아니라며 말렸다.');}},
+    {t:'한마디 거든다',p:null,tags:['평판 ↓'],fn:()=>{fx({fame:-ri(4,8)});say('험담에 끼어들었다. 그 말이 돌고 돌아 그대 귀에 다시 들어왔다.');}},
+    {t:'자리를 피한다',p:null,safe:true,tags:[],fn:()=>{say('슬그머니 자리를 떴다.');}}]}),
+  ()=>({title:'관아의 뇌물',text:'관아의 아전이 일을 봐 주는 대가로 은근히 뇌물을 바라는 눈치다.',opts:[
+    {t:'단호히 거절한다',p:null,tags:['평판 ↑','일이 늦어질 수 있음'],fn:()=>{fx({fame:ri(4,7),worry:4});say('뇌물을 거절하였다. 일은 늦어졌지만 떳떳하였다.');}},
+    {t:'슬쩍 쥐여 준다',p:.75,tags:['재산 ↓','들키면 평판 ↓'],fn:()=>{fx({wealth:-amt(.04)});if(!ok(.75)){fx({fame:-ri(8,12)});say('뇌물을 쓴 일이 소문났다.');}else say('뇌물을 쥐여 주니 일이 술술 풀렸다.');}}]}),
+  ()=>({title:'역병 도는 마을',text:'옆 마을에 역병이 돌아 병자들을 돌볼 손이 모자란다고 한다.',opts:[
+    {t:'가서 병자들을 돌본다',p:null,tags:['평판 크게 ↑','건강을 해칠 수 있음'],fn:()=>{fx({fame:ri(10,15)});if(chance(.3)){fx({health:-ri(10,18)});say('병자들을 돌보다 병이 옮아 크게 앓았다.','big');}else say('병자들을 돌보았다. 사람들이 그대를 은인이라 불렀다.','big');}},
+    {t:'죽과 약재만 보낸다',p:null,tags:['평판 ↑','재산 ↓'],fn:()=>{fx({fame:ri(4,7),wealth:-amt(.04)});say('죽과 약재를 실어 보냈다.');}},
+    {t:'문을 걸어 잠근다',p:null,safe:true,tags:[],fn:()=>{say('병이 옮을까 두려워 문을 걸어 잠갔다.');}}]}),
+  ()=>({title:'노인 공경',text:'마을의 외로운 노인이 홀로 겨울을 나기 어려워 보인다.',opts:[
+    {t:'땔감과 양식을 챙겨 드린다',p:null,tags:['평판 ↑','재산 조금 ↓'],fn:()=>{fx({fame:ri(4,8),wealth:-amt(.02)});say('겨우내 땔감과 양식을 챙겨 드렸다. 노인이 그대 손을 잡고 울었다.');}},
+    {t:'내 코가 석 자다',p:null,safe:true,tags:[],fn:()=>{say('제 앞가림도 빠듯하여 모른 척하였다.');}}]})];
+  if(P.age<16)L.splice(4,4);
+  const sc=R(L)();sc.kind='major';sc.title='세상의 눈 · '+sc.title;return sc;
+}

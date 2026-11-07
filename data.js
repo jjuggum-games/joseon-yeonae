@@ -288,9 +288,9 @@ const JOBS = {
   bandit:{n:'도적',ladder:['좀도둑', '화적', '이름난 의적'],stat:'brave'},
   military:{n:'무관',ladder:['무과','권관(종9품)','만호(종4품)','첨절제사(종3품)','부사(종3품)','병마절도사(종2품)','도원수'],stat:'brave'}
 };
-const STATS = [['look','매력'],['know','학식'],['art','재주'],['wit','통찰'],['brave','담력']];
-const STATES = [['health','건강'],['fame','평판'],['worry','근심']];
-const STATN = Object.fromEntries([...STATS,...STATES,['grace','매력']]);
+const STATS = [['look','매력'],['know','학식'],['art','재주'],['brave','무예'],['health','건강'],['fame','평판']];
+const STATES = [];
+const STATN = Object.fromEntries([...STATS,['grace','매력'],['wit','학식'],['worry','근심']]);
 const ARTS = ['가무','음률','그림','바느질','무예','시문'];
 
 /* 올해의 중점 */
@@ -298,13 +298,11 @@ const FOCI = [
   {k:'grace',n:'매력 가꾸기',st:{look:3}},
   {k:'know',n:'학식 쌓기',st:{know:3}},
   {k:'art',n:'재주 익히기',st:{art:3}},
-  {k:'wit',n:'통찰 기르기',st:{wit:3}},
-  {k:'brave',n:'담력 기르기',st:{brave:3}},
+  {k:'brave',n:'무예 닦기',st:{brave:3}},
   {k:'health',n:'건강 돌보기',st:{health:3,worry:-3}},
-  {k:'fame',n:'평판 쌓기',st:{fame:3}},
   {k:'wealth',n:'재산 모으기',st:{},wealth:1},
   {k:'love',n:'인연 돌보기',st:{},love:1},
-  {k:'power',n:'세력 모으기',st:{wit:1},power:1},
+  {k:'power',n:'세력 모으기',st:{know:1},power:1},
   {k:'rest',n:'놀며 쉬기',st:{worry:-5,health:1}}
 ];
 

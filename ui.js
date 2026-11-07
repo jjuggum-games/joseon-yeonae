@@ -220,11 +220,10 @@ function renderMe(){
     ${P.alt?`<div class="kv"><span>역사</span><span style="color:var(--jok)">정사와 다름</span></div>`:''}
     <div class="sec">능력치</div>
     ${STATS.map(([k,n])=>`<div class="bar"><span>${n}</span><span class="t"><i style="width:${st[k]}%"></i></span><span class="n">${Math.round(st[k])}</span></div>`).join('')}
-    <div class="sec">형편</div>
-    ${STATES.map(([k,n])=>`<div class="bar ${k==='worry'?'w':''}"><span>${n}</span><span class="t"><i style="width:${st[k]}%"></i></span><span class="n">${Math.round(st[k])}</span></div>`).join('')}
+    <div class="bar"><span>재력</span><span class="t"><i style="width:${wealthScore()}%"></i></span><span class="n">${wealthScore()}</span></div><div class="fnote" style="text-align:right;margin-top:-2px">${wealthWord(wealthScore())}</div>
     <div class="fnote">특기: ${esc(P.artK)}</div>
     <div style="margin-top:6px"><button class="btn sm ghost" data-a="stathelp">${SET.statHelp?'▾ 능력치 설명 숨기기':'▸ 능력치마다 무엇에 좋은지 보기'}</button></div>
-    ${SET.statHelp?`<div class="stathelp">${[...STATS,...STATES].map(([k,n])=>`<div><b>${n}</b> ${esc(STAT_HELP[k])}</div>`).join('')}</div>`:''}
+    ${SET.statHelp?`<div class="stathelp">${[...STATS,['wealth','재력']].map(([k,n])=>`<div><b>${n}</b> ${esc(STAT_HELP[k])}</div>`).join('')}</div>`:''}
     <div class="sec">올해의 중점</div>
     ${fl.length?`<div class="foci">${FOCI.filter(f=>fl.includes(f.k)).map(f=>`<button class="btn ${P.focus===f.k?'on':''}" data-a="focus" data-v="${f.k}" title="${esc(FOCUS_DESC[f.k][0])}">${f.n}</button>`).join('')}</div>
       <div class="focusdesc">${focusNote(P.focus)}</div>
@@ -233,26 +232,23 @@ function renderMe(){
 }
 const FOCUS_DESC={
   grace:['매력 +5~10','처음 만난 사람에게 호감을 얻기 쉽습니다. 간택과 승은, 시댁 어른과 잘 지내는 데에도 도움이 됩니다.'],
-  know:['학식 +5~10','과거 시험에 붙거나, 마음에 둔 사람과 시를 주고받을 때 유리합니다. 남장 과거 같은 일에도 유리합니다.'],
+  know:['학식 +5~10','과거 시험에 붙거나, 마음에 둔 사람과 시를 주고받을 때 유리합니다. 상대의 마음과 선택지의 가능성이 또렷이 보이고, 궁중암투와 남장 과거에도 유리합니다.'],
   art:['재주 +5~10 · 특기 솜씨 ↑','노래·춤·그림·바느질 같은 솜씨가 늡니다. 기생·광대·화원·침모로 이름을 떨치려면 꼭 필요합니다.'],
-  wit:['통찰 +5~10','상대의 마음과 선택지의 성공 가능성이 또렷이 보입니다. 사람 사이의 일이 잘 풀리고, 궁중암투와 역사의 갈림길에서 유리합니다.'],
-  brave:['담력 +5~10','사랑을 따라 달아나기, 원치 않는 간택 피하기, 의병으로 나서기, 모함에 맞서기처럼 위험한 선택이 잘 풀립니다.'],
-  health:['건강 +5~10 · 근심 −5~10','병에 덜 걸리고 오래 삽니다. 아이를 낳을 때의 위험도 줄어듭니다.'],
-  fame:['평판 +5~10','이웃의 대소사를 챙기고 덕을 쌓아 이름을 알립니다. 간택, 벼슬 승진, 명기로 이름나기, 혼처 고르기에 유리합니다.'],
+  brave:['무예 +5~10','사랑을 따라 달아나기, 원치 않는 간택 피하기, 의병으로 나서기, 모함에 맞서기처럼 위험한 선택이 잘 풀립니다.'],
+  health:['건강 +5~10','병에 덜 걸리고 오래 삽니다. 아이를 낳을 때의 위험도 줄어듭니다.'],
   wealth:['한 해 벌이 ↑','재산이 빨리 모입니다. 장사꾼은 객주로, 농사꾼은 부농으로 오르기 쉽고, 노비라면 돈을 바쳐 신분을 벗을 밑천이 됩니다.'],
   love:['만난 사람들과의 정 ↑','인연 탭의 사람들과 정이 조금씩 깊어집니다. ‘마음에 두기’로 고른 사람이 있으면 그 사람과의 정이 크게 오르고, 함께하는 일도 잘 풀립니다.'],
-  power:['통찰 조금 ↑ · 세력 ↑','궁이나 조정에서 내 편이 늘어, 역사의 갈림길에서 정사와 다른 길을 열 가능성이 높아집니다. 궁이나 조정 가까이 있을 때만 고를 수 있습니다.'],
-  rest:['근심 −5~10 · 건강 조금 ↑','근심이 70을 넘으면 해마다 건강이 깎입니다. 마음이 무거울 때 쉬어 가십시오.']
+  power:['학식 조금 ↑ · 세력 ↑','궁이나 조정에서 내 편이 늘어, 역사의 갈림길에서 정사와 다른 길을 열 가능성이 높아집니다. 궁이나 조정 가까이 있을 때만 고를 수 있습니다.'],
+  rest:['마음고생 ↓ · 건강 조금 ↑','마음고생이 심하면 해마다 건강이 깎입니다. 마음이 무거울 때 쉬어 가십시오.']
 };
 const STAT_HELP={
   look:'얼굴과 몸가짐에서 풍기는 매력입니다. 처음 만난 사람의 호감을 크게 좌우하고, 높으면 먼저 다가오는 사람이 생깁니다. 간택·승은·후궁의 총애, 시댁 어른과 잘 지내기에도 도움이 됩니다. 마흔이 넘으면 조금씩 줄어듭니다.',
-  know:'글과 학문입니다. 책이나 시를 좋아하는 사람에게 호감을 얻고, 과거 급제, 시 주고받기, 의원·역관·훈장 일에 유리합니다. 남장 과거에도 유리합니다.',
+  know:'글과 학문, 그리고 사람과 세상을 꿰뚫어 보는 눈입니다. 과거 급제, 시 주고받기, 의원·역관·훈장 일에 유리하고, 높을수록 상대의 마음과 선택지의 성공 가능성이 또렷이 보입니다. 궁중암투와 역사의 갈림길, 남장 과거에도 유리합니다.',
   art:'노래·춤·그림·바느질 같은 솜씨입니다. 그런 것을 좋아하는 사람에게 호감을 얻고, 솜씨가 소문나면 먼저 다가오는 사람이 생깁니다. 기생·광대·화원·침모로 출세하려면 꼭 필요합니다.',
-  wit:'사람의 속마음과 일의 앞뒤를 꿰뚫어 보는 눈입니다. 담력이 위험을 무릅쓰는 배짱이라면, 통찰은 무엇이 위험한지 미리 알아보는 힘입니다. 30보다 낮으면 상대의 마음과 성공 가능성이 흐릿하게 보입니다. 인연 사건, 승진, 궁중암투, 역사의 갈림길에 유리합니다.',
-  brave:'겁 없이 나서는 배짱입니다. 무예를 좋아하는 사람에게 호감을 얻고, 달아나기, 간택이나 부모의 뜻 거스르기, 의병, 악연에 맞서기처럼 위험한 선택이 잘 풀립니다.',
-  health:'낮으면 병들거나 일찍 세상을 떠나기 쉽습니다. 마흔이 넘으면 해마다 조금씩 줄어드니, 건강 돌보기로 지키십시오.',
-  fame:'세상 사람들의 평판입니다. 높으면 처음 만난 사람도 소문을 듣고 반가워하며, 간택, 벼슬 승진, 명기 되기, 역사의 갈림길에서 유리합니다. 나쁜 소문이 나면 깎입니다.',
-  worry:'마음의 짐입니다. 높을수록 나쁘고, 70을 넘으면 해마다 건강이 깎입니다. 놀며 쉬기나 건강 돌보기로 줄일 수 있습니다.'
+  brave:'무예와 배짱입니다. 무과와 검객의 길에 필요하고, 무예를 좋아하는 사람에게 호감을 얻습니다. 달아나기, 간택이나 부모의 뜻 거스르기, 의병, 악연에 맞서기처럼 위험한 선택이 잘 풀립니다.',
+  health:'낮으면 병들거나 일찍 세상을 떠나기 쉽습니다. 마흔이 넘으면 해마다 조금씩 줄어들고, 마음고생이 심하면 더 깎이니 건강 돌보기와 놀며 쉬기로 지키십시오.',
+  fame:'세상 사람들의 평판입니다. 직접 올릴 수는 없고, 승진·자식 얻기·선행 같은 일과 해마다의 선택으로 오르내립니다. 높으면 간택, 승진, 명기 되기, 혼처 고르기, 열녀문에 유리합니다.',
+  wealth:'얼마나 부유하게 사는지입니다. 손에 쥔 재산(돈)만이 아니라 사는 집, 해마다의 벌이, 집안과 배우자 집안의 형세를 두루 따집니다. 재산이 같아도 벌이가 좋고 번듯한 집에 살면 재력이 높습니다.'
 };
 function focusNote(k){const d=FOCUS_DESC[k];const f=FOCI.find(x=>x.k===k);if(!d||!f)return '';return `<b>${f.n}</b> · ${d[0]}<br>${d[1]}`;}
 function stageOf(e){
@@ -371,7 +367,7 @@ function sideLove(){
   const seek=V.filter==='love'&&!canSeek?`<div class="seek"><div class="fnote" style="margin:0">열여덟 살이 되면 새 인연을 찾아 나설 수 있습니다.</div></div>`:V.filter==='love'&&canSeek?`<div class="seek"><div class="sec" style="margin-top:0">새 인연 찾아 나서기</div>${seekWait?'<div class="fnote">올해는 이미 인연을 찾아 나섰다. 해가 바뀌면 다시 나설 수 있다.</div>':`<div class="foci"><button class="btn sm" data-a="seek" data-v="royal">종친</button><button class="btn sm" data-a="seek" data-v="direct">왕실 직계</button><button class="btn sm" data-a="seek" data-v="yangban">양반</button><button class="btn sm" data-a="seek" data-v="common">평민</button><button class="btn sm" data-a="seek" data-v="cheonmin">천민</button></div>${seekWarn?`<div class="fnote" style="color:var(--bad)">${seekWarn}</div>`:''}<div class="fnote">마음에 드는 사람이 없으면, 어느 신분의 사람을 만나러 갈지 고르십시오. 누구를 만날지는 운에 달렸습니다. 한 해에 한 번 나설 수 있고, 세월은 멈추지 않습니다.</div>`}</div>`:'';
   return `${seek}<div class="filters">${F.map(([k,n])=>`<button class="btn sm ${V.filter===k?'on':''}" data-a="filter" data-v="${k}">${n}</button>`).join('')}</div>
     ${list.length?list.map(card).join(''):`<div class="muted serif" style="font-size:.9em">${V.filter==='love'?(P.age<18?'열여덟이 되면 인연이 찾아옵니다. 지금은 벗과 어울릴 나이입니다.':'아직 마음에 둔 이가 없다.'):'아직 없다.'}</div>`}
-    ${V.filter==='love'?'<div class="fnote">마음이 가는 사람에게 <b>마음에 두기</b>를 눌러 두면, 두어 해에 한 번 그 사람과의 일이 찾아오고 ‘인연 돌보기’ 중점도 그 사람에게 몰아서 오릅니다. 정하지 않으면 드물게 무작위로 찾아옵니다. 통찰이 높으면 상대의 마음이 또렷이 보입니다.</div>':''}`;
+    ${V.filter==='love'?'<div class="fnote">마음이 가는 사람에게 <b>마음에 두기</b>를 눌러 두면, 두어 해에 한 번 그 사람과의 일이 찾아오고 ‘인연 돌보기’ 중점도 그 사람에게 몰아서 오릅니다. 정하지 않으면 드물게 무작위로 찾아옵니다. 학식이 높으면 상대의 마음이 또렷이 보입니다.</div>':''}`;
 }
 function sideFam(){
   const row=(name,rel,meta,cls='')=>`<div class="fm ${cls}"><div class="fn">${esc(name)}</div><div class="fr">${esc(rel)}</div>${meta?`<div class="fx">${esc(meta)}</div>`:''}</div>`;
@@ -443,7 +439,7 @@ function showLetter(id){const l=P.letters.find(x=>x.id===id);if(!l)return;modal(
 function showGuide(){modal(`<div class="guide"><h3>처음 오신 그대에게</h3><ol>
   <li>세월은 저절로 흐릅니다. 혼인, 인연, 역사의 갈림길처럼 <b>중요한 순간에만 멈춥니다.</b></li>
   <li>왼쪽의 <b>올해의 중점</b>은 언제든 바꿀 수 있고, 바꿔도 세월은 멈추지 않습니다.</li>
-  <li>선택지에는 <b>가능성</b>과 <b>바뀌는 것</b>이 표시됩니다. 통찰이 낮으면 가능성이 흐릿하게 보입니다.</li>
+  <li>선택지에는 <b>가능성</b>과 <b>바뀌는 것</b>이 표시됩니다. 학식이 낮으면 가능성이 흐릿하게 보입니다.</li>
   <li>오른쪽 <b>인연</b> 탭에서 사람마다 쌓인 정을 볼 수 있습니다. 마음이 가는 사람에게 <b>마음에 두기</b>를 눌러 두면 두어 해에 한 번 그 사람과의 일이 찾아옵니다.</li>
   <li>점선 밑줄이 그어진 말을 누르면 풀이가 나옵니다. 선택은 되돌릴 수 없습니다.</li></ol>
   <div class="rowbtns"><button class="btn pri" data-a="close">알겠소</button></div></div>`);}
@@ -749,3 +745,14 @@ function lifeLog(h){
     ${L.map((r,i)=>`<details class="ll-y" ${i===last?'open id="llLast"':''}><summary><b>${esc(r[2])}</b> <span class="muted">· ${r[1]}세</span></summary>${r[3].map(([b,t])=>`<p class="${b?'big':''}">${fmt(t)}</p>`).join('')}</details>`).join('')}
   </details>`;
 }
+
+/* 재력: 가진 돈만이 아니라 집과 땅, 해마다의 벌이, 집안의 형세를 두루 본 부유함 */
+function wealthScore(){
+  if(!P)return 0;
+  const m=Math.log10(1+P.wealth)/Math.log10(3001);
+  const inc=typeof incomeOf==='function'?incomeOf():0;const i=Math.log10(1+Math.max(0,inc))/Math.log10(301);
+  const h=P.home||'';const ht=/궁|전각|중궁|대전|동궁/.test(h)?1:/솟을대문|큰 기와집/.test(h)?.85:/사랑채|기와집|안채/.test(h)?.65:/너른|별채|객주/.test(h)?.45:/초가/.test(h)?.25:.1;
+  const sp=spouseP();const fam=Math.max(P.rich!=null?P.rich/4:0,sp&&sp.rich!=null?sp.rich/4:0,{royal:1,yangban:.55,jungin:.45,sangmin:.2,cheonmin:.05}[P.cls]||.2);
+  return Math.max(0,Math.min(100,Math.round((m*.35+i*.3+ht*.2+fam*.15)*100)));
+}
+function wealthWord(v){return v>=85?'갑부':v>=70?'넉넉함':v>=50?'살 만함':v>=30?'빠듯함':v>=15?'가난함':'끼니가 어려움';}

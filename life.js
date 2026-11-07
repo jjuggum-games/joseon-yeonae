@@ -355,6 +355,7 @@ function birth(given){
     say(`${P.female?'쌍둥이를 낳았다!':who+'쌍둥이를 낳았다!'} ${f2===female?(female?'딸':'아들')+' 둘':'아들딸'}, ${gwawa(k1.name)} ${k2.name}${bat(k2.name)?'이었다':'였다'}.`,'big');ev('twins',k1.name+'·'+k2.name);}
   else say(`${P.female?`${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다.`:`${cm?iga(callOf(cm)):'아내가'} ${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다.`}${pr.guess===pr.sex?' 태몽이 맞았다.':''}`,'big');
   const kid=k1;
+  fx({fame:twins?ri(5,8):ri(2,4)},true);
   {const pc=partner?partner.cls:null;if(pc&&(pc==='cheonmin')!==(P.cls==='cheonmin')&&P.flags.kidRule){note('nobilaw');say(kcls==='cheonmin'?`${KID_RULE[P.flags.kidRule]}에 따라, 아이는 천인의 신분으로 태어났다.`:`${KID_RULE[P.flags.kidRule]}에 따라, 아이는 양인의 신분을 얻었다.`);}}
   fx({worry:-5},true);
   if(royalKid&&P.job&&P.job.k==='concubine'&&!female){promoteCon(2);}
@@ -423,9 +424,15 @@ function yJob(){
 }
 function promoteCon(n){const lv=Math.min(8,P.job.lv+n);setJob('concubine',lv);say(`[[${JOBS.concubine.ladder[lv]}]]의 품계를 받았다.`,'big');ev('job',`${JOBS.concubine.ladder[lv]}에 올랐다`);note('naemyeong');}
 function isGwageoYear(y){return [0,3,6,9].includes((y-4+6000)%12);}
+function jobPay(J){const L=J.lv;return ({official:6+L*7,merchant:[6,28,90][L],gisaeng:[0,6,16,40][L],concubine:25+L*12,queen:[150,300][L],king:[600][0],royalwife:[60,90][L],housewife:[0,1,3][L],court:2+L*4,farmer:[2,6,14][L],weaver:[2,4,9][L],doctor:[6,15,32][L],interp:[8,20,45][L],painter:[5,12,28][L],uinyeo:[2,5,10][L],slave:[0,.3,1][L],gwangdae:[1,4,14][L],soldier:[2,6,14][L],hunjang:[0,2,8][L],sword:[0,4,12][L],yein:[1,5,16][L],scholar:[0,3,4][L],prince:[60,90,140][L],princess:[60,90][L],buma:[80][0],lady:[0,0,0,10][L],military:[0,10,18,28,38,55,80][L],jumo:[2,6,14][L],fisher:[2,5,14][L],smith:[1,5,10][L],potter:[1,5,12][L],carpenter:[1,5,14][L],mudang:[1,5,14][L],ajeon:[2,6,14][L],sanwon:[4,10,20][L],monk:[0,1,4][L],herb:[1,4,16][L],nurse:[1,3,6][L],baekjeong:[2, 6, 14][L],chaekkwae:[1, 5, 14][L],jeongisu:[1, 4, 12][L],hunter:[1, 5, 12][L],sanpa:[1, 4, 10][L],jeomjaeng:[1, 5, 16][L],bangmul:[2, 6, 14][L],dyer:[1, 5, 12][L],gatjang:[1, 5, 12][L],mabu:[1, 3, 8][L],salt:[1, 4, 16][L],haenyeo:[1, 5, 12][L],gwansang:[5, 12, 26][L],yulgwan:[5, 12, 26][L],sajagwan:[3, 10, 22][L],akgong:[2, 6, 16][L],poet:[0, 1, 4][L],cheosa:[0, 2, 8][L],bandit:[2, 8, 18][L]}[J.k]||0);}
+function incomeOf(){
+  const J=P.job;let v={royal:150,yangban:22,jungin:12,sangmin:3,cheonmin:.4}[P.cls]||2;
+  if(J)v+=jobPay(J);
+  return v-({royal:120,yangban:18,jungin:9,sangmin:2.6,cheonmin:.3}[P.cls]||2);
+}
 function income(){
   const J=P.job;let v={royal:150,yangban:22,jungin:12,sangmin:3,cheonmin:.4}[P.cls]||2;
-  if(J){const L=J.lv;v+=({official:6+L*7,merchant:[6,28,90][L],gisaeng:[0,6,16,40][L],concubine:25+L*12,queen:[150,300][L],king:[600][0],royalwife:[60,90][L],housewife:[0,1,3][L],court:2+L*4,farmer:[2,6,14][L],weaver:[2,4,9][L],doctor:[6,15,32][L],interp:[8,20,45][L],painter:[5,12,28][L],uinyeo:[2,5,10][L],slave:[0,.3,1][L],gwangdae:[1,4,14][L],soldier:[2,6,14][L],hunjang:[0,2,8][L],sword:[0,4,12][L],yein:[1,5,16][L],scholar:[0,3,4][L],prince:[60,90,140][L],princess:[60,90][L],buma:[80][0],lady:[0,0,0,10][L],military:[0,10,18,28,38,55,80][L],jumo:[2,6,14][L],fisher:[2,5,14][L],smith:[1,5,10][L],potter:[1,5,12][L],carpenter:[1,5,14][L],mudang:[1,5,14][L],ajeon:[2,6,14][L],sanwon:[4,10,20][L],monk:[0,1,4][L],herb:[1,4,16][L],nurse:[1,3,6][L],baekjeong:[2, 6, 14][L],chaekkwae:[1, 5, 14][L],jeongisu:[1, 4, 12][L],hunter:[1, 5, 12][L],sanpa:[1, 4, 10][L],jeomjaeng:[1, 5, 16][L],bangmul:[2, 6, 14][L],dyer:[1, 5, 12][L],gatjang:[1, 5, 12][L],mabu:[1, 3, 8][L],salt:[1, 4, 16][L],haenyeo:[1, 5, 12][L],gwansang:[5, 12, 26][L],yulgwan:[5, 12, 26][L],sajagwan:[3, 10, 22][L],akgong:[2, 6, 16][L],poet:[0, 1, 4][L],cheosa:[0, 2, 8][L],bandit:[2, 8, 18][L]}[J.k]||0);}
+  if(J)v+=jobPay(J);
   const live={royal:120,yangban:18,jungin:9,sangmin:2.6,cheonmin:.3}[P.cls]||2;
   const kidsCost=P.kids.filter(k=>k.alive&&P.year-k.born<18).length*({royal:10,yangban:2,jungin:1,sangmin:.4,cheonmin:.05}[P.cls]||.4);
   let net=v-live-kidsCost+ri(-2,3)*(P.cls==='cheonmin'?.1:1);
@@ -462,10 +469,10 @@ function courtPush(){
 const JOB_DESC={
   scholar:['과거 공부','서당과 향교에서 글을 읽어 소과·문과에 나아간다. 학식이 중요하다.'],
   official:['벼슬살이','조정에서 품계를 쌓는다.'],
-  military:['무과 준비','활쏘기와 말타기, 병서를 익혀 무과에 나아간다. 급제하면 무관이 되어 병마절도사까지 오를 수 있다. 담력이 중요하다.'],
+  military:['무과 준비','활쏘기와 말타기, 병서를 익혀 무과에 나아간다. 급제하면 무관이 되어 병마절도사까지 오를 수 있다. 무예가 중요하다.'],
   hunjang:['서당에 다니며 글공부','글을 깨쳐 훗날 훈장이 될 수도 있다. 학식이 중요하다.'],
-  sword:['검을 배운다','무예를 갈고닦아 이름난 검객이 된다. 담력이 중요하다.'],
-  soldier:['군에 든다','군졸에서 초관·만호로 오른다. 담력이 중요하다.'],
+  sword:['검을 배운다','무예를 갈고닦아 이름난 검객이 된다. 무예가 중요하다.'],
+  soldier:['군에 든다','군졸에서 초관·만호로 오른다. 무예가 중요하다.'],
   farmer:['농사','땅을 일구어 자작농·부농이 된다. 재산이 모이면 오른다.'],
   merchant:['장사','보부상에서 객주·거상이 된다. 재산이 모이면 오른다.'],
   weaver:['삯바느질','바느질 솜씨로 품삯을 받아 이름난 침모가 된다. 재주가 중요하다.'],
@@ -477,35 +484,35 @@ const JOB_DESC={
   yein:['예인의 길','사당패를 따라 소리와 춤을 익혀 명창·명무가 된다. 재주가 중요하다.'],
   gisaeng:['기방에 들어간다','기적에 이름을 올리고 가무와 시서를 익힌다. 명기가 될 수도 있다.'],
   court:['궁녀로 들어간다','궁에 들어가 생각시가 된다. 혼인하려면 궁을 떠나야 해서 쉽지 않다.'],
-  jumo:['주막을 꾸린다','길손에게 술과 밥을 팔아 이름난 주막 주인이 된다. 통찰이 중요하다.'],
-  fisher:['뱃일','바다나 강에서 고기를 잡아 배를 가진 선주가 된다. 담력이 중요하다.'],
+  jumo:['주막을 꾸린다','길손에게 술과 밥을 팔아 이름난 주막 주인이 된다. 학식이 중요하다.'],
+  fisher:['뱃일','바다나 강에서 고기를 잡아 배를 가진 선주가 된다. 무예가 중요하다.'],
   smith:['대장간','풀무질부터 시작해 이름난 대장장이가 된다. 건강이 중요하다.'],
   potter:['도자기','그릇을 빚는 사기장이 된다. 재주가 중요하다.'],
   carpenter:['목수','집을 짓는 목수가 되어 도편수까지 오른다. 재주가 중요하다.'],
-  mudang:['무녀의 길','굿을 하고 점을 치는 무녀가 되어 이름난 만신이 된다. 통찰이 중요하다.'],
-  ajeon:['관아 아전','고을 관아의 실무를 맡아 이방까지 오른다. 통찰이 중요하다.'],
+  mudang:['무녀의 길','굿을 하고 점을 치는 무녀가 되어 이름난 만신이 된다. 학식이 중요하다.'],
+  ajeon:['관아 아전','고을 관아의 실무를 맡아 이방까지 오른다. 학식이 중요하다.'],
   sanwon:['산학','셈과 회계를 익혀 호조의 산원이 된다. 학식이 중요하다.'],
   monk:['출가','머리를 깎고 절에 들어간다. 혼인과는 멀어진다. 학식이 중요하다.'],
   herb:['약초 캐기','산을 누비며 약초와 산삼을 캔다. 건강이 중요하다.'],
   baekjeong:['백정','소를 잡고 고기와 가죽을 다룬다. 천대받지만 벌이는 쏠쏠하다. 건강이 중요하다.'],
   chaekkwae:['책쾌','양반가를 드나들며 책을 사고판다. 학식이 중요하다.'],
   jeongisu:['전기수','저잣거리에서 소설을 읽어 주고 돈을 받는다. 재주가 중요하다.'],
-  hunter:['사냥','산짐승을 쫓아 가죽과 고기를 얻는다. 범을 잡으면 이름이 난다. 담력이 중요하다.'],
-  sanpa:['산파','아이 받는 일을 익힌다. 통찰이 중요하다.'],
-  jeomjaeng:['점과 관상','사주와 관상을 보아 앞날을 점친다. 통찰이 중요하다.'],
-  bangmul:['방물장수','안채를 드나들며 분과 바늘, 노리개를 판다. 소식통이 되기도 한다. 통찰이 중요하다.'],
+  hunter:['사냥','산짐승을 쫓아 가죽과 고기를 얻는다. 범을 잡으면 이름이 난다. 무예가 중요하다.'],
+  sanpa:['산파','아이 받는 일을 익힌다. 학식이 중요하다.'],
+  jeomjaeng:['점과 관상','사주와 관상을 보아 앞날을 점친다. 학식이 중요하다.'],
+  bangmul:['방물장수','안채를 드나들며 분과 바늘, 노리개를 판다. 소식통이 되기도 한다. 학식이 중요하다.'],
   dyer:['염색','쪽과 홍화로 옷감을 물들인다. 재주가 중요하다.'],
   gatjang:['갓일','말총과 대오리로 갓을 짓는다. 재주가 중요하다.'],
   mabu:['마부','말을 돌보고 끌며 길을 오간다. 건강이 중요하다.'],
   salt:['염전','바닷물을 졸여 소금을 굽는다. 건강이 중요하다.'],
-  haenyeo:['물질','바다에 들어가 전복과 미역을 딴다. 담력이 중요하다.'],
+  haenyeo:['물질','바다에 들어가 전복과 미역을 딴다. 무예가 중요하다.'],
   gwansang:['천문','관상감에서 하늘과 절기를 살핀다. 학식이 중요하다.'],
   yulgwan:['율학','법률을 익혀 형조의 율관이 된다. 학식이 중요하다.'],
   sajagwan:['글씨','글씨를 갈고닦아 나라의 문서를 쓰는 사자관이 된다. 재주가 중요하다.'],
   akgong:['악공','거문고와 피리를 익혀 궁중 잔치에서 연주한다. 재주가 중요하다.'],
   poet:['시문','안채에서 시를 짓고 글을 쓴다. 이름이 바깥까지 알려지기도 한다. 학식이 중요하다.'],
   cheosa:['처사의 길','벼슬에 나서지 않고 학문에 힘쓴다. 이름이 높아지면 조정에서도 귀를 기울인다. 학식이 중요하다.'],
-  bandit:['도적의 길','관아의 눈을 피해 재물을 턴다. 의적이 되어 가난한 이를 돕기도 한다. 담력이 중요하다.'],
+  bandit:['도적의 길','관아의 눈을 피해 재물을 턴다. 의적이 되어 가난한 이를 돕기도 한다. 무예가 중요하다.'],
   nurse:['유모','대갓집 아이에게 젖을 물리고 길러 준다. 건강이 중요하다.'],
   lady:['규방 살림','집안 살림을 익혀 안주인·종부가 된다. 매력이 중요하다.'],
   slave:['주인집 일','시키는 일을 하며 산다.']
@@ -556,8 +563,7 @@ function careerScene(){
 function availFoci(){
   const a=P.age;
   if(a<7)return {list:[],why:'아직 어려 뛰놀며 자랐다.'};
-  const L=['grace','know','art','wit','brave','health'];
-  if(a>=12)L.push('fame');
+  const L=['grace','know','art','brave','health'];
   if(a>=18){L.push('wealth','love');if(highPlace(P)||P.realSpouse)L.push('power');}
   L.push('rest');
   return {list:L,why:''};
@@ -630,7 +636,9 @@ const GROW={
   health:{young:['들판을 쏘다니며 몸이 튼튼해졌다.','한 해 동안 잔병치레 없이 지냈다.'],
         adult:['좋은 약재를 얻어 달여 먹었다.','한 해 동안 큰 병 없이 지냈다.','부지런히 걸어 다니며 몸이 가벼워졌다.']}
 };
-const GROW_K=['look','know','art','wit','brave','health'];
+GROW.fame={young:['어른들께 인사를 잘한다는 칭찬이 마을에 돌았다.','길 잃은 아이를 집에 데려다주어 칭찬을 들었다.','서당 훈장이 그대를 두고 될성부른 나무라 하였다.'],
+  adult:['이웃 잔치 일을 도맡아 거들어 칭송을 들었다.','정직하다는 소문이 고을에 퍼졌다.','어려운 이웃의 일을 대신 처리해 주어 고맙다는 인사를 받았다.','고을 어른들 사이에서 그대의 이름이 좋게 오르내렸다.']};
+const GROW_K=['look','know','art','brave','health','fame'];
 function yGrowth(){
   if(P.age<7)return;
   const n=wpick([[0,2],[1,5],[2,3]]);
@@ -967,6 +975,7 @@ function yMajor(){
   if(!P.female&&!P.married&&P.year-(P.flags.pcheopY||0)>=3){const c=peopleOf('cheop').find(x=>x.alive);if(c&&chance(.5))add(57,()=>promoteCheopScene(c));}
   if(P.female&&P.widowed&&!P.married&&!P.flags.widowAsked&&P.age>=18)add(62,()=>widowScene());
   if(P.flags.sujeol&&!P.flags.jeongnyeo&&!P.married&&P.year-P.flags.sujeol>=10)add(90,()=>jeongnyeoScene());
+  if(P.age>=12&&P.year-(P.flags.fameY||0)>=3&&chance(.45))add(25,()=>fameScene());
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){
@@ -1026,8 +1035,8 @@ function marriageable(){
 function rare(k,text){const cx=Store.codex();cx.rare[k]=1;Store.saveCodex();P.flags['rare_'+k]=1;say(text,'big');ev('rare',text);}
 
 /* ===== 자식의 능력치와 배움 ===== */
-const KID_ST=[['look','매력'],['know','학식'],['art','재주'],['wit','통찰'],['brave','담력']];
-const EDU={seodang:['서당에서 글공부','know'],martial:['무예 수련','brave'],art:['소리·그림·바느질 솜씨','art'],manner:['예법과 몸단장','look'],work:['집안일 거들기','wit'],play:['마음껏 뛰놀게 둔다',null]};
+const KID_ST=[['look','매력'],['know','학식'],['art','재주'],['brave','무예']];
+const EDU={seodang:['서당에서 글공부','know'],martial:['무예 수련','brave'],art:['소리·그림·바느질 솜씨','art'],manner:['예법과 몸단장','look'],work:['집안일 거들기','know'],play:['마음껏 뛰놀게 둔다',null]};
 function kidStats(cm){
   const st={};const base=[30,25,20,15,10].map(v=>v+ri(-3,3));
   const ks=KID_ST.map(x=>x[0]);for(let i=ks.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[ks[i],ks[j]]=[ks[j],ks[i]];}

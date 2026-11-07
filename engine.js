@@ -79,7 +79,10 @@ function normalizeSt(p){
   const d=Object.getOwnPropertyDescriptor(s,'grace');
   if(d&&!d.get){const g=s.grace;delete s.grace;if(!p.stMerged){s.look=Math.round(clamp((s.look+g)/2+6));}}
   if(!Object.getOwnPropertyDescriptor(s,'grace'))Object.defineProperty(s,'grace',{get(){return this.look;},set(v){this.look=v;},enumerable:false,configurable:true});
-  p.stMerged=1;return p;
+  const dw=Object.getOwnPropertyDescriptor(s,'wit');
+  if(dw&&!dw.get){const w=s.wit;delete s.wit;s.know=Math.round(clamp(Math.max(s.know,(s.know+w)/2+4)));}
+  if(!Object.getOwnPropertyDescriptor(s,'wit'))Object.defineProperty(s,'wit',{get(){return this.know;},set(v){this.know=v;},enumerable:false,configurable:true});
+  p.stMerged=1;p.witMerged=1;return p;
 }
 
 /* ===== 생애 상태 ===== */
@@ -113,8 +116,8 @@ function rollBirth(hist){
   /* 타고난 바탕: 모두 10 이상, 계단식으로 높낮이를 나누어 무작위로 붙인다 */
   const TIERS=[[50,40,40,25,15],[45,40,30,20,15],[55,35,30,20,10],[40,40,35,30,20],[60,35,25,15,10],[50,35,30,30,15],[45,45,25,20,10]];
   const tier=R(TIERS).map(v=>Math.max(10,v+ri(-3,3)));
-  const keys=['look','know','art','wit','brave'];for(let i=keys.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[keys[i],keys[j]]=[keys[j],keys[i]];}
-  delete st.grace;keys.forEach((k,i)=>st[k]=tier[i]);p.stMerged=1;
+  const keys=['look','know','art','brave'];for(let i=keys.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[keys[i],keys[j]]=[keys[j],keys[i]];}
+  delete st.grace;delete st.wit;const tv=tier.slice();tv.splice(ri(0,tv.length-1),1);keys.forEach((k,i)=>st[k]=tv[i]);p.stMerged=1;
   st.health=ri(62,86);st.worry=ri(0,10);
   st.fame={royal:40,yangban:22,jungin:14,sangmin:8,cheonmin:3}[p.cls]+ri(0,6);
   if(p.cls==='royal'||p.cls==='yangban'){st.know+=ri(2,6);}
@@ -241,7 +244,7 @@ function fx(o,silent){
   const ch=[];
   for(const k in o){let v=o[k];if(!v)continue;
     if(k==='wealth'){const old=P.wealth;P.wealth=Math.max(0,P.wealth+v);const d=P.wealth-old;if(Math.abs(d)>=0.5)ch.push(`재산 ${d>0?'+':'-'}${money(Math.abs(d))}`);continue;}
-    const old=P.st[k];P.st[k]=clamp(old+v);const d=P.st[k]-old;if(d)ch.push(`${STATN[k]} ${d>0?'+':''}${d}`);}
+    const old=P.st[k];P.st[k]=clamp(old+v);const d=P.st[k]-old;if(d&&k!=='worry')ch.push(`${STATN[k]} ${d>0?'+':''}${d}`);}
   if(ch.length&&!silent)say(ch.join(' · '),'chg');
   return ch;
 }
