@@ -750,12 +750,12 @@ function raiseParent(toCls,why,reason){
 function kidRoyalScene(k){
   k.ganTaek=1;note('ganjip');
   const p=clamp(.2+(k.st?k.st.look:30)/250+P.st.fame/350,.1,.75);
-  return {kind:'major',title:'자식 · 딸의 간택',text:`나라에 금혼령이 내려지고 세자빈을 고른다는 명이 떨어졌다. 딸 ${k.name}의 처녀단자를 올리라는 기별이 왔다.${sisQ(k)?` 중전인 언니 ${sisQ(k).name}의 뜻이 닿았다는 소문도 돈다.`:''}`,opts:[
+  return {kind:'major',title:'자식 · 딸의 간택',text:`나라에 금혼령이 내려지고 세자빈을 고른다는 명이 떨어졌다. 딸 ${k.name}의 처녀단자를 올리라는 기별이 왔다.${sisQ(k)?` ${sisQ(k).royalBride}인 언니 ${sisQ(k).name}의 뜻이 닿았다는 소문도 돈다.`:''}`,opts:[
     {t:'간택에 내보낸다',sub:'딸의 매력과 집안의 평판이 중요하다',p,tags:['성공하면 딸이 세자빈, 그대는 왕실의 외척','신분·재력 크게 ↑'],fn:()=>{
       if(!chance(p)){say(`삼간택까지 갔으나 ${iga(k.name)} 끝내 뽑히지 못하였다.`);return null;}
-      k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='세자빈';k.wedY=P.year;k.feat='세자빈으로 간택되었다';
+      k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='세자빈';k.wedY=P.year;k.sejaOf=realKing(P.year).n;k.feat='세자빈으로 간택되었다';
       say(`딸 ${iga(k.name)} 세자빈으로 간택되었다! 가문에 큰 경사가 났다.`,'big');
-      {const sq=sisQ(k);if(sq){k.sisterQ=sq.id;say(`세자는 후궁의 소생이나, 중전인 ${iga(sq.name)} 적모로서 친자식처럼 길러 온 아들이었다. 이로써 언니는 시어머니가, ${k.name}${bat(k.name)?'은':'는'} 그 며느리가 되었다.`,'big');}}ev('kidfeat',`딸 ${k.name}`,{feat:k.feat});
+      {const sq=sisQ(k);if(sq){k.sisterQ=sq.id;if(sq.royalBride==='중전')say(`세자는 후궁의 소생이나, 중전인 ${iga(sq.name)} 적모로서 친자식처럼 길러 온 아들이었다. 이로써 언니는 시어머니가, ${k.name}${bat(k.name)?'은':'는'} 그 며느리가 되었다.`,'big');else say(`대비인 언니 ${iga(sq.name)} 궁 안의 큰 어른으로서 이 혼사를 이끌었다. 자매가 나란히 궁에 들게 되었다.`,'big');}}ev('kidfeat',`딸 ${k.name}`,{feat:k.feat});
       queenParentBoost(false);}},
     {t:'병을 핑계로 피한다',p:.75,safe:true,tags:['평판 조금 ↓'],fn:()=>{if(chance(.75))say(`딸이 병중이라 둘러대어 간택을 피하였다.`);else{fx({fame:-6});say('핑계가 들통나 꾸중을 들었다.');}}}]};
 }
