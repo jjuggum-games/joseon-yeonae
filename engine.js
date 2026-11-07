@@ -66,8 +66,7 @@ function callOf(p){
   if(p.title)return p.title;
   if(p.nick)return p.name;
   if(p.sub==='gisaeng')return p.name;
-  if(p.cls==='yangban'||p.cls==='royal')return p.female?`${p.sur}씨 낭자`:`${p.sur} 도령`;
-  if(p.cls==='jungin')return p.female?`${p.sur}씨 처자`:`${p.sur} 서방`;
+  if(p.cls==='yangban'||p.cls==='royal'||p.cls==='jungin')return `${p.sur||''}${p.name}`;
   return p.name;
 }
 function fullOf(p){

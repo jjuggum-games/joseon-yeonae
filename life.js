@@ -266,8 +266,8 @@ function yFamily(){
     const x=pa[key];if(!x.alive)continue;x.age++;
     const pd=x.age<45?.006:x.age<55?.02:x.age<65?.045:x.age<75?.09:.18;
     if(chance(pd)&&P.age>=3){
-      x.alive=false;say(`${w}가 세상을 떠났다. ${P.age>=15?'삼년상을 치르며 몸과 마음이 상하였다.':'어린 나이에 부모를 여의었다.'}`,'big');
-      ev('loss',`${w}를 여의었다`);fx({worry:12,health:-3},true);
+      x.alive=false;say(`${iga(w)} 세상을 떠났다. ${P.age>=15?'삼년상을 치르며 몸과 마음이 상하였다.':'어린 나이에 부모를 여의었다.'}`,'big');
+      ev('loss',`${eulreul(w)} 여의었다`);fx({worry:12,health:-3},true);
       if(key==='f'&&P.married&&P.cls!=='cheonmin')inherit();
     }
   }
@@ -458,7 +458,7 @@ function yJob(){
   }
   if(k==='chongsin'){
     const fk=P.flags.favorKing;
-    if(fk&&realKing(P.year).n!==fk&&!P.alt){P.flags.favorKing=null;if(chance(.55)){say(`${fk}이 승하하자 그대를 미워하던 이들이 들고일어났다.`,'big');punish({});P.job=null;P.court=false;return;}else{say(`${fk}이 승하하였다. 총애도 끝나 궐을 떠나 조용히 지내게 되었다.`,'big');P.job=null;P.court=false;}}
+    if(fk&&realKing(P.year).n!==fk&&!P.alt){P.flags.favorKing=null;if(chance(.55)){say(`${iga(fk)} 승하하자 그대를 미워하던 이들이 들고일어났다.`,'big');punish({});P.job=null;P.court=false;return;}else{say(`${iga(fk)} 승하하였다. 총애도 끝나 궐을 떠나 조용히 지내게 되었다.`,'big');P.job=null;P.court=false;}}
     else{P.favor=clamp((P.favor||50)+ri(-8,6)+(P.st.look-60)/15);if(J.lv<2&&chance(.05+P.favor/400))setJob('chongsin',J.lv+1),say(`${euro(jobTitle(P.job))} 권세가 커졌다.`,'big');
       if(P.favor<25&&chance(.3)){say('임금의 총애가 식었다. 궐에서 물러나야 했다.','big');P.job=null;P.court=false;}
       if(J.lv>=2&&chance(.06)){say('그대의 권세를 시기한 이들이 탄핵 상소를 올렸다.','big');if(chance(.5)){punish({});P.job=null;P.court=false;return;}else say('임금이 그대를 감싸 주었다.');}}
@@ -797,7 +797,7 @@ function admirer(){
   const x=spawnLove({quiet:true});
   x.t=clamp(Math.max(x.t,40+ri(0,15)));x.status='their';
   const why=st.look===top?'고운 자태':st.art===top?`${P.artK} 솜씨`:'글솜씨';
-  say(`그대의 ${why}가 소문이 나, ${iga(callOf(x))} 사람을 넣어 안부를 물어 왔다.`,'big');
+  say(`그대의 ${iga(why)} 소문이 나, ${iga(callOf(x))} 사람을 넣어 안부를 물어 왔다.`,'big');
 }
 function spawnLove(o={}){
   const same=chance(.12);const fem=same?P.female:!P.female;
@@ -809,7 +809,7 @@ function spawnLove(o={}){
   const x=newPerson({kind:'love',female:fem,cls,sub,born:P.year-clamp(P.age+ri(-4,6),18,60),place});
   if(o.quiet){firstImpression(x,true);return x;}
   const pr=persona(x.persona);
-  say(`${place}에서 ${eulreul(fullOf(x))} 처음 보았다. ${R([`${pr.n}이 묻어나는 사람이었다.`,'자꾸만 눈길이 갔다.','스치듯 지나쳤으나 마음에 남았다.','짧게 몇 마디를 나누었다.'])}`,'big');
+  say(`${place}에서 ${eulreul(fullOf(x))} 처음 보았다. ${R([`${iga(pr.n)} 묻어나는 사람이었다.`,'자꾸만 눈길이 갔다.','스치듯 지나쳤으나 마음에 남았다.','짧게 몇 마디를 나누었다.'])}`,'big');
   ev('meet',x.id);
   firstImpression(x);
   if(!P.married&&chance(.15)){const r=newPerson({kind:'rival',female:P.female,cls:x.cls==='royal'?'yangban':x.cls,born:P.year-ri(17,28),grudge:20});r.note=`${eulreul(callOf(x))} 두고 다투는 연적`;say(`그런데 ${callOf(x)}에게 마음을 둔 이가 또 있다는 말이 들렸다. ${r.name}${bat(r.name)?'이라':'라'} 하였다.`);}
@@ -845,7 +845,7 @@ function seekLove(kind){
   if(kind==='royal')x.pos=fem?'옹주':'종친';
   if(kind==='direct'){x.pos=o.pos;if(o.isKing)x.isKing=true;if(o.seja)x.seja=true;}
   const pr=persona(x.persona);
-  say(`인연을 찾아 나섰다. ${place}에서 ${eulreul(x.title||fullOf(x))} 만났다. ${pr.n}이 묻어나는 사람이었다.`,'big');
+  say(`인연을 찾아 나섰다. ${place}에서 ${eulreul(x.title||fullOf(x))} 만났다. ${iga(pr.n)} 묻어나는 사람이었다.`,'big');
   ev('meet',x.id);
   firstImpression(x);
   if((kind==='royal'||kind==='direct')&&!['yangban','royal'].includes(P.cls))say('신분이 하늘과 땅만큼 차이 나는 사람이었다. 맺어지기는 어려울 것이다.');
@@ -897,7 +897,7 @@ const SP_HATE={blunt:['talk'],stern:['outing'],cool:['gift'],shy:['outing']};
 function spouseScene(x){
   const king=x.kingRole;const w=spouseWord(x);
   const el=x.kind!=='cheop'&&P.elder&&P.people[P.elder]&&P.people[P.elder].alive?P.people[P.elder]:null;
-  const where=G.fest?G.fest.n+'을 맞아':R(['어느 봄날','어느 여름날','비 내리던 날','달 밝은 밤','어느 가을날','눈 내리던 날']);
+  const where=G.fest?eulreul(G.fest.n)+' 맞아':R(['어느 봄날','어느 여름날','비 내리던 날','달 밝은 밤','어느 가을날','눈 내리던 날']);
   const acts=king?[
     ['talk','임금께 시를 지어 올린다','글솜씨와 마음이 함께 전해진다'],
     ['outing','후원 산책길에 모신다',G.fest?`${G.fest.n} 놀이를 함께 즐긴다`:'꽃이 핀 후원을 함께 거닌다'],
@@ -940,7 +940,7 @@ function doSpouse(x,k,p,el){
 function loveScene(x){
   if(x.kind==='spouse')return spouseScene(x);
   const isSp=x.kind==='spouse';
-  const where=G.fest?G.fest.n+'을 맞아':R(['어느 봄날','어느 여름날','비 내리던 날','달 밝은 밤','어느 가을날','눈 내리던 날']);
+  const where=G.fest?eulreul(G.fest.n)+' 맞아':R(['어느 봄날','어느 여름날','비 내리던 날','달 밝은 밤','어느 가을날','눈 내리던 날']);
   const nm=callOf(x);
   const text=isSp?`${where}, ${spouseWord(x)}${P.female?'과':'와'} 단둘이 마주 앉았다. 지금 정은 ${HEART[hLv(x.h)]} 정도였다.`
     :`${where}, ${nm}의 소식이 들려왔다. (${personInfo(x)}) ${x.known?`${eulreul(persona(x.persona).n)} 지닌 사람이고, ${eulreul(taste(x.taste).n)} 좋아한다.`:'아직 어떤 사람인지 잘 모른다.'}`;
@@ -1292,7 +1292,7 @@ function royalDaughterYear(k,a){
     if(!k.wonson&&a>=19&&chance(.2)){k.wonson=1;k.grand=(k.grand||0)+1;P.grand=(P.grand||0)+1;say(rb==='세자빈'?`세자빈인 딸 ${iga(nm)} 원손을 낳았다! 온 나라가 경사로 들썩였다.`:`중전인 딸 ${iga(nm)} 원자를 낳았다! 외손이 장차 임금이 될 것이다.`,'big');fx({fame:8,worry:-6});ev('kidfeat',`딸 ${nm}`,{feat:rb==='세자빈'?'원손을 낳았다':'원자를 낳았다'});return;}
     if(chance(.08)){say(R([`궁에서 딸 ${nm}의 안부를 전하는 상궁이 다녀갔다.`,`명절을 맞아 딸 ${nm}에게 친정의 음식을 들여보냈다.`,`딸 ${iga(nm)} 궁 안에서 어질다는 칭송을 듣는다고 한다.`]));fx({worry:-2});return;}
     if(rb==='세자빈'&&!k.wonson&&a>=28&&chance(.06)){say(`딸 ${iga(nm)} 아직 원손을 낳지 못해 궁 안에서 말이 많다고 한다.`);fx({worry:6});return;}
-    if(chance(.005)){k.royalBride='폐빈';say(`궁중의 모함에 휘말려 딸 ${iga(nm)} 폐서인이 되어 사가로 쫓겨났다.`,'big');fx({fame:-15,worry:20});updateHonor();ev('note',`딸 ${nm}이 폐서인이 되는 일을 겪었다`);k.home='with';return;}
+    if(chance(.005)){k.royalBride='폐빈';say(`궁중의 모함에 휘말려 딸 ${iga(nm)} 폐서인이 되어 사가로 쫓겨났다.`,'big');fx({fame:-15,worry:20});updateHonor();ev('note',`딸 ${iga(nm)} 폐서인이 되는 일을 겪었다`);k.home='with';return;}
   }
   if(rb==='대비'&&chance(.05))say(`대비가 된 딸 ${iga(nm)} 궁 안의 큰 어른으로 존경받는다.`);
 }
