@@ -863,6 +863,7 @@ function favorScene(){
 /* ===== 갈라서기: 이혼·소박과 자식 ===== */
 function minorKids(){return P.kids.filter(k=>k.alive&&!k.away&&P.year-k.born<18);}
 function doDivorce(sp,why,byMe){
+  if(P.preg&&!P.preg.unwed){if(P.female&&!P.preg.father)P.preg.father=sp.id;if(!P.female&&!P.preg.mother)P.preg.mother=sp.id;}
   const yb=['yangban','royal'].includes(P.cls);
   sp.kind='ex';sp.status='parted';sp.exY=P.year;P.spouse=null;P.married=false;P.divorced=(P.divorced||0)+1;P.flags.divorceY=P.year;
   if(P.female){fx({fame:-(yb?18:8),worry:15});if(/시댁|별채|사랑채|중궁|동궁/.test(P.home||''))P.home='친정 곁방';if(P.sub==='cheop')P.sub='';

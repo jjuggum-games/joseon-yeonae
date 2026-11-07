@@ -412,7 +412,7 @@ function sideFam(){
     const alive=P.kids.filter(k=>k.alive).length;
     h+=grp('자식',kd,`${P.kids.length}명${alive<P.kids.length?` · 살아 있는 이 ${alive}명`:''}`);
   }
-  const pgs=[...(P.preg?[[P.preg,P.female?'나':'아내']]:[]),...Object.entries(P.cpreg||{}).map(([id,pr])=>[pr,P.people[id]?callOf(P.people[id]):'첩'])];
+  const pgs=[...(P.preg?[[P.preg,P.female?'나'+(P.preg.father&&P.preg.father!==P.spouse&&P.people[P.preg.father]?` (${callOf(P.people[P.preg.father])}의 아이)`:''):(P.preg.mother&&P.preg.mother!==P.spouse&&P.people[P.preg.mother]?callOf(P.people[P.preg.mother]):'아내')]]:[]),...Object.entries(P.cpreg||{}).map(([id,pr])=>[pr,P.people[id]?callOf(P.people[id]):'첩'])];
   if(pgs.length)h+=grp('뱃속의 아이',pgs.map(([pr,who])=>row(who,'태몽 · '+pr.dream,pr.guess?pr.guess+'일 것이라 한다':'')).join(''));
   if(P.grand)h+=grp('손주',row(P.grand+'명','손주',''));
   return h+'</div>';
@@ -683,7 +683,7 @@ document.addEventListener('click',async e=>{
     case 'trykid':{const x=P&&P.people[a.dataset.id];if(!P||!x||G.scene||!fertileWith(x)||pregOf(x))return;P.kidTryY=P.kidTryY||{};if(P.kidTryY[x.id]===P.year)return;P.kidTryY[x.id]=P.year;
       const isC=x.kind==='cheop';if(!isC)P.wantKids=true;
       const f=Math.min(.85,fertileWith(x)*1.6);
-      if(chance(f)){const d=R(TAEMONG);const pr={due:P.year+1,sex:chance(.5)?'아들':'딸',dream:d[0],guess:d[1],cheop:isC?x.id:undefined};if(isC){P.cpreg=P.cpreg||{};P.cpreg[x.id]=pr;}else P.preg=pr;
+      if(chance(f)){const d=R(TAEMONG);const pr={due:P.year+1,sex:chance(.5)?'아들':'딸',dream:d[0],guess:d[1],cheop:isC?x.id:undefined,father:P.female?x.id:undefined,mother:!P.female&&!isC?x.id:undefined};if(isC){P.cpreg=P.cpreg||{};P.cpreg[x.id]=pr;}else P.preg=pr;
         say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였다. ${P.female?'곧 몸에 태기가 있었다':`곧 ${callOf(x)}에게 태기가 있었다`}. 그날 밤 ${d[0]}을 꾸었다.`,'big');note('taemong');toast('태기가 있습니다!');}
       else{say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였으나, 올해는 태기가 없었다.`);toast('올해는 태기가 없었습니다.');}
       Store.saveCur();V.dirty.feed=1;renderSide();break;}

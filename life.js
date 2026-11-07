@@ -276,7 +276,7 @@ function yFamily(){
   }
   // 회임과 출산
   if(P.cpreg)for(const id of Object.keys(P.cpreg)){const pr=P.cpreg[id];if(pr.due<=P.year){delete P.cpreg[id];birth(pr);}}
-  if(P.preg&&P.preg.due===P.year){return birth();}
+  if(P.preg&&P.preg.due<=P.year){return birth();}
   const up=unwedConceive();if(up)return up;
   conceive();
 }
@@ -322,7 +322,7 @@ function conceive(){
   const f=fertile();if(!f||P.kids.filter(k=>!k.adopted).length>=9)return;
   if(chance(f)){
     const d=R(TAEMONG);const sex=chance(.5)?'아들':'딸';
-    P.preg={due:P.year+1,sex,dream:d[0],guess:d[1]};
+    P.preg={due:P.year+1,sex,dream:d[0],guess:d[1],father:P.female?P.spouse:undefined,mother:P.female?undefined:P.spouse};
     say(`${P.female?'몸에 태기가 있었다':'아내에게 태기가 있었다'}. 그날 밤 ${d[0]}을 꾸었다.`,'big');
     note('taemong');
   }
@@ -347,13 +347,15 @@ function birth(given){
   const seo=!!cm||P.sub==='cheop'||(spouseP()&&(spouseP().kind==='cheop'||spouseP().mode==='cheop'))||(pr.unwed&&!(P.married&&P.spouse===pr.father));
   if(P.alive===false)return;
   const twins=chance(.03);
-  const partner=cm||P.people[pr.father]||spouseP();const meP={cls:P.cls};
+  const partner=cm||P.people[pr.father]||P.people[pr.mother]||spouseP();
+  const exPar=partner&&!cm&&partner.id!==P.spouse&&!pr.unwed?partner:null;const meP={cls:P.cls};
   const kcls=P.female?kidClass(partner,meP):kidClass(meP,partner);
-  const mk=(fem,name)=>{const kid={id:uid(),name,female:fem,born:P.year,alive:true,adopted:false,married:false,grand:0,seo,cls:kcls,father:P.female?(pr.father||P.spouse):undefined,mother:cm?cm.id:(P.female?undefined:(partner&&partner.id)),st:kidStats(cm)};P.kids.push(kid);ev('child',kid.name,{female:fem});return kid;};
+  const mk=(fem,name)=>{const kid={id:uid(),name,female:fem,born:P.year,alive:true,adopted:false,married:false,grand:0,seo,cls:kcls,father:P.female?(pr.father||P.spouse):undefined,away:exPar&&!P.female?1:undefined,mother:cm?cm.id:(P.female?undefined:(partner&&partner.id)),st:kidStats(cm)};P.kids.push(kid);ev('child',kid.name,{female:fem});return kid;};
   const k1=mk(female,nm);
   if(twins){const f2=chance(.5)?female:!female;const k2=mk(f2,personName(kidNameCls(cm,pr),f2));
     const who=P.female?'':cm?iga(callOf(cm))+' ':'아내가 ';
     say(`${P.female?'쌍둥이를 낳았다!':who+'쌍둥이를 낳았다!'} ${f2===female?(female?'딸':'아들')+' 둘':'아들딸'}, ${gwawa(k1.name)} ${k2.name}${bat(k2.name)?'이었다':'였다'}.`,'big');ev('twins',k1.name+'·'+k2.name);}
+  else if(exPar)say(P.female?`${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다. 헤어진 ${callOf(exPar)}의 아이였다.`:`헤어진 ${iga(callOf(exPar))} ${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다는 소식이 왔다. 아이는 어미 곁에서 자라게 되었다.`,'big');
   else say(`${P.female?`${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다.`:`${cm?iga(callOf(cm)):'아내가'} ${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다.`}${pr.guess===pr.sex?' 태몽이 맞았다.':''}`,'big');
   const kid=k1;
   fx({fame:twins?ri(5,8):ri(2,4)},true);
