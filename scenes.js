@@ -763,6 +763,7 @@ function queenParentBoost(queen){
   raiseParent('yangban','딸이 왕실에 들어 왕실의 외척이 되었다');
   const t=queen?(P.female?'부부인':'부원군'):(P.female?'세자빈의 어머니':'세자빈의 아버지');
   if(!P.titles.includes(t))P.titles.push(t);
+  P.honor=queen?`${(P.bon||'').replace(/^(.).*$/,'$&')}${P.female?'부부인':'부원군'}`:(P.female?'세자빈의 어머니':'세자빈의 아버지 (국구 집안)');if(!queen&&!P.female&&P.job&&P.job.k==='official'&&P.job.lv<14){setJob('official',Math.min(16,P.job.lv+2));}ev('job',queen?`${P.honor}의 작호를 받았다`:`세자빈의 ${P.female?'어머니':'아버지'}가 되었다`);
   fx({fame:queen?25:15,wealth:queen?Math.max(400,P.wealth*.5):Math.max(150,P.wealth*.3)});
   P.flags.kidSupport=(P.flags.kidSupport||0)+(queen?30:12);P.flags.queenParent=queen?2:Math.max(P.flags.queenParent||0,1);
   if(queen||!/기와집|궁/.test(P.home||'')){P.home=queen?'솟을대문 달린 큰 기와집':'사랑채 딸린 기와집';}

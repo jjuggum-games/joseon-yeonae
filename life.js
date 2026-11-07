@@ -1130,7 +1130,27 @@ function kidGrow(k,a){
     if(!e[1]&&chance(.3)){}
   }
   if(a>=18&&a<=35&&!k.feat&&k.alive&&chance(.12))kidFeat(k);
+  if(a>=16&&k.alive&&!k.job)kidJob(k);
+  else if(k.job&&k.alive&&a<60&&JOBS[k.job.k]&&k.job.lv<JOBS[k.job.k].ladder.length-1&&chance(.06))k.job.lv++;
 }
+/* 자식의 생업 */
+function kidJob(k,feat){
+  const st=kidSt(k);const top=KID_ST.map(x=>x[0]).sort((x,y)=>st[y]-st[x])[0];const c=k.cls||P.cls,Y=P.year,F=k.female;
+  const f=feat||k.feat||'';let j=null;
+  const M=[[/세자빈|중전|간택/,null],[/문과에 급제/,['official',st.know>80?2:0]],[/무과에 급제/,['military',1]],[/역관/,['interp',1]],[/의관/,['doctor',1]],[/의사/,['westdoc',1]],[/교원/,['teacher',1]],[/기자|신문/,['reporter',1]],[/독립운동/,['indep',1]],[/주사/,['official',0]],[/장교/,['newarmy',1]],[/장사로 재산/,['merchant',2]],[/궁에서까지/,['weaver',2]]];
+  for(const [re,v] of M)if(re.test(f)){if(!v)return;j=v;break;}
+  if(!j){
+    if(c==='royal')j=F?['princess',0]:['prince',0];
+    else if(Y>=1910&&!F)j=top==='know'?[R(['teacher','reporter','clerk']),0]:top==='art'?['photo',0]:['worker',0];
+    else if(Y>=1894&&!F&&top==='know')j=[R(['teacher','telegraph']),0];
+    else if(c==='yangban')j=F?(top==='know'?['poet',0]:['lady',0]):(top==='brave'?['military',0]:Y<1894?['scholar',0]:['cheosa',0]);
+    else if(c==='jungin')j=F?(top==='know'?['uinyeo',0]:['weaver',0]):(top==='know'?[R(['interp','doctor','sanwon']),0]:top==='art'?['painter',0]:['ajeon',0]);
+    else if(c==='sangmin')j=F?(top==='art'?['weaver',0]:R([['farmer',0],['jumo',0],['bangmul',0]])):(top==='brave'?['soldier',0]:top==='art'?[R(['potter','carpenter','smith']),0]:top==='know'?['merchant',0]:['farmer',0]);
+    else j=F?(top==='art'&&Y<1894?['gisaeng',0]:['slave',0]):(P.sub==='gwangdae'?['gwangdae',0]:P.sub==='baekjeong'?['baekjeong',0]:Y>=1894?['farmer',0]:['slave',0]);
+  }
+  if(j&&JOBS[j[0]])k.job={k:j[0],lv:Math.min(j[1],JOBS[j[0]].ladder.length-1)};
+}
+function kidJobTitle(k){if(k.royalBride)return k.royalBride;if(!k.job&&k.alive&&P.year-k.born>=16)kidJob(k);if(!k.job||!JOBS[k.job.k])return '';if(k.female&&k.married&&['lady','farmer','slave'].includes(k.job.k))return '출가하여 살림';return JOBS[k.job.k].ladder[Math.min(k.job.lv,JOBS[k.job.k].ladder.length-1)];}
 function kidFeat(k){
   const st=kidSt(k);const top=KID_ST.map(x=>x[0]).sort((x,y)=>st[y]-st[x])[0];const v=st[top];if(v<55)return;
   const w=k.female?'딸':'아들';const cls=P.cls;let t=null,fame=4;
@@ -1148,7 +1168,7 @@ function kidFeat(k){
   else if(top==='art'){t=k.female?'솜씨가 빼어나 궁에서까지 찾았다':'솜씨가 빼어나 이름을 떨쳤다';}
   else if(top==='look'){t=k.female?'곱기로 소문나 좋은 혼처가 줄을 이었다':'풍채가 좋아 어디서나 눈길을 끌었다';}
   else if(top==='wit'){t='셈이 밝아 장사로 재산을 크게 불렸다';P.wealth+= ({royal:300,yangban:60,jungin:40,sangmin:12,cheonmin:2}[cls]||5);}
-  if(!t)return;k.feat=t;say(`${w} ${iga(k.name)} ${t}.`,'big');fx({fame,worry:-4});ev('kidfeat',`${w} ${k.name}`,{feat:t});
+  if(!t)return;k.feat=t;k.job=null;kidJob(k,t);say(`${w} ${iga(k.name)} ${t}.`,'big');fx({fame,worry:-4});ev('kidfeat',`${w} ${k.name}`,{feat:t});
   kidSuccessBoost(k,t);
 }
 

@@ -77,6 +77,7 @@ function fullOf(p){
 
 /* ===== 능력치 합치기: 기품은 매력(용모)에 합친다 ===== */
 function normalizeSt(p){
+  try{if(p&&p.kids){const qb=p.kids.find(k=>k.alive&&k.royalBride);if(qb&&!p.honor)p.honor=qb.royalBride==='중전'?`${p.bon||''}${p.female?'부부인':'부원군'}`:(p.female?'세자빈의 어머니':'세자빈의 아버지 (국구 집안)');}}catch(_){}
   const s=p.st;if(!s)return p;
   const d=Object.getOwnPropertyDescriptor(s,'grace');
   if(d&&!d.get){const g=s.grace;delete s.grace;if(!p.stMerged){s.look=Math.round(clamp((s.look+g)/2+6));}}
@@ -279,5 +280,5 @@ function setJob(k,lv){
 function statusLine(){
   const c=CLS[P.cls].n;
   const t=P.job?jobTitle(P.job):(P.age<10?'아이':'');
-  return [c,t,P.flags&&P.flags.jeongnyeo?'열녀':''].filter(Boolean).join(' · ');
+  return [c,t,P.honor||'',P.flags&&P.flags.jeongnyeo?'열녀':''].filter(Boolean).join(' · ');
 }
