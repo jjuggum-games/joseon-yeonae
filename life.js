@@ -343,7 +343,7 @@ function birth(given){
     else if(cm){cm.alive=false;say(`${iga(callOf(cm))} 해산 끝에 세상을 떠났다.`,'big');}
     else{const sp=spouseP();spouseDies(sp,'해산 끝에');}
   }
-  const nm=royalKid?(R(['영','화','덕','은','숙','정','명','경','의','순'])+R(['창','원','안','성','양','천','평','춘'])+(female?' 옹주':'군')):personName(P.cls==='cheonmin'?'cheonmin':P.cls,female);
+  const nm=royalKid?(R(['영','화','덕','은','숙','정','명','경','의','순'])+R(['창','원','안','성','양','천','평','춘'])+(female?' 옹주':'군')):personName(kidNameCls(cm,pr),female);
   const seo=!!cm||P.sub==='cheop'||(spouseP()&&(spouseP().kind==='cheop'||spouseP().mode==='cheop'))||(pr.unwed&&!(P.married&&P.spouse===pr.father));
   if(P.alive===false)return;
   const twins=chance(.03);
@@ -351,7 +351,7 @@ function birth(given){
   const kcls=P.female?kidClass(partner,meP):kidClass(meP,partner);
   const mk=(fem,name)=>{const kid={id:uid(),name,female:fem,born:P.year,alive:true,adopted:false,married:false,grand:0,seo,cls:kcls,father:pr.father||P.spouse,mother:cm?cm.id:undefined,st:kidStats(cm)};P.kids.push(kid);ev('child',kid.name,{female:fem});return kid;};
   const k1=mk(female,nm);
-  if(twins){const f2=chance(.5)?female:!female;const k2=mk(f2,personName(P.cls==='cheonmin'?'cheonmin':P.cls,f2));
+  if(twins){const f2=chance(.5)?female:!female;const k2=mk(f2,personName(kidNameCls(cm,pr),f2));
     const who=P.female?'':cm?iga(callOf(cm))+' ':'아내가 ';
     say(`${P.female?'쌍둥이를 낳았다!':who+'쌍둥이를 낳았다!'} ${f2===female?(female?'딸':'아들')+' 둘':'아들딸'}, ${gwawa(k1.name)} ${k2.name}${bat(k2.name)?'이었다':'였다'}.`,'big');ev('twins',k1.name+'·'+k2.name);}
   else say(`${P.female?`${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다.`:`${cm?iga(callOf(cm)):'아내가'} ${female?'딸':'아들'} ${eulreul(k1.name)} 낳았다.`}${pr.guess===pr.sex?' 태몽이 맞았다.':''}`,'big');
@@ -1089,4 +1089,12 @@ function kidFeat(k){
   else if(top==='wit'){t='셈이 밝아 장사로 재산을 크게 불렸다';P.wealth+= ({royal:300,yangban:60,jungin:40,sangmin:12,cheonmin:2}[cls]||5);}
   if(!t)return;k.feat=t;say(`${w} ${iga(k.name)} ${t}.`,'big');fx({fame,worry:-4});ev('kidfeat',`${w} ${k.name}`,{feat:t});
   kidSuccessBoost(k,t);
+}
+
+/* 자식 이름은 부모 가운데 신분이 높은 쪽의 집안 풍습을 따른다 */
+function kidNameCls(cm,pr){
+  const R5=['cheonmin','sangmin','jungin','yangban','royal'];
+  const par=cm||(pr&&P.people[pr.father])||spouseP();
+  const a=R5.indexOf(P.cls),b=par?R5.indexOf(par.cls):-1;
+  const c=R5[Math.max(a,b)];return c==='royal'?'yangban':c;
 }
