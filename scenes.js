@@ -766,10 +766,10 @@ function kidRoyalScene(k){
     {t:'간택에 내보낸다',sub:'딸의 매력과 집안의 평판이 중요하다',p,tags:['성공하면 딸이 세자빈, 그대는 왕실의 외척','신분·재력 크게 ↑'],fn:()=>{
       if(!chance(p)){say(`삼간택까지 갔으나 ${iga(k.name)} 끝내 뽑히지 못하였다.`);bookSeen('scene','kidsamgan');
         const kn=realKing(P.year).n;
-        return {kind:'major',title:'자식 · 딸의 삼간택 낙선',text:`삼간택까지 올랐던 처녀는 왕실의 여인으로 여겨져 다른 집에 시집가기 어렵다. 궐에서 딸 ${eulreul(k.name)} 후궁으로 들이겠다는 말이 전해졌다.`,opts:[
+        return {kind:'major',title:'자식 · 딸의 삼간택 낙선',text:`삼간택에서 떨어졌다. 궐에서 딸 ${eulreul(k.name)} 후궁으로 들이겠다는 말이 전해졌다. 사양하면 금혼령이 풀리는 대로 다른 혼처를 찾을 수 있다.`,opts:[
           {t:'후궁으로 들여보낸다',p:null,tags:['딸이 후궁(숙의)이 됨','평판·재력 ↑','딸을 궐에 보냄'],fn:()=>{k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='숙의';k.wedY=P.year;k.kingOf=kn;k.feat='후궁이 되었다';
             fx({fame:6,wealth:Math.max(60,P.wealth*.1),worry:4});P.flags.kidSupport=(P.flags.kidSupport||0)+6;say(`딸 ${iga(k.name)} 숙의의 첩지를 받고 ${kn}의 후궁으로 입궐하였다. 다시는 사가에서 함께 살 수 없게 되었다.`,'big');ev('kidfeat',`딸 ${k.name}`,{feat:'후궁이 되었다'});}},
-          {t:'사가에서 혼인하지 않고 지내게 한다',p:null,safe:true,tags:['딸의 혼인이 한동안 막힘','평판 ↑'],fn:()=>{k.noMatch=P.year+8;fx({fame:4});say(`궐의 부름을 사양하였다. ${k.name}의 혼담은 한동안 끊길 것이다.`);}}]};}
+          {t:'사양하고 다른 혼처를 찾는다',p:null,safe:true,tags:['평판 ↑','혼담은 그대로 이어짐'],fn:()=>{fx({fame:4});say(`궐의 부름을 정중히 사양하였다. 금혼령이 풀리자 ${k.name}에게도 다시 혼담이 들어왔다.`);}}]};}
       k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='세자빈';k.wedY=P.year;k.sejaOf=realKing(P.year).n;k.feat='세자빈으로 간택되었다';
       say(`딸 ${iga(k.name)} 세자빈으로 간택되었다! 가문에 큰 경사가 났다.`,'big');
       {const sq=sisQ(k);if(sq){k.sisterQ=sq.id;if(sq.royalBride==='중전')say(`세자는 후궁의 소생이나, 중전인 ${iga(sq.name)} 적모로서 친자식처럼 길러 온 아들이었다. 이로써 언니는 시어머니가, ${k.name}${bat(k.name)?'은':'는'} 그 며느리가 되었다.`,'big');else say(`대비인 언니 ${iga(sq.name)} 궁 안의 큰 어른으로서 이 혼사를 이끌었다. 자매가 나란히 궁에 들게 되었다.`,'big');}}ev('kidfeat',`딸 ${k.name}`,{feat:k.feat});
@@ -803,15 +803,15 @@ function samganScene(stage){
   const p=[clamp(.55+st.look/300+st.fame/400,.3,.9),clamp(.4+(st.look+st.know)/400+st.fame/400,.2,.85),clamp(.25+(st.look+st.know+st.art)/600+st.fame/300,.12,.7)][stage];
   const text=[ '나라에 금혼령이 내려졌다. 세자빈을 고른다며 양반가 처녀들의 단자를 올리라는 명이 떨어졌다. 그대의 처녀단자도 올라갔다.',
     '초간택을 통과하였다. 재간택에서는 대비전과 중궁전의 어른들이 처녀들의 몸가짐과 말씨를 꼼꼼히 살핀다고 한다.',
-    '재간택까지 통과하였다. 이제 마지막 삼간택만 남았다. 뽑히면 세자빈이 되고, 떨어지면 다른 데 시집가기도 어려워진다고 한다.'][stage];
+    '재간택까지 통과하였다. 이제 마지막 삼간택만 남았다. 뽑히면 세자빈이 되고, 떨어지면 후궁으로 들어오라는 제의를 받기도 한다.'][stage];
   return {kind:'major',title:`세자빈 간택 · ${nm}`,text,opts:[
-    {t:`${nm}에 나아간다`,sub:stage===0?'매력과 집안의 평판이 중요하다':stage===1?'매력과 학식(예법)이 중요하다':'매력·학식·재주를 두루 본다',p,tags:stage===2?['성공하면 세자빈','떨어지면 혼인이 어려움']:['다음 간택으로'],fn:()=>{
+    {t:`${nm}에 나아간다`,sub:stage===0?'매력과 집안의 평판이 중요하다':stage===1?'매력과 학식(예법)이 중요하다':'매력·학식·재주를 두루 본다',p,tags:stage===2?['성공하면 세자빈','떨어지면 후궁 제의']:['다음 간택으로'],fn:()=>{
       if(!chance(p)){
         if(stage<2){say(`${nm}에서 떨어졌다. 금혼령이 풀리고 다시 혼담을 받을 수 있게 되었다.`);return null;}
         say('삼간택에서 끝내 뽑히지 못하였다.','big');
-        return {kind:'major',title:'삼간택 낙선',text:'삼간택까지 올랐던 처녀는 왕실의 여인으로 여겨져 다른 집에 시집가기 어렵다. 궐에서 후궁으로 들어오라는 말이 전해졌다.',opts:[
+        return {kind:'major',title:'삼간택 낙선',text:'삼간택에서 떨어졌다. 궐에서 후궁으로 들어오라는 말이 전해졌다. 사양하면 금혼령이 풀리는 대로 다른 혼처를 찾을 수 있다.',opts:[
           {t:'후궁으로 궁에 들어간다',p:null,tags:['신분 변화: 후궁'],fn:()=>{const k=realKing(P.year);kingSpouse(k);setJob('concubine',3);P.favor=45;say('후궁의 첩지를 받고 궁에 들었다.','big');ev('seungeun',k.n);}},
-          {t:'사가에서 홀로 지낸다',p:null,safe:true,tags:['혼인이 매우 어려워짐','평판 ↑'],fn:()=>{P.flags.noMatch=P.year+8;fx({fame:6});say('궐의 부름을 사양하고 사가에서 조용히 지냈다. 한동안 혼담이 끊겼다.');}}]};
+          {t:'후궁 자리를 사양하고 다른 혼처를 찾는다',p:null,safe:true,tags:['평판 ↑','혼담은 그대로 이어짐'],fn:()=>{fx({fame:6});say('궐의 부름을 정중히 사양하였다. 금혼령이 풀리자 다시 혼담이 들어오기 시작했다.');}}]};
       }
       if(stage<2)return samganScene(stage+1);
       const x=newPerson({kind:'spouse',female:false,cls:'royal',sur:'이',bon:'전주',name:R(ROYAL_HWI),born:P.year-ri(P.age-3,P.age+2),h:20,t:20});x.title=`세자 ${x.sur}${x.name}`;x.pos='세자';x.live='한양 궁궐 동궁';x.fam='왕실 · 동궁';x.seja=true;x.status='married';x.rank=17;
