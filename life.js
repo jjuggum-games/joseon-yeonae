@@ -829,7 +829,7 @@ function seekLove(kind){
     const r=rnd();
     if(fem){o.title=r<.45?gh+'공주':gh+'옹주';o.pos=o.title.endsWith('공주')?'공주':'옹주';o.born=P.year-ri(18,24);}
     else if(r<.12&&hasKing(P.year)&&P.age<=35&&!Object.values(P.people).some(y=>y.isKing&&y.alive)){const k=realKing(P.year);o.title=k.n;o.isKing=true;o.pos='임금';o.born=k.s-ri(12,22);}
-    else if(r<.35&&!Object.values(P.people).some(y=>y.seja&&y.alive)){o.title='세자 저하';o.seja=true;o.pos='세자';o.born=P.year-ri(18,26);}
+    else if(r<.35&&!Object.values(P.people).some(y=>y.seja&&y.alive)){o.name=R(ROYAL_HWI);o.title=`세자 이${o.name}`;o.seja=true;o.pos='세자';o.born=P.year-ri(18,26);}
     else if(r<.65){o.title=gh+'대군';o.pos='대군';}
     else {o.title=gh+'군';o.pos='왕자군';}
     place=o.isKing?R(['궁궐 연회','어가 행렬','궁궐 후원']):R(['궁궐 후원','종묘 제례를 마친 길','왕실 사냥터','궐내 잔치']);
@@ -839,6 +839,7 @@ function seekLove(kind){
   else {o.cls=R(['sangmin','sangmin','jungin']);place=R(PLACES[o.cls]);}
   o.place=place;
   const x=newPerson(o);
+  if(x.seja){x.pos='세자';x.live='한양 궁궐 동궁';}
   if(kind==='royal')x.pos=fem?'옹주':'종친';
   if(kind==='direct'){x.pos=o.pos;if(o.isKing)x.isKing=true;if(o.seja)x.seja=true;}
   const pr=persona(x.persona);
@@ -1033,7 +1034,7 @@ function yMajor(){
   // 사화
   {const sp=spouseP();const can=!P.alt&&!P.flags.noThrone&&P.age>=20&&P.age<=55&&P.year-(P.flags.throneY||0)>=4&&((P.female&&P.married&&sp&&sp.cls==='royal'&&!sp.kingRole&&!sp.real)||(!P.female&&P.cls==='royal'&&P.job&&P.job.k==='prince'));
    if(can&&hasKing(y)&&chance(.12))add(70,()=>throneScene());}
-  {const sp=spouseP();if(sp&&sp.seja&&sp.alive&&realKing(y).s===y&&!P.alt){sp.seja=false;sp.kingRole=true;const kn=(sp.name||'새')+'왕';sp.title=kn;P.alt={year:y,king:kn,from:y,title:'세자빈의 남편이 보위에',line:`세자였던 그대의 남편이 보위에 올라 ${iga(kn)} 되었다.`};setJob('queen',1);P.home='중궁전';say(`선왕이 승하하고 세자였던 남편이 보위에 올랐다. 그대는 중전이 되었다. 이 판의 역사에서 임금은 ${kn}이다.`,'big');ev('branch',`세자였던 남편이 ${iga(kn)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});fx({fame:25});}}
+  {const sp=spouseP();if(sp&&sp.seja&&sp.alive&&realKing(y).s===y&&!P.alt){sp.seja=false;sp.kingRole=true;const kn=(sp.name||'새')+R(['종','조']);sp.title=kn;P.alt={year:y,king:kn,from:y,title:'세자빈의 남편이 보위에',line:`세자였던 그대의 남편이 보위에 올라 ${iga(kn)} 되었다.`};setJob('queen',1);P.home='중궁전';say(`선왕이 승하하고 세자였던 남편이 보위에 올랐다. 그대는 중전이 되었다. 이 판의 역사에서 임금은 ${kn}이다.`,'big');ev('branch',`세자였던 남편이 ${iga(kn)} 되니, 정사와 다른 역사가 열렸다.`,{title:'보위'});fx({fame:25});}}
   {const sp=spouseP();if(P.female&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.wifeDead&&chance(.025)){sp.wifeDead=true;say(`${callOf(sp)}의 정실이 병으로 세상을 떠났다.`);}}
   if(hasKing(y)&&P.job&&P.job.k==='concubine'&&P.job.lv>=6&&P.favor>=60&&P.year-(P.flags.qriseY||0)>=5&&chance(.06+royalSons()*.04))add(72,()=>queenRiseScene());
   {const sp=spouseP();if(P.female&&P.married&&sp&&sp.alive&&(P.sub==='cheop'||sp.mode==='cheop')&&!sp.kingRole&&P.year-(P.flags.wriseY||0)>=5){const sons=P.kids.filter(k=>k.alive&&!k.female).length;if(sp.wifeDead||sons>=2&&chance(.08+sons*.04))add(60,()=>wifeRiseScene());}}

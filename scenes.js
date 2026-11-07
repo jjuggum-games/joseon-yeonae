@@ -797,7 +797,7 @@ function samganScene(stage){
           {t:'사가에서 홀로 지낸다',p:null,safe:true,tags:['혼인이 매우 어려워짐','평판 ↑'],fn:()=>{P.flags.noMatch=P.year+8;fx({fame:6});say('궐의 부름을 사양하고 사가에서 조용히 지냈다. 한동안 혼담이 끊겼다.');}}]};
       }
       if(stage<2)return samganScene(stage+1);
-      const x=newPerson({kind:'spouse',female:false,cls:'royal',born:P.year-ri(P.age-3,P.age+2),title:'세자',h:20,t:20});x.seja=true;x.status='married';x.rank=17;
+      const x=newPerson({kind:'spouse',female:false,cls:'royal',sur:'이',bon:'전주',name:R(ROYAL_HWI),born:P.year-ri(P.age-3,P.age+2),h:20,t:20});x.title=`세자 ${x.sur}${x.name}`;x.pos='세자';x.live='한양 궁궐 동궁';x.seja=true;x.status='married';x.rank=17;
       wed(x,true);setJob('queen',0);P.court=true;P.home='세자궁(동궁)';fx({fame:20});
       say('삼간택 끝에 세자빈으로 뽑혔다! 가례를 올리고 동궁에 들었다.','big');ev('crown','세자');
       return null;}},

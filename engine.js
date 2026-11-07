@@ -51,8 +51,11 @@ function nameCands(P){
   }
   return out;
 }
+/* 왕실 남자는 외자 휘(諱)를 쓴다 */
+const ROYAL_HWI=['환','호','윤','혼','균','도','향','곤','기','순','선','영','용','유','장','종','찬','첨','항','현','황','희','훤','욱','엽','성','봉','방','근','건','경','정','옹','염','석','담','혁','령','준','협'];
 function personName(cls,female,sub){
   if(sub==='gisaeng'){const k=R(KI_NAMES);return k[0];}
+  if(cls==='royal'&&!female)return R(ROYAL_HWI);
   if(['royal','yangban','jungin'].includes(cls))return hanName(female).n;
   if(cls==='sangmin')return chance(.7)?nativeName(female).n:hanName(female).n;
   return nativeName(female).n;
@@ -77,6 +80,7 @@ function fullOf(p){
 
 /* ===== 능력치 합치기: 기품은 매력(용모)에 합친다 ===== */
 function normalizeSt(p){
+  try{if(p&&p.people)for(const x of Object.values(p.people)){if(x.seja&&(x.title==='세자'||x.title==='세자 저하')){x.sur='이';x.bon='전주';x.name=R(ROYAL_HWI);x.title=`세자 이${x.name}`;x.pos='세자';x.live='한양 궁궐 동궁';}}}catch(_){}
   try{if(p&&p.kids&&p.kids.some(k=>k.royalBride)){const _P=P;P=p;updateHonor();P=_P;}}catch(_){}
   const s=p.st;if(!s)return p;
   const d=Object.getOwnPropertyDescriptor(s,'grace');
