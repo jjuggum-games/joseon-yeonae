@@ -260,7 +260,7 @@ function syncStatus(){
    if(sp&&sp.household)sp.household.kids.forEach(k=>{if(k.alive&&chance(.006))k.alive=false;});}
 }
 function yFamily(){
-  syncStatus();
+  syncStatus();inlawYear();
   if(P.lastCls&&P.lastCls!==P.cls)onClassChange(P.lastCls,P.cls);P.lastCls=P.cls;
   if(P.flags.moveSidaek&&P.year>=P.flags.moveSidaek&&P.married){P.flags.moveSidaek=0;const sp=spouseP();P.home=`시댁 (${HOMES[sp&&sp.cls!=='royal'?sp.cls:'yangban']||'초가'})`;say('처가살이하던 남편을 따라 시댁으로 살림을 옮겼다.');}
   if(P.flags.moveBack&&P.year>=P.flags.moveBack&&P.married){P.flags.moveBack=0;P.home=HOMES[P.cls]||'초가';say('처가살이를 마치고 아내와 아이들을 데리고 본가로 돌아왔다.');}
@@ -272,7 +272,7 @@ function yFamily(){
     if(chance(pd)&&P.age>=3){
       x.alive=false;say(`${iga(w)} 세상을 떠났다. ${P.age>=15?'삼년상을 치르며 몸과 마음이 상하였다.':'어린 나이에 부모를 여의었다.'}`,'big');
       ev('loss',`${eulreul(w)} 여의었다`);fx({worry:12,health:-3},true);
-      if(key==='f'&&P.married&&P.cls!=='cheonmin')inherit();
+      if(P.cls!=='cheonmin'&&P.age>=15)inherit(key);
     }
   }
   // 형제자매
@@ -281,7 +281,7 @@ function yFamily(){
     if(a===0)say(`${s.female?'여동생':'남동생'} ${iga(s.name)} 태어났다.`);
     if(a<0||!s.alive)continue;
     if(!s.married&&a>=17&&a<=26&&chance(.22)&&P.cls!=='cheonmin'){s.married=true;if(P.age>=6)say(`${sibWord(s)} ${iga(s.name)} 혼인하였다.`);}
-    if(a>=1&&chance(a>55?.04:.003)){s.alive=false;say(`${sibWord(s)} ${iga(s.name)} 세상을 떠났다.`);}
+    if(a>=1&&chance(a>55?.04:.003)){s.alive=false;say(`${sibWord(s)} ${iga(s.name)} 세상을 떠났다.`);sibEstate(s);}
   }
   // 배우자
   const sp=spouseP();
@@ -320,17 +320,89 @@ function spouseDies(sp,why){
   say(`${spouseWord(sp)} ${iga(sp.title||sp.name)} ${why} 세상을 떠났다.`,'big');
   ev('widow',sp.title||sp.name);P.widowed=true;P.flags.widowY=P.year;P.married=false;
   fx({worry:25,health:-4},true);
+  if(!sp.kingRole&&P.cls!=='cheonmin')spouseEstate(sp);
   if(sp.kingRole&&P.job&&P.job.k==='concubine'){say('후궁은 다시 혼인할 수 없었다. 궁을 나와 조용히 지내게 되었다.');P.home='사가(私家)';P.court=false;P.flags.noRemarry=1;}
 }
 function spouseWord(sp){if(sp.kind==='cheop')return '첩';return P.female?(sp.kingRole?'임금':'남편'):'아내';}
 function sibWord(s){return s.older?(s.female?(P.female?'언니':'누이'):(P.female?'오라비':'형')):(s.female?'여동생':'아우');}
-function inherit(){
-  const n=P.sibs.filter(s=>s.alive).length+1;
-  const late=P.year>=1650;
-  let share=P.birthWealth*.5/n*(prel()/60);
-  if(late&&P.female)share*=.25;if(late&&!P.female&&P.order===0)share*=2.2;
-  if(share>1){fx({wealth:share});say(`아버지의 재산을 물려받았다.${late&&P.female?' 출가한 딸의 몫은 적었다.':''}${P.parentRel<35?' 부모와 사이가 멀었던 탓에 몫이 줄었다.':''}`);note('jaesan');}
-  if(n>2&&chance(.3)){say('형제들 사이에 재산을 두고 다툼이 일었다.');fx({worry:8},true);}
+/* ===== 상속: 그때의 법도대로 =====
+   고려~조선 전기(17세기 중반까지): 아들딸 구분 없이 고루 나눔(균분). 제사를 받드는 자식에게 1/5을 더 줌.
+     첩의 자식은 적자 몫의 1/7(양첩), 1/10(천첩).
+   조선 후기: 맏아들 중심. 딸(특히 출가한 딸)의 몫은 적거나 없음. 첩 자식은 거의 받지 못함.
+   과부는 남편 재산을 맡아 다스리되, 재가하면 시댁에 돌려줌. 첩에게는 상속 권리가 없음.
+   자식 없이 죽은 아내의 재산(혼수)은 친정으로 돌아감. */
+function lawEarly(){return P.year<1650;}
+function heirShare(estate,meFemale,meSeo,meEldest,meMarriedOut){
+  const sibs=P.sibs.filter(s=>s.alive);const kids=[...sibs.map(s=>({f:s.female,eld:false,out:s.female&&s.married})),{f:meFemale,eld:meEldest,out:meMarriedOut,me:true}];
+  const early=lawEarly();
+  const w=k=>{if(early){let v=1;if(k.eld&&!k.f)v+=.2;return v;}let v=k.f?(k.out?.15:.35):1;if(k.eld&&!k.f)v=2.5;return v;};
+  let tot=kids.reduce((a,k)=>a+w(k),0);let mine=estate*w(kids[kids.length-1])/tot;
+  if(meSeo)mine*=early?(P.parents&&P.parents.m&&/비|노비|종/.test(P.parents.m.job||'')?.1:.14):.05;
+  return mine;
+}
+function inherit(who){
+  who=who||'f';
+  const early=lawEarly();const base=P.birthWealth*(who==='f'?.5:.18)*(prel()/60);
+  const eldest=!P.female&&!P.sibs.some(s=>s.alive&&s.older&&!s.female);
+  const seo=P.sub==='seo'||P.originSub==='seo';
+  let share=heirShare(base,P.female,seo,eldest,P.female&&P.married);
+  note('sangsok');
+  if(share<1){if(P.cls!=='cheonmin')say(early?'물려받을 만한 재산이 거의 없었다.':'재산은 맏아들에게 돌아가고, 그대 몫은 거의 없었다.');return;}
+  fx({wealth:share});
+  const why=early?(seo?'법도대로 고루 나누었으나, 첩의 자식이라 적자 몫의 일부만 받았다.':P.female?'아들딸 가리지 않고 고루 나누는 법도대로 몫을 받았다.':eldest?'고루 나누되 제사를 받드는 맏이라 몫이 조금 더 많았다.':'형제들과 고루 나누어 받았다.')
+    :(seo?'서자의 몫은 거의 없었다.':P.female?(P.married?'출가외인이라 하여 딸의 몫은 아주 적었다.':'딸의 몫은 아들보다 적었다.'):eldest?'맏아들로서 가산의 대부분을 물려받고 제사를 맡게 되었다.':'가산의 대부분은 맏형에게 가고, 그대 몫은 얼마 되지 않았다.');
+  say(`${who==='f'?'아버지':'어머니'}의 재산을 나누었다. ${why}`);
+  if(P.sibs.filter(s=>s.alive).length>=2&&chance(.25)){say('형제들 사이에 재산을 두고 다툼이 일었다.');fx({worry:8},true);}
+}
+/* 배우자가 세상을 떠났을 때 */
+function spouseEstate(sp){
+  const early=lawEarly();note('sangsok');
+  if(P.female&&(P.sub==='cheop'||sp.mode==='cheop')){
+    const sons=P.kids.filter(k=>k.alive&&!k.female&&!k.adopted).length;const H=sp.household;
+    const keep=(H&&H.wife&&H.wife.status==='alive')||(H&&H.kids&&H.kids.some(k=>k.alive&&!k.female))?.3:.6;
+    const k2=Math.min(.85,keep+(sons?(early?.15:.08):0));const lost=P.wealth*(1-k2);P.wealth-=lost;
+    say(`첩에게는 남편의 재산을 이을 권리가 없었다. ${keep<.5?'본처와 적자들이 가산을 차지하였다.':'가산은 남편의 집안이 거두어 갔다.'}${sons?' 그래도 아들이 있어 그 몫을 조금 지켰다.':''}`,'big');
+    if(keep<.5&&chance(.35)){P.home='작은 셋집';say('본가에서 나가라는 말에 짐을 싸서 작은 셋집으로 옮겼다.');}
+    return;
+  }
+  if(P.female){
+    const kids=P.kids.filter(k=>k.alive).length;P.flags.widowEstate=P.wealth*.7;
+    if(kids)say('남편의 재산은 자식들 몫이 되었고, 그대가 자식들이 클 때까지 맡아 다스리게 되었다. 다만 재가하면 시댁에 돌려주어야 한다.');
+    else if(!early&&P.cls==='yangban'){const lost=P.wealth*.4;P.wealth-=lost;say('자식이 없어 시댁에서 양자를 들여 제사와 가산을 잇게 하였다. 그대에게는 먹고살 만큼만 남겨졌다.','big');P.flags.widowEstate=P.wealth*.7;}
+    else say('자식이 없으니 남편의 재산은 그대가 평생 쓰되, 그대가 세상을 떠나면 시댁으로 돌아가게 되었다. 재가하면 곧바로 돌려주어야 한다.');
+    return;
+  }
+  /* 아내가 세상을 떠남: 아내가 가져온 재산(혼수)은 자식에게, 자식이 없으면 처가로 */
+  const kids=P.kids.filter(k=>k.alive&&k.mother===sp.id).length;
+  if(!kids&&P.cls!=='cheonmin'){const dow=P.wealth*({yangban:.15,royal:.15,jungin:.12,sangmin:.08}[sp.cls]||.05);if(dow>1){P.wealth-=dow;say('자식이 없었으므로 아내가 가져온 재산은 법도대로 처가에 돌려주었다.');}}
+  else if(kids)say('아내가 가져온 재산은 아내가 낳은 자식들의 몫으로 남겨 두었다.');
+}
+/* 재가하면 전 남편의 재산은 시댁으로 */
+function remarryEstate(){
+  if(!P.female||!P.flags.widowEstate)return;
+  const lost=Math.min(P.wealth*.8,P.flags.widowEstate);P.flags.widowEstate=0;
+  if(lost>1){P.wealth-=lost;say('재가하였으니 전 남편의 재산은 법도대로 시댁에 돌려주었다.','big');}
+}
+/* 시부모·장인 장모의 상 */
+function inlawYear(){
+  const sp=spouseP();if(!sp||!sp.alive||!P.married||sp.kingRole||P.cls==='cheonmin')return;
+  if(sp.inP==null)sp.inP=ageOf(sp)<45?2:ageOf(sp)<60?1:0;
+  if(sp.inP<=0)return;const pa=ageOf(sp)+28;if(!chance(pa<60?.015:pa<70?.05:pa<80?.1:.2))return;
+  sp.inP--;const fa=sp.inP===1&&chance(.5)||sp.inP===0&&!sp.inFaDead;if(fa)sp.inFaDead=1;
+  const w=P.female?(fa?'시아버지':'시어머니'):(fa?'장인':'장모');
+  say(`${iga(w)} 세상을 떠났다.`,'big');ev('loss',`${eulreul(w)} 여의었다`);fx({worry:6},true);note('sangsok');
+  const early=lawEarly();const est=({royal:400,yangban:200,jungin:80,sangmin:15}[sp.cls]||5)*(fa?1:.35);
+  if(sp.eldest==null)sp.eldest=chance(.35);
+  let g;
+  if(P.female){g=early?est/ri(2,4):(sp.eldest?est*.7:est*.12);if(P.sub==='cheop'){say('첩의 몫은 따로 없었다.');return;}
+    say(early?`남편이 형제들과 고루 나누어 받았다.`:sp.eldest?'남편이 맏아들이라 가산의 대부분과 제사를 이어받았다.':'가산은 맏아들에게 가고, 남편 몫은 얼마 되지 않았다.');}
+  else{g=early?est/ri(2,4):est*.05;say(early?'아들딸 고루 나누는 법도에 따라 아내도 친정 재산의 몫을 받아 왔다.':'출가외인이라 하여 아내의 몫은 거의 없었다.');}
+  if(g>1)fx({wealth:g});
+}
+/* 자식 없이 세상을 떠난 형제의 재산 */
+function sibEstate(s){
+  if(P.cls==='cheonmin'||s.married||P.parents.f.alive)return;
+  const g=P.birthWealth*.05;if(g<1)return;fx({wealth:g});say(`혼인하지 않고 떠난 ${sibWord(s)}의 몫이 남은 형제들에게 나뉘었다.`);
 }
 function fertile(){
   if(P.eunuch)return 0;

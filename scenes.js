@@ -257,6 +257,7 @@ function gunghap(x){
   x.gh=g;return g;
 }
 function wed(x,silent,elope){
+  if(P.female&&P.widowed&&typeof remarryEstate==='function')remarryEstate();
   if(P.court&&!x.kingRole&&P.female){P.court=false;if(P.job&&P.job.k==='court')P.job=null;P.home='사가(私家)';fx({fame:-12},true);say('궁녀의 몸으로 혼인하려면 궁을 떠나야 했다. 오랜 청원 끝에 출궁하였다.','big');ev('court','궁을 떠났다');}
   Object.values(P.people).forEach(y=>{if(y.kind==='cand'&&y.id!==x.id)delete P.people[y.id];});
   const love=x.kind==='love';
