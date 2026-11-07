@@ -750,11 +750,12 @@ function raiseParent(toCls,why,reason){
 function kidRoyalScene(k){
   k.ganTaek=1;note('ganjip');
   const p=clamp(.2+(k.st?k.st.look:30)/250+P.st.fame/350,.1,.75);
-  return {kind:'major',title:'자식 · 딸의 간택',text:`나라에 금혼령이 내려지고 세자빈을 고른다는 명이 떨어졌다. 딸 ${k.name}의 처녀단자를 올리라는 기별이 왔다.`,opts:[
+  return {kind:'major',title:'자식 · 딸의 간택',text:`나라에 금혼령이 내려지고 세자빈을 고른다는 명이 떨어졌다. 딸 ${k.name}의 처녀단자를 올리라는 기별이 왔다.${sisQ(k)?` 중전인 언니 ${sisQ(k).name}의 뜻이 닿았다는 소문도 돈다.`:''}`,opts:[
     {t:'간택에 내보낸다',sub:'딸의 매력과 집안의 평판이 중요하다',p,tags:['성공하면 딸이 세자빈, 그대는 왕실의 외척','신분·재력 크게 ↑'],fn:()=>{
       if(!chance(p)){say(`삼간택까지 갔으나 ${iga(k.name)} 끝내 뽑히지 못하였다.`);return null;}
       k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='세자빈';k.wedY=P.year;k.feat='세자빈으로 간택되었다';
-      say(`딸 ${iga(k.name)} 세자빈으로 간택되었다! 가문에 큰 경사가 났다.`,'big');ev('kidfeat',`딸 ${k.name}`,{feat:k.feat});
+      say(`딸 ${iga(k.name)} 세자빈으로 간택되었다! 가문에 큰 경사가 났다.`,'big');
+      {const sq=sisQ(k);if(sq){k.sisterQ=sq.id;say(`세자는 후궁의 소생이나, 중전인 ${iga(sq.name)} 적모로서 친자식처럼 길러 온 아들이었다. 이로써 언니는 시어머니가, ${k.name}${bat(k.name)?'은':'는'} 그 며느리가 되었다.`,'big');}}ev('kidfeat',`딸 ${k.name}`,{feat:k.feat});
       queenParentBoost(false);}},
     {t:'병을 핑계로 피한다',p:.75,safe:true,tags:['평판 조금 ↓'],fn:()=>{if(chance(.75))say(`딸이 병중이라 둘러대어 간택을 피하였다.`);else{fx({fame:-6});say('핑계가 들통나 꾸중을 들었다.');}}}]};
 }
@@ -1713,7 +1714,7 @@ function updateHonor(){
   const parts=[];
   if(q){const t=`${P.bon||''}${P.female?'부부인':'부원군'}`;parts.push(t);if(!P.titles.includes(P.female?'부부인':'부원군'))P.titles.push(P.female?'부부인':'부원군');}
   const dae=ks.find(k=>k.royalBride==='대비');const jung=ks.find(k=>k.royalBride==='중전');
-  if(dae)parts.push(P.female?'대비의 어머니':'대비의 아버지');else if(jung)parts.push(P.female?'중전의 어머니':'중전의 아버지');
+  if(dae)parts.push(P.female?'대비의 어머니':'대비의 아버지');if(jung)parts.push(P.female?'중전의 어머니':'중전의 아버지');
   if(sj)parts.push(P.female?'세자빈의 어머니':'세자빈의 아버지');
   if(!q&&sj&&!P.female)parts[parts.length-1]+=' (국구 집안)';
   P.honor=parts.join(' · ');
@@ -1757,3 +1758,5 @@ function freeKidScene(k){
     {t:'멀리 도망시킨다',sub:'추쇄꾼에게 잡힐 수 있다',p:.5,tags:['성공하면 양인으로 숨어 삶','실패하면 자식이 매를 맞음'],fn:()=>{if(chance(.5)){k.cls='sangmin';k.away=true;k.freedY=P.year;say(`${eulreul(nm)} 몰래 먼 고을로 떠나보냈다. 이름을 바꾸고 양인으로 살아갈 것이다.`,'big');ev('freed',`${W} ${eulreul(nm)} 도망시켜 양인으로 살게 하였다`);}else{retry();fx({worry:12,fame:-3});say(`추쇄꾼에게 붙잡혀 ${iga(nm)} 모진 매를 맞고 끌려 돌아왔다.`,'big');}}},
     {t:'훗날을 기약한다',p:null,safe:true,tags:[],fn:()=>{retry();say(`언젠가 ${eulreul(nm)} 반드시 풀어 주리라 다짐하였다.`);}}]};
 }
+
+function sisQ(k){return P.kids.find(x=>x!==k&&x.alive&&['중전','대비'].includes(x.royalBride));}
