@@ -84,6 +84,8 @@ function normalizeSt(p){
   if(!Object.getOwnPropertyDescriptor(s,'wit'))Object.defineProperty(s,'wit',{get(){return this.know;},set(v){this.know=v;},enumerable:false,configurable:true});
   if(p.people){const ROLE={'고을 사또':['사또','고을 수령(종6품)'],'관찰사':['관찰사','관찰사(종2품)'],'권세 높은 대감':['대감','판서(정2품)'],'세도가 대감':['대감','세도가의 참판(종2품)'],'권세 높은 판서 댁':['대감','판서(정2품)']};
     for(const x of Object.values(p.people)){const r=x.title&&ROLE[x.title];if(r&&x.name&&x.sur){x.title=`${x.sur}${x.name} ${r[0]}`;x.pos=r[1];}}}
+  if(p.people&&p.female&&p.married&&p.spouse&&p.people[p.spouse]){const sp=p.people[p.spouse];const R5=['cheonmin','sangmin','jungin','yangban','royal'];
+    if(sp.mode!=='cheop'&&p.sub!=='cheop'&&!sp.kingRole&&R5.indexOf(sp.cls)>R5.indexOf(p.cls)){p.birthCls=p.birthCls||p.cls;p.cls=sp.cls;p.lastCls=p.cls;}}
   p.stMerged=1;p.witMerged=1;return p;
 }
 

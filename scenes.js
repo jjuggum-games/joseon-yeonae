@@ -251,6 +251,8 @@ function wed(x,silent,elope){
   if(!x.rank&&x.cls==='yangban'&&!x.female)x.rank=ri(0,9);
   P.spouse=x.id;P.married=true;P.widowed=false;P.flags.wedY=P.year;P.rejects=0;
   ev('marry',x.id,{love,elope:!!elope,mode:x.mode||'wife'});
+  /* 정실로 시집간 여인은 남편 집안의 신분을 따른다 */
+  if(P.female&&x.mode!=='cheop'&&!x.kingRole&&P.sub!=='cheop'&&CRANK.indexOf(x.cls)>CRANK.indexOf(P.cls)){P.birthCls=P.birthCls||P.cls;const from=CLS[P.cls].n;P.cls=x.cls;P.sub='';P.flags.clsReason='marriage';say(`${callOf(x)} 집안의 정실이 되어, 그대도 ${from}에서 ${CLS[x.cls].n} 집안의 사람이 되었다.`);}
   if(P.female&&x.seja){setJob('queen',0);P.court=true;P.home='세자궁(동궁)';}
   else if(!P.female&&x.cls==='royal'&&x.female&&!(P.job&&P.job.k==='buma')){setJob('buma',0);}
   /* 혼인한 여인은 무엇이든 자리가 생긴다 */
@@ -730,8 +732,9 @@ function inlawBoost(k,cls,rich){
   if(rich>=3){const g=U*ri(15,30);fx({wealth:g});say(`부유한 사돈댁에서 넉넉한 예물과 함께 살림을 보태 주었다.`);P.flags.kidSupport=(P.flags.kidSupport||0)+U*1.5;}
   if(cls==='royal'){fx({fame:12,wealth:U*40});say('왕실과 사돈을 맺었다. 나라에서 사돈댁에 내리는 녹봉과 예물이 이어졌다.','big');P.flags.kidSupport=(P.flags.kidSupport||0)+U*4;raiseParent('sangmin','왕실의 사돈이 되어 천한 신분을 벗었다');}
 }
-function raiseParent(toCls,why){
+function raiseParent(toCls,why,reason){
   if(CRANK.indexOf(P.cls)>=CRANK.indexOf(toCls))return;
+  P.flags.clsReason=reason||'household';
   const from=CLS[P.cls].n;P.cls=toCls;P.sub='';if(P.job&&['slave'].includes(P.job.k))P.job=null;
   say(`${why}. ${from}에서 ${CLS[toCls].n}이 되었다.`,'big');ev('rise',why);note('myeoncheon');
 }
@@ -947,4 +950,25 @@ function supportScene(kind,x){
       {t:'아이들은 내가 키운다',sub:'그 집안을 설득해야 한다',p:clamp(.35+(P.st.fame+P.st.know)/400),tags:['실패하면 아이들을 빼앗김'],fn:()=>{if(chance(.35+(P.st.fame+P.st.know)/400)){setIn(amt*.5,inlaw);say(`${inlaw}을 설득해 아이들을 곁에 두었다. 조금이나마 살림도 보태 주었다.`);}else{mine.filter(k=>!k.female).forEach(k=>k.away=1);fx({worry:20});say(`끝내 ${inlaw}에서 손자들을 데려갔다.`,'big');}}}]:[
       {t:'고맙게 받는다',p:null,tags:['해마다 살림 보탬'],fn:()=>{setIn(amt*(.8+ir*.3),inlaw);say(`${inlaw}에서 해마다 손주들 몫을 보내 주었다.`);}},
       {t:'정중히 사양한다',p:null,safe:true,tags:['평판 조금 ↑'],fn:()=>{fx({fame:3});say('마음만 고맙게 받겠다며 사양하였다.');}}]};
+}
+
+/* ===== 내 신분이 바뀔 때 자식들의 신분 ===== */
+function onClassChange(from,to){
+  const reason=P.flags.clsReason||(from==='cheonmin'?'freed':'other');P.flags.clsReason=null;
+  const up=CRANK.indexOf(to)>CRANK.indexOf(from);
+  const home=P.kids.filter(k=>k.alive&&!k.away&&!(k.female&&k.married)&&!k.estranged);
+  const changed=[];
+  if(!up){if(home.length)say(`그대의 신분이 바뀌었으나, 이미 태어난 자식들의 신분은 그대로였다.`);return;}
+  if(reason==='marriage'){if(P.kids.some(k=>k.alive))say('혼인으로 그대의 신분은 올랐으나, 앞서 낳은 자식들은 제 아비 집안의 신분을 그대로 따랐다.');return;}
+  if(reason==='freed'){
+    home.filter(k=>k.cls==='cheonmin'&&P.year-k.born<18).forEach(k=>{k.cls='sangmin';changed.push(k.name);});
+    const grown=P.kids.filter(k=>k.alive&&k.cls==='cheonmin'&&P.year-k.born>=18);
+    if(changed.length)say(`그대가 천인의 신분을 벗으며, 함께 사는 어린 자식들(${changed.join(', ')})도 함께 속량되었다.`,'big');
+    if(grown.length)say(`다만 이미 장성한 ${grown.map(k=>k.name).join(', ')}${bat(grown[grown.length-1].name)?'은':'는'} 따로 속량해야 했다.`);
+    return;}
+  /* 외척·사돈·자식 덕 등으로 집안 전체가 오른 경우 */
+  home.forEach(k=>{if(CRANK.indexOf(k.cls||from)<CRANK.indexOf(to)&&!(to==='royal')){k.cls=to;changed.push(k.name);}});
+  if(changed.length)say(`집안의 신분이 오르니 함께 사는 자식들(${changed.join(', ')})도 ${CLS[to].n} 집안의 자식으로 대접받게 되었다.`);
+  const out=P.kids.filter(k=>k.alive&&(k.away||(k.female&&k.married))&&CRANK.indexOf(k.cls||from)<CRANK.indexOf(to));
+  if(out.length)say(`출가했거나 따로 사는 ${out.map(k=>k.name).join(', ')}의 신분은 그대로였다.`);
 }

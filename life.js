@@ -230,6 +230,8 @@ function yFestival(){
 
 /* ---- 가족 ---- */
 function yFamily(){
+  if(P.lastCls&&P.lastCls!==P.cls)onClassChange(P.lastCls,P.cls);P.lastCls=P.cls;
+  if(P.year===1894)P.kids.forEach(k=>{if(k.alive&&k.cls==='cheonmin')k.cls='sangmin';});
   const pa=P.parents;
   for(const [key,w] of [['f','아버지'],['m','어머니']]){
     const x=pa[key];if(!x.alive)continue;x.age++;
