@@ -82,6 +82,8 @@ function normalizeSt(p){
   const dw=Object.getOwnPropertyDescriptor(s,'wit');
   if(dw&&!dw.get){const w=s.wit;delete s.wit;s.know=Math.round(clamp(Math.max(s.know,(s.know+w)/2+4)));}
   if(!Object.getOwnPropertyDescriptor(s,'wit'))Object.defineProperty(s,'wit',{get(){return this.know;},set(v){this.know=v;},enumerable:false,configurable:true});
+  if(p.people){const ROLE={'고을 사또':['사또','고을 수령(종6품)'],'관찰사':['관찰사','관찰사(종2품)'],'권세 높은 대감':['대감','판서(정2품)'],'세도가 대감':['대감','세도가의 참판(종2품)'],'권세 높은 판서 댁':['대감','판서(정2품)']};
+    for(const x of Object.values(p.people)){const r=x.title&&ROLE[x.title];if(r&&x.name&&x.sur){x.title=`${x.sur}${x.name} ${r[0]}`;x.pos=r[1];}}}
   p.stMerged=1;p.witMerged=1;return p;
 }
 

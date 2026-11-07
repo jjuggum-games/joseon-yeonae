@@ -359,7 +359,7 @@ function sideLove(){
     const isT=P.target===x.id;
     const canT=x.alive&&P.age>=18&&(x.kind==='love'&&x.status!=='parted'||x.kind==='cheop');
     const age=x.alive?` · ${ageOf(x)}세`:'';
-    return `<div class="pc ${off?'off':''} ${isT?'tgt':''}" data-a="card" data-id="${x.id}"><div class="h"><b>${esc(nm)}${isT?' <span class="chip j">마음에 둔 사람</span>':''}</b><span class="chip ${x.status==='mutual'||x.status==='lover'||x.kind==='spouse'?'j':''}">${esc(badge)}</span></div><div class="m">${esc(fullOf(x))}${age}</div>${x.kind!=='elder'?`<div class="info">${esc(personInfo(x))}</div>`:''}${bars}${canT?`<div style="margin-top:6px"><button class="btn sm ${isT?'on':''}" data-a="target" data-id="${x.id}">${isT?'마음 거두기':'마음에 두기'}</button>${x.kind==='love'&&(!P.married||!P.female)&&!(P.job&&['concubine','queen'].includes(P.job.k))&&canWed(x)&&x.blocked!==P.year?` <button class="btn sm" data-a="propose" data-id="${x.id}">${P.married?'첩으로 들이기':'청혼하기'}</button>`:''}</div>`:''}${(x.kind==='spouse'&&x.id===P.spouse||x.kind==='cheop')&&x.alive?kidBtns(x):''}${more}</div>`;
+    return `<div class="pc ${off?'off':''} ${isT?'tgt':''}" data-a="card" data-id="${x.id}"><div class="h"><b>${esc(nm)}${isT?' <span class="chip j">마음에 둔 사람</span>':''}</b><span class="chip ${x.status==='mutual'||x.status==='lover'||x.kind==='spouse'?'j':''}">${esc(badge)}</span></div><div class="m">${esc(fullOf(x))}${age}</div>${x.kind!=='elder'?`<div class="info">${esc(personInfo(x))}</div>`:''}${bars}${canT?`<div style="margin-top:6px"><button class="btn sm ${isT?'on':''}" data-a="target" data-id="${x.id}">${isT?'마음 거두기':'마음에 두기'}</button>${x.kind==='love'&&(!P.married||!P.female)&&!(P.job&&['concubine','queen'].includes(P.job.k))&&canWed(x)&&x.blocked!==P.year?` <button class="btn sm" data-a="propose" data-id="${x.id}">${P.married?'첩으로 들이기':'청혼하기'}</button>`:''}</div>`:''}${(x.kind==='spouse'&&x.id===P.spouse||x.kind==='cheop')&&x.alive?kidBtns(x):''}${x.kind==='spouse'&&x.id===P.spouse&&x.alive&&!x.kingRole&&P.age>=18?`<div style="margin-top:6px"><button class="btn sm ghost" data-a="divorce" ${P.flags.divorceAsk===P.year?'disabled':''}>${P.female?'갈라서기':'소박 놓기'}</button></div>`:''}${more}</div>`;
   };
   const canSeek=P.age>=18;
   const seekWarn=P.job&&['concubine','queen'].includes(P.job.k)?'임금의 여인이 다른 이를 만나는 것은 큰 죄입니다. 들키면 목숨이 위태로울 수 있습니다.':P.court?'궁녀의 연정은 큰 죄입니다. 들키면 궁에서 쫓겨날 수 있습니다.':P.married?'혼인한 몸입니다. 들키면 평판이 무너지거나 소박을 맞을 수 있습니다.':'';
@@ -404,7 +404,7 @@ function sideFam(){
   /* 자식 */
   if(P.kids.length){
     const kd=P.kids.map(k=>{const a=P.year-k.born;const st=kidSt(k);
-      const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?' (양자)':'')+(k.seo?' (서출)':'')+(k.cls&&k.cls!==P.cls?' · '+CLS[k.cls].n:'')+(k.estranged?' · 의절':''),[k.alive?a+'세':'',k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
+      const base=row(k.name,ded(k)+(k.female?'딸':'아들')+(k.adopted?' (양자)':'')+(k.seo?' (서출)':'')+(k.cls&&k.cls!==P.cls?' · '+CLS[k.cls].n:'')+(k.estranged?' · 의절':'')+(k.away?' · 따로 자람':''),[k.alive?a+'세':'',k.feat||'',k.married?(k.inlaw?'사돈 '+k.inlaw:'혼인'):''].filter(Boolean).join(' · '),dead(k));
       if(!k.alive)return base;
       const stl=`<div class="kst">${KID_ST.map(([s,n])=>`<span>${n} <b>${st[s]}</b></span>`).join('')}</div>`;
       const sel=a>=6&&a<18?`<div class="kedu"><span>배움</span><select data-kedu="${k.id}">${Object.entries(EDU).map(([key,[n]])=>`<option value="${key}" ${(k.edu||'play')===key?'selected':''}>${n}</option>`).join('')}</select></div>`:a<6?'<div class="kedu muted">여섯 살이 되면 배울 것을 정할 수 있습니다.</div>':'';
@@ -687,6 +687,7 @@ document.addEventListener('click',async e=>{
         say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였다. ${P.female?'곧 몸에 태기가 있었다':`곧 ${callOf(x)}에게 태기가 있었다`}. 그날 밤 ${d[0]}을 꾸었다.`,'big');note('taemong');toast('태기가 있습니다!');}
       else{say(`${gwawa(callOf(x))} 아이를 바라며 정성을 들였으나, 올해는 태기가 없었다.`);toast('올해는 태기가 없었습니다.');}
       Store.saveCur();V.dirty.feed=1;renderSide();break;}
+    case 'divorce':{if(!P||G.scene||P.flags.divorceAsk===P.year)return;P.flags.divorceAsk=P.year;const sc=divorceMeScene();if(sc)showScene(sc);break;}
     case 'stopkid':{if(!P)return;P.wantKids=false;say('이제 자식은 이만하면 되었다고 여겼다.');Store.saveCur();V.dirty.feed=1;renderSide();toast('더는 아이를 기다리지 않습니다.');break;}
     case 'propose':{if(!P||G.scene)return;const x=P.people[a.dataset.id];if(!x)return;showScene(marryScene(x));V.mob='feed';mobShow();break;}
     case 'target':e.stopPropagation();{const id=a.dataset.id;P.target=P.target===id?null:id;if(P.target){const x=P.people[id];say(`${callOf(x)}에게 마음을 두기로 하였다.`);}Store.saveCur();renderSide();}break;

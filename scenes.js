@@ -859,3 +859,53 @@ function favorScene(){
       else if(r<.7){fx({worry:15,fame:-5});say(`${king?'임금':who}의 눈 밖에 나 한동안 숨죽여 지냈다.`,'big');}
       else{fx({health:-10,worry:10});say('트집을 잡혀 매를 맞았다.','big');}}}]};
 }
+
+/* ===== 갈라서기: 이혼·소박과 자식 ===== */
+function minorKids(){return P.kids.filter(k=>k.alive&&!k.away&&P.year-k.born<18);}
+function doDivorce(sp,why,byMe){
+  const yb=['yangban','royal'].includes(P.cls);
+  sp.kind='ex';sp.status='parted';sp.exY=P.year;P.spouse=null;P.married=false;P.divorced=(P.divorced||0)+1;P.flags.divorceY=P.year;
+  if(P.female){fx({fame:-(yb?18:8),worry:15});if(/시댁|별채|사랑채|중궁|동궁/.test(P.home||''))P.home='친정 곁방';if(P.sub==='cheop')P.sub='';
+    if(P.job&&['royalwife','lady','housewife','queen'].includes(P.job.k))P.job=null;}
+  else{fx({fame:-(yb?8:4),worry:10,wealth:-P.wealth*.15});}
+  ev('divorce',callOf(sp),{why,byMe});note('sobak');
+}
+function custodyScene(sp,next){
+  const ks=minorKids();if(!ks.length)return next||null;
+  const nm=callOf(sp);const fatherSide=!P.female;
+  const p=P.female?clamp(.2+(P.st.know+P.st.fame)/500+(P.wealth>UNIT[P.cls]*40?.15:0),.08,.8):clamp(.85-(sp.rich||0)*.05,.4,.92);
+  const names=ks.map(k=>k.name).join(', ');
+  return {kind:'major',title:'자식은 누가 키우나',text:`${P.female?'시댁에서는 자식은 그 집안의 핏줄이니 두고 가라 한다.':`${iga(nm)} 아이들만은 데려가겠다고 한다.`} 남은 아이들(${names})을 어찌할 것인가.`,opts:[
+    {t:'내가 데려가 키운다',sub:P.female?'법도는 아버지 쪽 편이라 쉽지 않다':'아버지의 집안이 키우는 것이 법도다',p,tags:['성공하면 아이들과 함께 삶'],fn:()=>{
+      if(chance(p)){say(`끝내 아이들을 데리고 나왔다. ${names}의 손을 꼭 잡았다.`,'big');}
+      else{ks.forEach(k=>{k.away=1;});fx({worry:20});say(`아이들을 데려오지 못하였다. ${names}${bat(names)?'은':'는'} ${nm}의 집에 남게 되었다.`,'big');}
+      return next||null;}},
+    {t:`${nm}의 집에 맡긴다`,p:null,tags:['아이들과 떨어져 삶','마음고생 ↑'],fn:()=>{ks.forEach(k=>{k.away=1;});fx({worry:15});say(`아이들을 ${nm}의 집에 두고 떠났다. 돌아보지 않으려 애썼다.`,'big');return next||null;}},
+    ...(ks.length>=2?[{t:'아이들을 나누어 키운다',p:null,tags:['반은 곁에, 반은 떠나보냄'],fn:()=>{ks.forEach((k,i)=>{if(fatherSide?(i%2===1):(k.female?false:true))k.away=1;});fx({worry:10});say(P.female?'딸들은 데려오고 아들들은 시댁에 남겼다.':'아이들을 반씩 나누어 키우기로 하였다.','big');return next||null;}}]:[])]};
+}
+/* 내가 먼저 갈라서자고 할 때 */
+function divorceMeScene(){
+  const sp=spouseP();if(!sp)return null;const nm=callOf(sp);const yb=['yangban','royal'].includes(P.cls);
+  const p=P.female?clamp(.2+P.st.know/400+P.st.brave/400+P.st.fame/500+(sp.h<30?.15:0),.08,.75):clamp(.55+P.st.fame/500-(sp.rich||0)*.04,.3,.9);
+  const plead=chance(clamp((sp.t||50)/100,.1,.9));
+  return {kind:'major',title:'갈라서기',pid:sp.id,text:`${gwawa(nm)} 더는 함께 살 수 없다고 마음먹었다. ${P.female?(yb?'여인이 먼저 지아비를 버리는 일은 세상의 큰 손가락질을 받는다.':'여인이 먼저 갈라서자고 하는 일은 쉽지 않다.'):'소박을 놓으면 처가와 원수가 되고 세상의 눈총도 받는다.'}`,opts:[
+    {t:P.female?'갈라서자고 청한다':'아내를 내보낸다',sub:'학식과 평판, 배짱이 도움이 된다',p,tags:['평판 ↓','자식 문제가 따름','다른 이와 혼인할 수 있게 됨'],fn:()=>{
+      if(!chance(p)){fx({worry:10,fame:-3});sp.t=clamp((sp.t||50)-10);say(`${P.female?'집안 어른들이 막아서':'처가와 문중이 들고일어나'} 뜻을 이루지 못하였다.`,'big');return null;}
+      if(plead)return {kind:'major',title:'붙잡는 손',pid:sp.id,text:`${iga(nm)} 그대의 소매를 붙잡는다. "한 번만 더 생각해 주시오. 내 고치겠소."`,opts:[
+        {t:'그래도 갈라선다',p:null,tags:['평판 ↓'],fn:()=>{doDivorce(sp,'갈라섬',true);say(`${gwawa(nm)} 끝내 갈라섰다.`,'big');return custodyScene(sp);}},
+        {t:'마음을 돌린다',p:null,safe:true,tags:['정 ↑'],fn:()=>{sp.t=clamp((sp.t||50)+15);sp.h=clamp((sp.h||50)+10);say('붙잡는 손을 차마 뿌리치지 못하였다. 다시 한번 살아 보기로 하였다.');}}]};
+      doDivorce(sp,'갈라섬',true);say(`${gwawa(nm)} 갈라섰다.`,'big');return custodyScene(sp);}},
+    {t:'다시 생각한다',p:null,safe:true,tags:[],fn:()=>{say('마음을 접고 조금 더 참아 보기로 하였다.');}}]};
+}
+/* 상대가 소박을 놓거나 갈라서자고 할 때 */
+function divorceThemScene(){
+  const sp=spouseP();if(!sp)return null;const nm=callOf(sp);P.flags.dthemY=P.year;
+  const sons=P.kids.filter(k=>k.alive&&!k.female).length;
+  const why=P.female?(sons===0&&P.year-(P.flags.wedY||P.year)>=7?'대를 이을 아들을 낳지 못했다':sp.h<30?'그대에게 정이 떨어졌다':'시어머니와 뜻이 맞지 않는다'):(sp.h<30?'그대에게 정이 떨어졌다':'그대의 집안 형편이 기울었다');
+  const p=clamp(.25+(P.st.look+P.st.know)/400+P.st.fame/400+P.kids.filter(k=>k.alive).length*.05+(sp.t||50)/400,.1,.85);
+  return {kind:'major',title:P.female?'소박':'아내의 결심',pid:sp.id,text:P.female?`${iga(nm)} ${why}며 그대를 친정으로 돌려보내려 한다. 소박을 맞으면 친정에서도 얼굴을 들기 어렵다.`:`${iga(nm)} ${why}며 친정으로 돌아가겠다고 한다.`,opts:[
+    {t:'붙잡는다',sub:'매력·학식·평판, 그리고 자식이 힘이 된다',p,tags:['성공하면 함께 삶','실패하면 갈라섬'],fn:()=>{
+      if(chance(p)){sp.t=clamp((sp.t||50)+12);sp.h=clamp((sp.h||50)+8);say(`간곡히 붙잡았다. ${iga(nm)} 마음을 돌렸다.`,'big');return null;}
+      doDivorce(sp,P.female?'소박':'아내가 떠남',false);say(P.female?`끝내 소박을 맞아 친정으로 돌아왔다.`:`${iga(nm)} 끝내 친정으로 돌아갔다.`,'big');if(P.female)ev('sobak','소박을 맞았다');return custodyScene(sp);}},
+    {t:'담담히 받아들인다',p:null,tags:['갈라섬'],fn:()=>{doDivorce(sp,P.female?'소박':'아내가 떠남',false);fx({worry:-5});say('붙잡지 않았다. 각자의 길을 가기로 하였다.','big');return custodyScene(sp);}}]};
+}

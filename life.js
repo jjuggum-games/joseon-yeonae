@@ -993,6 +993,7 @@ function yMajor(){
   {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=13&&P.year-k.born<=17&&!k.seo&&k.cls!=='cheonmin');if(d&&P.cls==='yangban'&&chance(.25))add(80,()=>kidRoyalScene(d));}
   {const q=P.kids.find(k=>k.alive&&k.royalBride==='세자빈');if(q&&realKing(y).s===y&&y-(q.wedY||P.year-1)>=0){q.royalBride='중전';q.feat='중전이 되었다';say(`세자가 보위에 오르니, 딸 ${iga(q.name)} 중전이 되었다!`,'big');ev('kidfeat',`딸 ${q.name}`,{feat:q.feat});queenParentBoost(true);}}
   {const top=Math.max(P.st.look,P.st.know,P.st.art);if(P.age>=18&&P.age<=35&&top>=70&&!P.married&&!P.court&&!(P.job&&['concubine','queen','king','buma'].includes(P.job.k))&&P.cls!=='royal'&&P.year-(P.flags.gazeY||0)>=6&&chance(.12+(top-70)/300))add(68,()=>gazeScene());}
+  {const sp=spouseP();if(P.married&&sp&&sp.alive&&!sp.kingRole&&!sp.seja&&P.year-(P.flags.dthemY||0)>=6&&P.year-(P.flags.wedY||P.year)>=2){const bad=(sp.h<30?1:0)+(P.female&&!P.kids.some(k=>k.alive&&!k.female)&&P.year-(P.flags.wedY||P.year)>=7?1:0);if(bad&&chance(.08*bad))add(64,()=>divorceThemScene());}}
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){
@@ -1029,6 +1030,7 @@ function yMajor(){
     if(P.flags.wasGisaeng&&P.married&&!P.flags.rare3&&P.year-(P.flags.wedY||0)>=5&&chance(.04))add(22,()=>{P.flags.rare3=1;rare('gisaeng2lady','정실이 세상을 떠나 그대가 집안의 안주인 자리에 올랐다. 훗날 남편이 정1품에 올라 그대는 정경부인의 칭호를 받았다. 기녀 출신으로는 전에 없던 일이라 하였다.');fx({fame:30});return null;});
     if(P.age>=20&&(P.married||P.age>=25)&&P.year-(P.flags.homeY||0)>=3&&chance(.4))add(26,()=>homeScene());
     if(P.widowed&&!P.married&&P.age<=45&&canRemarry())add(46,()=>{P.widowed=P.widowed;return matchScene(true);});
+    if(P.divorced&&!P.widowed&&!P.married&&P.age<=45&&canRemarry()&&chance(.4))add(46,()=>matchScene(true));
   }
   if(!c.length)return;
   c.sort((a,b)=>b[0]-a[0]);
@@ -1036,6 +1038,7 @@ function yMajor(){
 }
 function canRemarry(){
   if(P.flags.sujeol)return false;
+  if(P.divorced&&!P.married&&P.year-(P.flags.divorceY||0)<1)return false;
   if(P.flags.noRemarry)return false;
   if(P.female&&P.cls==='yangban'&&P.year>=1485&&P.year<1894&&!(P.alt)){if(!P.seen.jaega){P.seen.jaega=1;note('jaega');say('양반가의 과부는 다시 시집갈 수 없었다. 수절의 세월이 시작되었다.');}return false;}
   return true;

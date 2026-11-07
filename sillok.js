@@ -49,7 +49,8 @@ function buildSillok(){
     if(t)at(e.a,t.trim());
   }
   P.ev.filter(e=>e.type==='cheop').forEach(e=>at(e.a,`${kAge(e.a)} 살에 첩 ${eulreul(e.t)} 들였다.`));
-  P.ev.filter(e=>e.type==='sobak').forEach(e=>at(e.a,`${kAge(e.a)} 살에 소박을 맞아 시댁을 떠났다.`));
+  P.ev.filter(e=>e.type==='sobak'&&!P.ev.some(d=>d.type==='divorce'&&d.a===e.a)).forEach(e=>at(e.a,`${kAge(e.a)} 살에 소박을 맞아 시댁을 떠났다.`));
+  P.ev.filter(e=>e.type==='divorce').forEach(e=>at(e.a+.3,e.why==='소박'?`${kAge(e.a)} 살에 소박을 맞아 ${gwawa(e.t)} 갈라섰다.`:e.byMe?`${kAge(e.a)} 살에 ${gwawa(e.t)} 갈라섰다.`:`${kAge(e.a)} 살에 ${iga(e.t)} 떠나 갈라섰다.`));
   P.ev.filter(e=>e.type==='affair').forEach(e=>{const x=P.people[e.t];if(x)at(e.a,`혼인한 몸으로 ${gwawa(callOf(x))} 남몰래 정을 통하였다는 말이 전한다.`);});
   P.ev.filter(e=>e.type==='widow').forEach(e=>at(e.a+(marryEv.some(m=>m.a===e.a&&P.people[m.t]&&[P.people[m.t].title,P.people[m.t].name].includes(e.t))?.5:-.5),`${kAge(e.a)} 살에 ${P.female?'남편을':'아내를'} 여의었다.`));
   T.sort((x,y)=>x[0]-y[0]||x[1]-y[1]).forEach(r=>M.push(r[2]));
