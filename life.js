@@ -285,7 +285,7 @@ function yFamily(){
 function spouseDies(sp,why){
   sp.alive=false;sp.dy=P.year;
   say(`${spouseWord(sp)} ${iga(sp.title||sp.name)} ${why} 세상을 떠났다.`,'big');
-  ev('widow',sp.title||sp.name);P.widowed=true;P.married=false;
+  ev('widow',sp.title||sp.name);P.widowed=true;P.flags.widowY=P.year;P.married=false;
   fx({worry:25,health:-4},true);
   if(sp.kingRole&&P.job&&P.job.k==='concubine'){say('후궁은 다시 혼인할 수 없었다. 궁을 나와 조용히 지내게 되었다.');P.home='사가(私家)';P.court=false;P.flags.noRemarry=1;}
 }
@@ -706,7 +706,7 @@ function yFlavor(){
 }
 
 /* ---- 인연 생성 ---- */
-function loveAllowed(){return P.age>=18;}
+function loveAllowed(){return P.age>=18&&!P.flags.sujeol&&!(P.job&&P.job.k==='monk');}
 function yLoveSpawn(){
   if(!loveAllowed())return;
   const act=Object.values(P.people).filter(x=>x.kind==='love'&&x.alive&&x.status!=='parted');
@@ -1024,7 +1024,7 @@ function yMajor(){
     if(P.sub==='gisaeng'&&P.job&&P.job.lv>=1&&y>=1494&&y<=1505&&P.age<=28&&P.st.art>=45&&!P.married&&chance(.12))add(66,()=>seungeunScene(true));
     // 고백·혼담
     const mut=Object.values(P.people).find(x=>x.kind==='love'&&x.alive&&x.status==='mutual'&&!x.asked);
-    if(mut&&!P.married&&!(P.job&&['concubine','queen'].includes(P.job.k)))add(58,()=>confessScene(mut));
+    if(mut&&!P.married&&!P.flags.sujeol&&!(P.job&&['concubine','queen','monk'].includes(P.job.k)))add(58,()=>confessScene(mut));
     if(P.sub==='gisaeng'&&P.job&&P.job.k==='gisaeng'&&!P.married){const pat=Object.values(P.people).find(x=>x.kind==='love'&&x.alive&&!x.female&&x.t>=55&&['yangban','jungin','sangmin'].includes(x.cls)&&!x.offered);if(pat)add(57,()=>bushilScene(pat));}
     if(marriageable())add(50,()=>matchScene());
     if(P.married&&P.wantKids===null&&P.year>(P.flags.wedY||0)&&fertile())add(48,()=>kidsScene());
