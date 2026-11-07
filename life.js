@@ -356,7 +356,7 @@ function conceive(){
     note('taemong');
   }
 }
-function kidUniqName(c,f,also){for(let i=0;i<10;i++){const n=personName(c,f);if(n!==also&&!P.kids.some(k=>k.name===n))return n;}return personName(c,f);}
+function kidUniqName(c,f,also){const ban=new Set([also,P.name,...Object.values(P.people).filter(x=>['spouse','cheop','ex'].includes(x.kind)).map(x=>x.name),...P.kids.map(k=>k.name)]);for(let i=0;i<25;i++){const n=personName(c,f);if(!ban.has(n))return n;}return personName(c,f);}
 function birth(given){
   const pr=given||P.preg;if(!given)P.preg=null;
   if(pr.unwed&&!P.female&&!(P.married&&P.spouse===pr.father)&&!pr.keep){const x=P.people[pr.father];if(x)say(`${iga(callOf(x))} 아이를 낳았다는 소식을 들었다.`);return;}
