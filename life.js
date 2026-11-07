@@ -981,6 +981,7 @@ function yMajor(){
   if(y===1777&&P.kids.some(k=>k.alive&&k.seo))say('나라에서 서얼허통절목을 내려 서얼에게도 벼슬길을 열어 주었다. 서얼 자식들의 앞날에 빛이 비쳤다.','big');
   {const d=P.kids.find(k=>k.alive&&k.female&&!k.married&&!k.ganTaek&&P.year-k.born>=13&&P.year-k.born<=17&&!k.seo&&k.cls!=='cheonmin');if(d&&P.cls==='yangban'&&chance(.25))add(80,()=>kidRoyalScene(d));}
   {const q=P.kids.find(k=>k.alive&&k.royalBride==='세자빈');if(q&&realKing(y).s===y&&y-(q.wedY||P.year-1)>=0){q.royalBride='중전';q.feat='중전이 되었다';say(`세자가 보위에 오르니, 딸 ${iga(q.name)} 중전이 되었다!`,'big');ev('kidfeat',`딸 ${q.name}`,{feat:q.feat});queenParentBoost(true);}}
+  {const top=Math.max(P.st.look,P.st.know,P.st.art);if(P.age>=18&&P.age<=35&&top>=70&&!P.married&&!P.court&&!(P.job&&['concubine','queen','king','buma'].includes(P.job.k))&&P.cls!=='royal'&&P.year-(P.flags.gazeY||0)>=6&&chance(.12+(top-70)/300))add(68,()=>gazeScene());}
   if(PURGES[y]&&!P.alt&&(P.job&&P.job.k==='official'||spouseP()&&spouseP().rank>=4)&&P.age>=18)add(85,()=>purgeScene(PURGES[y]));
   if(P.age===13&&!P.flags.careerAsked&&jobChoices().list.length>1)add(70,()=>careerScene());
   if(P.age>=18){
@@ -989,6 +990,7 @@ function yMajor(){
       if(y>=1412&&y<=1416&&!P.realSpouse&&chance(.35))add(75,()=>crownScene('양녕대군',1394));
       if(y>=1753&&y<=1757&&!P.realSpouse&&chance(.35))add(75,()=>crownScene('사도세자',1735));
       if(isJoseon(y)&&chance(.035))add(65,()=>haremScene());
+      if(isJoseon(y)&&!P.flags.samgan&&P.age<=22&&chance(.12))add(74,()=>samganScene(0));
     }
     if(!P.female&&P.cls==='yangban'&&!P.married&&P.age<=22&&P.sub!=='seo'&&chance(.025))add(60,()=>bumaScene());
     if(P.court&&P.job&&P.job.k==='court'&&P.job.lv>=1&&P.age<=32&&P.st.look>=50&&!P.married&&chance(P.courtDept==='jimil'?.12:.04))add(66,()=>seungeunScene());
@@ -1028,6 +1030,7 @@ function canRemarry(){
   return true;
 }
 function marriageable(){
+  if(P.flags.noMatch&&P.year<P.flags.noMatch)return false;
   if(P.married||P.age<18)return false;
   if(P.job&&P.job.k==='monk')return false;
   if(P.widowed)return false;

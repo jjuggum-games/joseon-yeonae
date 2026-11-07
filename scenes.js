@@ -765,3 +765,73 @@ function kidSuccessBoost(k,t){
   if(P.cls==='cheonmin'&&k.cls!=='cheonmin'&&/급제|역관|의관|무관|재산/.test(t)&&chance(.7)){raiseParent('sangmin',`${k.female?'딸':'아들'} ${iga(k.name)} 값을 치러 그대를 속량하였다`);}
   else if(P.cls==='sangmin'&&/문과에 급제/.test(t)){fx({fame:6});say('자식이 문과에 급제하니, 집안이 양반 행세를 하게 되었다.');P.inlawUp=Math.max(P.inlawUp||0,1);}
 }
+
+/* ===== 삼간택: 양반가 딸인 그대가 세자빈 간택에 나아간다 ===== */
+function samganScene(stage){
+  P.flags.samgan=1;note('ganjip');
+  const st=P.st;const N=['초간택','재간택','삼간택'];const nm=N[stage];
+  const p=[clamp(.55+st.look/300+st.fame/400,.3,.9),clamp(.4+(st.look+st.know)/400+st.fame/400,.2,.85),clamp(.25+(st.look+st.know+st.art)/600+st.fame/300,.12,.7)][stage];
+  const text=[ '나라에 금혼령이 내려졌다. 세자빈을 고른다며 양반가 처녀들의 단자를 올리라는 명이 떨어졌다. 그대의 처녀단자도 올라갔다.',
+    '초간택을 통과하였다. 재간택에서는 대비전과 중궁전의 어른들이 처녀들의 몸가짐과 말씨를 꼼꼼히 살핀다고 한다.',
+    '재간택까지 통과하였다. 이제 마지막 삼간택만 남았다. 뽑히면 세자빈이 되고, 떨어지면 다른 데 시집가기도 어려워진다고 한다.'][stage];
+  return {kind:'major',title:`세자빈 간택 · ${nm}`,text,opts:[
+    {t:`${nm}에 나아간다`,sub:stage===0?'매력과 집안의 평판이 중요하다':stage===1?'매력과 학식(예법)이 중요하다':'매력·학식·재주를 두루 본다',p,tags:stage===2?['성공하면 세자빈','떨어지면 혼인이 어려움']:['다음 간택으로'],fn:()=>{
+      if(!chance(p)){
+        if(stage<2){say(`${nm}에서 떨어졌다. 금혼령이 풀리고 다시 혼담을 받을 수 있게 되었다.`);return null;}
+        say('삼간택에서 끝내 뽑히지 못하였다.','big');
+        return {kind:'major',title:'삼간택 낙선',text:'삼간택까지 올랐던 처녀는 왕실의 여인으로 여겨져 다른 집에 시집가기 어렵다. 궐에서 후궁으로 들어오라는 말이 전해졌다.',opts:[
+          {t:'후궁으로 궁에 들어간다',p:null,tags:['신분 변화: 후궁'],fn:()=>{const k=realKing(P.year);kingSpouse(k);setJob('concubine',3);P.favor=45;say('후궁의 첩지를 받고 궁에 들었다.','big');ev('seungeun',k.n);}},
+          {t:'사가에서 홀로 지낸다',p:null,safe:true,tags:['혼인이 매우 어려워짐','평판 ↑'],fn:()=>{P.flags.noMatch=P.year+8;fx({fame:6});say('궐의 부름을 사양하고 사가에서 조용히 지냈다. 한동안 혼담이 끊겼다.');}}]};
+      }
+      if(stage<2)return samganScene(stage+1);
+      const x=newPerson({kind:'spouse',female:false,cls:'royal',born:P.year-ri(P.age-3,P.age+2),title:'세자',h:20,t:20});x.seja=true;x.status='married';x.rank=17;
+      wed(x,true);setJob('queen',0);P.court=true;P.home='세자궁(동궁)';fx({fame:20});
+      say('삼간택 끝에 세자빈으로 뽑혔다! 가례를 올리고 동궁에 들었다.','big');ev('crown','세자');
+      return null;}},
+    {t:'병을 핑계로 물러난다',sub:'무예(배짱)가 필요하다',p:clamp(.45+st.brave/250),safe:true,tags:['들키면 평판 ↓'],fn:()=>{if(chance(.45+st.brave/250))say('병을 핑계로 간택에서 물러났다.');else{fx({fame:-8});say('핑계가 들통나 집안이 꾸중을 들었다.');}}}]};
+}
+
+/* ===== 높은 사람의 눈에 띄다: 수청과 억지 혼인 ===== */
+function gazeScene(){
+  P.flags.gazeY=P.year;
+  const st=P.st;const top=[['look','고운 자태'],['know','글재주'],['art','솜씨']].sort((a,b)=>st[b[0]]-st[a[0]])[0];
+  const lover=Object.values(P.people).find(x=>x.kind==='love'&&x.alive&&x.status!=='parted'&&x.h>=60);
+  const U=UNIT[P.cls]||.5;const pr=clamp(rnd()*.5+.15+st.brave/400,.1,.75);
+  if(P.female){
+    const low=['cheonmin','sangmin'].includes(P.cls);
+    const who=low?R(['고을 사또','관찰사','권세 높은 대감']):R(['세도가 대감','권세 높은 판서 댁']);
+    const isSu=low;
+    const p=newPerson({kind:'love',female:false,cls:'yangban',born:P.year-ri(35,55),h:20,t:70});p.title=who;p.rich=3;p.pos=who;
+    return {kind:'major',title:isSu?'수청':'억지 혼사',pid:p.id,text:isSu?`그대의 ${iga(top[1])} 소문나 ${who}의 귀에까지 들어갔다. ${who}가 그대에게 수청을 들라는 명을 내렸다. 거역하면 무사하지 못할 것이다.`:`그대의 ${iga(top[1])} 소문나 ${who}에서 그대를 첩으로 들이겠다고 사람을 보냈다. 집안에서는 감히 거절하기 어렵다며 한숨을 쉰다.`,opts:[
+      {t:'명을 따른다',sub:`${who}의 첩이 된다`,p:null,tags:['재산·재력 ↑','신분 변화: 첩','다른 인연과 멀어짐'],fn:()=>{
+        if(P.cls==='cheonmin'){P.cls='sangmin';P.sub='';if(P.job&&['slave','gisaeng'].includes(P.job.k))P.job=null;say(`${iga(who)} 값을 치러 그대를 속량해 주었다.`);ev('freed','권세가의 첩이 되며 속량되었다');}
+        p.mode='cheop';wed(p,true);P.sub='cheop';P.home=`${who} 댁의 별채`;fx({wealth:U*ri(20,40),fame:isSu?-3:2});
+        Object.values(P.people).forEach(y=>{if(y.kind==='love'&&y.status!=='parted')y.status='parted';});
+        say(`${who}의 첩이 되어 별채에 들었다. 비단옷과 패물이 내려졌지만, 마음 한구석은 서늘하였다.`,'big');}},
+      {t:'목숨을 걸고 거절한다',sub:'거절이 받아들여질지는 운에 달렸다',p:pr,tags:['성공하면 평판 ↑','실패하면 매질·옥살이·집안의 화'],fn:()=>{
+        delete P.people[p.id];
+        if(chance(pr)){fx({fame:ri(8,14)});say(`끝내 뜻을 굽히지 않았다. ${who}도 더는 어쩌지 못하였고, 그대의 절개가 고을에 알려졌다.`,'big');ev('rise','권세가의 명을 거절하고 절개를 지켰다');return;}
+        const r=rnd();
+        if(r<.4){fx({health:-ri(12,20),worry:15});say(`명을 거역한 죄로 관아에 끌려가 곤장을 맞았다.`,'big');}
+        else if(r<.7){fx({worry:20,fame:-4});say('옥에 갇혀 한 철을 보냈다. 그래도 뜻은 꺾이지 않았다.','big');}
+        else{fx({wealth:-P.wealth*.35,worry:15});say(`${iga(who)} 앙심을 품어 집안이 큰 화를 입었다. 가산이 크게 기울었다.`,'big');}}},
+      ...(lover?[{t:`${gwawa(callOf(lover))} 함께 달아난다`,sub:'무예(배짱)가 필요하다',p:clamp(.3+st.brave/200),tags:['성공하면 정인과 맺어짐','실패하면 붙잡힘'],fn:()=>{delete P.people[p.id];if(chance(.3+st.brave/200)){lover.mode='wife';wed(lover,false,true);P.home='먼 고을의 초가';P.flags.elope=1;say(`야반도주하여 ${gwawa(callOf(lover))} 먼 고을에서 새 삶을 시작하였다.`,'big');}else{fx({health:-15,fame:-8,worry:15});say('달아나다 붙잡혀 호된 매를 맞았다.','big');}}}]:[])]};
+  }
+  const who=R(['세도가 대감','권세 높은 판서','왕실 종친']);const royal=who==='왕실 종친';
+  const b=newPerson({kind:'love',female:true,cls:royal?'royal':'yangban',born:P.year-ri(16,22),h:20,t:60});b.rich=3;if(royal){b.title=R(['숙','정','화','명'])+R(['신','안','혜'])+'옹주';}
+  return {kind:'major',title:'억지 혼사',pid:b.id,text:`그대의 ${iga(top[1])} 소문나 ${who}의 귀에 들어갔다. ${who}가 그대를 ${royal?'옹주의 부마로':'사위로'} 삼겠다며 혼담을 밀어붙인다. 마음에 두지 않은 혼인이지만, 거절하면 무사하지 못할 것이다.`,opts:[
+    {t:'혼인을 받아들인다',sub:'권세가의 사위가 된다',p:null,tags:['재산·재력·평판 ↑',royal?'신분 변화: 부마':'벼슬길이 열릴 수 있음','다른 인연과 멀어짐'],fn:()=>{
+      b.mode='wife';wed(b,true);fx({wealth:U*ri(30,60),fame:8});
+      if(royal)setJob('buma',0);else if(['yangban','jungin'].includes(P.cls)&&(!P.job||P.job.k==='scholar')&&chance(.6)){setJob('official',2);say('장인의 힘으로 음서를 받아 벼슬길에 나섰다.','big');}
+      if(['cheonmin','sangmin'].includes(P.cls)){raiseParent('jungin','권세가의 사위가 되어 신분이 올라갔다');}
+      Object.values(P.people).forEach(y=>{if(y.kind==='love'&&y.status!=='parted')y.status='parted';});
+      say(`${who}의 ${royal?'부마':'사위'}가 되었다. 번듯한 살림이 내려졌다.`,'big');}},
+    {t:'정중히 거절한다',sub:'거절이 받아들여질지는 운에 달렸다',p:pr,tags:['실패하면 모함·유배·집안의 화'],fn:()=>{
+      delete P.people[b.id];
+      if(chance(pr)){fx({fame:4});say(`${iga(who)} 혀를 차며 물러났다. 다행히 화는 없었다.`);return;}
+      const r=rnd();
+      if(r<.35&&P.age<70){exile(ri(2,4));say(`${who}의 모함을 받아 유배되었다.`);}
+      else if(r<.7){fx({wealth:-P.wealth*.3,worry:15});say(`${who}의 눈 밖에 나 집안 살림이 크게 기울었다.`,'big');}
+      else{fx({health:-12,worry:12});say('트집을 잡혀 관아에서 곤장을 맞았다.','big');}}},
+    ...(lover?[{t:`${callOf(lover)}에게 서둘러 청혼한다`,sub:'정인과 먼저 혼인해 버린다',p:clamp(.4+lover.h/300),tags:['성공하면 정인과 혼인'],fn:()=>{delete P.people[b.id];if(chance(.4+lover.h/300)){lover.mode='wife';wed(lover);say(`서둘러 ${gwawa(callOf(lover))} 혼례를 올렸다. ${who}도 어쩌지 못하였다.`,'big');}else{fx({worry:12});say('혼례를 서둘렀으나 일이 틀어졌다.');}}}]:[])]};
+}
