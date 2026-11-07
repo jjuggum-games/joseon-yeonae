@@ -1023,7 +1023,7 @@ function yMajor(){
       if(y>=1412&&y<=1416&&!P.realSpouse&&chance(.35))add(75,()=>crownScene('양녕대군',1394));
       if(y>=1753&&y<=1757&&!P.realSpouse&&chance(.35))add(75,()=>crownScene('사도세자',1735));
       if(isJoseon(y)&&chance(.035))add(65,()=>haremScene());
-      if(isJoseon(y)&&!P.flags.samgan&&P.age<=22&&chance(.12))add(74,()=>samganScene(0));
+      if(isJoseon(y)&&!P.flags.samgan&&P.age<=22&&!P.court&&!P.flags.noMatch)add(P.age>=20?99:76,()=>samganScene(0));
     }
     if(!P.female&&P.cls==='yangban'&&!P.married&&P.age<=22&&P.sub!=='seo'&&chance(.025))add(60,()=>bumaScene());
     if(P.court&&P.job&&P.job.k==='court'&&P.job.lv>=1&&P.age<=32&&P.st.look>=50&&!P.married&&chance(P.courtDept==='jimil'?.12:.04))add(66,()=>seungeunScene());
