@@ -122,7 +122,8 @@ function canMarryCls(a,b){
   const g={royal:['yangban','royal'],yangban:['yangban','royal'],jungin:['jungin','sangmin'],sangmin:['sangmin','jungin','cheonmin'],cheonmin:['cheonmin','sangmin']};
   return (g[a]||[]).includes(b);
 }
-function canWed(x){if(x.female===P.female)return false;if(ageOf(x)<18)return false;if(x.kingRole)return false;return true;}
+function sameClan(x){return x&&x.sur&&P.sur&&x.sur===P.sur&&x.bon===P.bon;}
+function canWed(x){if(x.female===P.female)return false;if(sameClan(x))return false;if(ageOf(x)<18)return false;if(x.kingRole)return false;return true;}
 const CLS_RANK={cheonmin:0,sangmin:1,jungin:2,yangban:3,royal:4};
 function clsRank(c,sub){return (CLS_RANK[c]||0)-(sub==='seo'||sub==='cheop'?.5:0);}
 const CLS_WIFE={royal:'왕실',yangban:'양반가',jungin:'중인 집안',sangmin:'상민 집안',cheonmin:'노비 집안'};
@@ -252,9 +253,9 @@ function wed(x,silent,elope){
   P.spouse=x.id;P.married=true;P.widowed=false;P.flags.wedY=P.year;P.rejects=0;
   ev('marry',x.id,{love,elope:!!elope,mode:x.mode||'wife'});
   /* 정실로 시집간 여인은 남편 집안의 신분을 따른다 */
-  if(P.female&&x.mode!=='cheop'&&!x.kingRole&&P.sub!=='cheop'&&CRANK.indexOf(x.cls)>CRANK.indexOf(P.cls)){P.birthCls=P.birthCls||P.cls;const from=CLS[P.cls].n;P.cls=x.cls;P.sub='';P.flags.clsReason='marriage';say(`${callOf(x)} 집안의 정실이 되어, 그대도 ${from}에서 ${CLS[x.cls].n} 집안의 사람이 되었다.`);}
+  if(P.female&&x.mode!=='cheop'&&!x.kingRole&&P.sub!=='cheop'&&CRANK.indexOf(x.cls)>CRANK.indexOf(P.cls)){P.birthCls=P.birthCls||P.cls;P.preMarryCls=P.cls;P.marryRoseBy=x.id;const from=CLS[P.cls].n;P.cls=x.cls;P.sub='';P.flags.clsReason='marriage';say(`${callOf(x)} 집안의 정실이 되어, 그대도 ${from}에서 ${CLS[x.cls].n} 집안의 사람이 되었다.`);}
   if(P.female&&x.seja){setJob('queen',0);P.court=true;P.home='세자궁(동궁)';}
-  else if(!P.female&&x.cls==='royal'&&x.female&&!(P.job&&P.job.k==='buma')){setJob('buma',0);}
+  else if(!P.female&&x.cls==='royal'&&x.female&&P.cls!=='royal'&&!(P.job&&P.job.k==='buma')){if(CRANK.indexOf(P.cls)<3){P.birthCls=P.birthCls||P.cls;P.preMarryCls=P.cls;P.marryRoseBy=x.id;P.cls='yangban';P.sub='';P.flags.clsReason='marriage';say('부마가 되어 양반의 반열에 올랐다.');}setJob('buma',0);}
   /* 혼인한 여인은 무엇이든 자리가 생긴다 */
   else if(P.female&&!x.kingRole){
     if((P.sub==='cheop'||x.mode==='cheop')&&['royal','yangban'].includes(x.cls))setJob('sosil',0);
@@ -312,8 +313,12 @@ function kidWedScene(k){
   k.wedAsked=true;
   const RANK=['cheonmin','sangmin','jungin','yangban','royal'];const my=RANK.indexOf(P.cls);
   const upCls=RANK[Math.min(3,my+1)];const canUp=my<3;
-  const mk=(kind)=>{const s=surname();const cls=kind==='up'?upCls:kind==='heart'&&chance(.4)&&my>0?RANK[my-1]:P.cls;
-    return {sur:s[0],bon:s[1],kind,cls,rich:kind==='rich'?3:kind==='up'?ri(1,3):ri(0,2)};};
+  const kidSur=P.female?((P.people[k.father]||spouseP()||{}).sur):P.sur;
+  const mk=(kind)=>{let s=surname();for(let i=0;i<8&&s[0]===kidSur;i++)s=surname();
+    let cls=kind==='up'?upCls:kind==='heart'&&chance(.4)&&my>0?RANK[my-1]:P.cls;
+    if(cls==='royal')cls='yangban'; /* 왕실은 같은 이씨끼리 혼인하지 않는다 */
+    let rich=kind==='rich'?3:kind==='up'?ri(1,3):ri(0,2);if(cls==='cheonmin')rich=Math.min(rich,1);
+    return {sur:s[0],bon:s[1],kind,cls,rich};};
   const fams=[mk('rich'),canUp?mk('up'):mk('noble'),mk('heart')];
   const famName=f=>(['yangban','royal'].includes(f.cls)?`${f.bon} ${f.sur}씨 집안`:`${f.sur}씨네`);
   const desc=f=>`${CLS[f.cls].n} · ${RICH[f.rich]}`;
@@ -323,6 +328,7 @@ function kidWedScene(k){
       tags:f.kind==='rich'?['재산 ↑','재력 ↑']:f.kind==='up'?['성공하면 평판·재력 ↑','거절당할 수 있음']:f.kind==='noble'?['평판 ↑','혼수 부담']:['아이의 행복'],fn:()=>{
       if(p!=null&&!chance(p)){say(`${famName(f)}에서 신분이 맞지 않는다며 혼담을 물렸다.`);fx({worry:5});k.wedAsked=false;return null;}
       k.married=true;k.inlaw=famName(f);k.inlawCls=f.cls;k.inlawRich=f.rich;k.wedY=P.year;
+      if(k.female&&k.cls!=='cheonmin'&&CRANK.indexOf(f.cls)>CRANK.indexOf(k.cls||P.cls))k.cls=f.cls;
       const cost={royal:200,yangban:80,jungin:30,sangmin:5,cheonmin:.5}[P.cls]||5;
       fx({wealth:f.kind==='rich'?cost*.6:f.kind==='noble'||f.kind==='up'?-cost*1.1:-cost*.7},true);
       if(f.kind==='noble')fx({fame:6},true);
@@ -545,7 +551,7 @@ function courtDeptScene(){
   return {kind:'major',title:'궁녀 · 처소',text:'관례를 치를 나이가 되었다. 생각시를 벗고 정식 나인이 되면 평생 일할 처소가 정해진다. 어느 처소로 가겠는가.',opts};
 }
 
-const JOB_KEEP=['gisaeng','court','uinyeo','weaver','merchant','farmer','jumo','mudang','nurse','herb','hunjang','yein','sanpa','bangmul','haenyeo','dyer','poet','slave','gwangdae','sword','monk','queen','concubine','royalwife','lady'];
+const JOB_KEEP=['princess','naesi','gisaeng','court','uinyeo','weaver','merchant','farmer','jumo','mudang','nurse','herb','hunjang','yein','sanpa','bangmul','haenyeo','dyer','poet','slave','gwangdae','sword','monk','queen','concubine','royalwife','lady'];
 /* 왕실과 혼인한 이가 보위를 넘보는 일 */
 function throneScene(){
   if(P.year<1392)return null;
@@ -746,7 +752,7 @@ function kidRoyalScene(k){
   return {kind:'major',title:'자식 · 딸의 간택',text:`나라에 금혼령이 내려지고 세자빈을 고른다는 명이 떨어졌다. 딸 ${k.name}의 처녀단자를 올리라는 기별이 왔다.`,opts:[
     {t:'간택에 내보낸다',sub:'딸의 매력과 집안의 평판이 중요하다',p,tags:['성공하면 딸이 세자빈, 그대는 왕실의 외척','신분·재력 크게 ↑'],fn:()=>{
       if(!chance(p)){say(`삼간택까지 갔으나 ${iga(k.name)} 끝내 뽑히지 못하였다.`);return null;}
-      k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.royalBride='세자빈';k.feat='세자빈으로 간택되었다';
+      k.married=true;k.inlaw='왕실';k.inlawCls='royal';k.cls='royal';k.royalBride='세자빈';k.wedY=P.year;k.feat='세자빈으로 간택되었다';
       say(`딸 ${iga(k.name)} 세자빈으로 간택되었다! 가문에 큰 경사가 났다.`,'big');ev('kidfeat',`딸 ${k.name}`,{feat:k.feat});
       queenParentBoost(false);}},
     {t:'병을 핑계로 피한다',p:.75,safe:true,tags:['평판 조금 ↓'],fn:()=>{if(chance(.75))say(`딸이 병중이라 둘러대어 간택을 피하였다.`);else{fx({fame:-6});say('핑계가 들통나 꾸중을 들었다.');}}}]};
@@ -870,6 +876,8 @@ function doDivorce(sp,why,byMe){
   if(P.preg&&!P.preg.unwed){if(P.female&&!P.preg.father)P.preg.father=sp.id;if(!P.female&&!P.preg.mother)P.preg.mother=sp.id;}
   const yb=['yangban','royal'].includes(P.cls);
   sp.kind='ex';sp.status='parted';sp.exY=P.year;P.spouse=null;P.married=false;P.divorced=(P.divorced||0)+1;P.flags.divorceY=P.year;
+  if(P.marryRoseBy===sp.id&&P.preMarryCls){const back=P.preMarryCls==='cheonmin'?'sangmin':P.preMarryCls;if(back!==P.cls){say(`${callOf(sp)} 집안을 떠나며, 혼인으로 얻었던 신분도 잃고 ${CLS[back].n}의 처지로 돌아갔다.`);P.cls=back;P.lastCls=back;}P.preMarryCls=null;P.marryRoseBy=null;}
+  if(P.job&&['royalwife','lady','housewife','queen','sosil','buma'].includes(P.job.k))P.job=null;
   if(P.female){fx({fame:-(yb?18:8),worry:15});if(/시댁|별채|사랑채|중궁|동궁/.test(P.home||''))P.home='친정 곁방';if(P.sub==='cheop')P.sub='';
     if(P.job&&['royalwife','lady','housewife','queen'].includes(P.job.k))P.job=null;}
   else{fx({fame:-(yb?8:4),worry:10,wealth:-P.wealth*.15});}
